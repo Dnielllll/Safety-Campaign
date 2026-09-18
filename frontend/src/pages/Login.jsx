@@ -31,7 +31,6 @@ export default function Login() {
   const [showOtpBypassNotice, setShowOtpBypassNotice] = useState(false);
   const [bypassTimeRemaining, setBypassTimeRemaining] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
-  const [showOtpPassword, setShowOtpPassword] = useState(false);
 
   React.useEffect(() => {
     const logoutMsg = localStorage.getItem("logout_message");
@@ -42,7 +41,6 @@ export default function Login() {
       // Clear form fields on session timeout
       setForm({ email: "", password: "", otp: "" });
       setShowPassword(false);
-      setShowOtpPassword(false);
       
       // Show additional session timeout information
       setSuccessMsg("Session Timeout: Your previous session has expired due to inactivity. Please log in again to continue.");
@@ -52,13 +50,11 @@ export default function Login() {
       // Clear form fields on logout to prevent auto-fill
       setForm({ email: "", password: "", otp: "" });
       setShowPassword(false);
-      setShowOtpPassword(false);
     }
     
     // Always clear form fields on component mount to prevent saved credentials
     setForm({ email: "", password: "", otp: "" });
     setShowPassword(false);
-    setShowOtpPassword(false);
     
     // Clear browser autocomplete on mount
     const emailInput = document.querySelector('input[type="email"]');
@@ -141,14 +137,21 @@ export default function Login() {
     console.log("Show OTP:", showOTP);
     console.log("Show Forgot Password:", showForgotPassword);
     
+    // Validate that both email and password are provided
+    if (!form.email || !form.password) {
+      setError("Please enter both email and password.");
+      setLoading(false);
+      return;
+    }
+    
     setError("");
     setLoading(true);
 
     try {
-      console.log("=== DEBUG: Checking user for OTP ===");
+      console.log("=== DEBUG: Validating credentials first ===");
       console.log("Email being checked:", form.email);
       
-      // First check if user exists and their role before sending OTP
+      // First check if user exists and their role
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('role, email')
@@ -166,6 +169,33 @@ export default function Login() {
       }
 
       console.log("User role detected:", userData.role);
+      
+      // Now validate the password using Supabase Auth
+      try {
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email: form.email,
+          password: form.password
+        });
+
+        if (authError) {
+          console.log("Password validation failed:", authError);
+          setError("Invalid email or password. Please try again.");
+          setLoading(false);
+          return;
+        }
+
+        console.log("Password validated successfully");
+        
+        // Sign out immediately since we just wanted to validate
+        await supabase.auth.signOut();
+      } catch (authErr) {
+        console.log("Password validation error:", authErr);
+        setError("Invalid email or password. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Password is correct, now check OTP requirements
       console.log("Role requires OTP check:", userData.role === 'public' || userData.role === 'citizen' || userData.role === 'staff');
 
       // Check if user was recently verified within 3 minutes (bypass OTP) - applies to staff and residents
@@ -557,39 +587,15 @@ export default function Login() {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id={isSessionTimeout ? "password-timeout-otp" : "password"}
-                          type={showOtpPassword ? "text" : "password"}
-                          required
-                          placeholder="••••••••"
-                          value={form.password}
-                          onChange={(e) => setForm({ ...form, password: e.target.value })}
-                          autoComplete={isSessionTimeout ? "off" : "new-password"}
-                          className="pl-10 pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowOtpPassword(!showOtpPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        >
-                          {showOtpPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
-
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => {
                         setShowOTP(false);
-                        setShowOtpPassword(false);
                         setForm({ ...form, otp: "" });
                         setError("");
+                        setSuccessMsg("");
                       }}
                       className="w-full"
                     >
@@ -600,7 +606,13 @@ export default function Login() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={handleEmailSubmit}
+                      onClick={() => {
+                        setShowOTP(false);
+                        setForm({ ...form, otp: "" });
+                        setError("");
+                        // Resend OTP by submitting the form again
+                        handleEmailSubmit();
+                      }}
                       disabled={loading}
                       className="w-full"
                     >
