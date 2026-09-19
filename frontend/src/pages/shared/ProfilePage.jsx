@@ -268,22 +268,22 @@ export default function ProfilePage() {
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-          <UserCircle className="h-6 w-6 text-primary" /> Profile Management
+        <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <UserCircle className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Profile Management
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">Update your personal information, avatar, and account settings.</p>
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">Update your personal information, avatar, and account settings.</p>
       </div>
 
       {/* Avatar + User Info Header */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex items-center gap-5">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5">
             <div className="relative group">
-              <Avatar className="h-20 w-20 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+              <Avatar className="h-16 w-16 sm:h-20 sm:w-20 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
                 {avatarPreview ? (
                   <AvatarImage src={avatarPreview} alt={profile.name} />
                 ) : (
-                  <AvatarFallback className={`${roleColor} text-white text-xl font-bold`}>
+                  <AvatarFallback className={`${roleColor} text-white text-lg sm:text-xl font-bold`}>
                     {profile.name?.[0]?.toUpperCase() ?? "U"}
                   </AvatarFallback>
                 )}
@@ -309,9 +309,9 @@ export default function ProfilePage() {
               />
             </div>
 
-            <div className="flex-1 min-w-0">
-              <p className="font-display font-bold text-lg truncate">{profile.name || "User"}</p>
-              <p className="text-sm text-muted-foreground truncate">{profile.email}</p>
+            <div className="flex-1 min-w-0 text-center sm:text-left">
+              <p className="font-display font-bold text-base sm:text-lg truncate">{profile.name || "User"}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">{profile.email}</p>
               <span className={`inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold text-white ${roleColor}`}>
                 {roleLabel}
               </span>
@@ -322,7 +322,7 @@ export default function ProfilePage() {
               size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingAvatar}
-              className="shrink-0"
+              className="shrink-0 w-full sm:w-auto"
             >
               {uploadingAvatar ? (
                 <><RefreshCw className="h-4 w-4 mr-1.5 animate-spin" /> Uploading…</>

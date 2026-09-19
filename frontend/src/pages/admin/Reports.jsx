@@ -61,14 +61,14 @@ export default function AdminReports() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-primary" /> Reports
+          <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Reports
           </h1>
-          <p className="text-muted-foreground text-sm">Performance of all campaigns in the system.</p>
+          <p className="text-muted-foreground text-xs sm:text-sm">Performance of all campaigns in the system.</p>
         </div>
-        <Button variant="outline" onClick={fetchReports} disabled={loading}>
+        <Button variant="outline" onClick={fetchReports} disabled={loading} className="w-full sm:w-auto">
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>

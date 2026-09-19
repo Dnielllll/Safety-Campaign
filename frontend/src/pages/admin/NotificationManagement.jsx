@@ -240,18 +240,18 @@ export default function NotificationManagement() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-            <BellRing className="h-6 w-6 text-primary" /> Notification Management
+          <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <BellRing className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Notification Management
           </h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
+          <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">
             Send, schedule, and monitor delivery of campaign notifications.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="w-full sm:w-auto">
             <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? "animate-spin" : ""}`} />
             Refresh
           </Button>

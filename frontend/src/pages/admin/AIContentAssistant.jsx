@@ -149,11 +149,11 @@ export default function AIContentAssistant() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-accent" /> AI Content Assistant
+        <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2 flex-wrap">
+          <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-accent" /> AI Content Assistant
           <Badge variant="secondary" className="ml-1 text-xs font-normal">Administrator</Badge>
         </h1>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-xs sm:text-sm">
           Generate and refine campaign announcements. As Administrator, you can publish directly — no approval needed.
         </p>
       </div>
