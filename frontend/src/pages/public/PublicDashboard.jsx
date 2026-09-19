@@ -12,11 +12,11 @@ const priorityVariant = { critical: "destructive", high: "warning", medium: "sec
 const quickLinks = [
   { to: "/campaigns", label: "Safety Campaigns", icon: Megaphone, color: "bg-orange-200 text-orange-600" },
   { to: "/voice-announcements", label: "AI Voice Announcements", icon: Volume2, color: "bg-orange-200 text-orange-600", requirePublic: true },
-  { to: "/emergency", label: "Emergency Info", icon: ShieldAlert, color: "bg-destructive/10 text-destructive" },
-  { to: "/notifications", label: "Notifications", icon: Bell, color: "bg-secondary text-secondary-foreground" },
+  { to: "/emergency", label: "Emergency Info", icon: ShieldAlert, color: "bg-orange-200 text-orange-600" },
+  { to: "/notifications", label: "Notifications", icon: Bell, color: "bg-orange-200 text-orange-600" },
   { to: "/feedback", label: "Submit Feedback", icon: MessageSquare, color: "bg-muted text-muted-foreground" },
   { to: "/surveys", label: "Surveys", icon: ClipboardList, color: "bg-muted text-muted-foreground" },
-  { to: "/about", label: "About Barangay", icon: Building2, color: "bg-primary/20 text-primary" },
+  { to: "/about", label: "About Barangay", icon: Building2, color: "bg-orange-200 text-orange-600" },
 ];
 
 export default function PublicDashboard() {
@@ -82,15 +82,15 @@ export default function PublicDashboard() {
               if (!user && (ql.to === "/feedback" || ql.to === "/surveys")) return null;
               if (user && ql.requirePublic) return null; // Hide voice announcements for logged-in residents
               const Icon = ql.icon;
-              const isEmergency = ql.to === "/emergency";
+              const isQuickAccessCard = ["/campaigns", "/voice-announcements", "/emergency", "/notifications", "/about"].includes(ql.to);
               return (
                 <Link
                   key={ql.to}
                   to={ql.to}
                   className="flex flex-col items-center gap-2 rounded-xl border border-border bg-white p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-gray-50 transition-all text-center group"
                 >
-                  <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${ql.color} ${isEmergency ? 'animate-pulse' : ''} group-hover:scale-110 transition-transform`}>
-                    <Icon className={`h-5 w-5 ${isEmergency ? 'animate-bounce' : ''}`} />
+                  <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${ql.color} group-hover:scale-110 transition-transform`}>
+                    <Icon className={`h-5 w-5 ${isQuickAccessCard ? 'animate-bounce' : ''}`} />
                   </div>
                   <span className="text-xs font-medium leading-tight text-gray-900">{ql.label}</span>
                 </Link>
