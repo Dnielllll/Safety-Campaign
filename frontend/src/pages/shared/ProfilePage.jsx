@@ -275,7 +275,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Avatar + User Info Header */}
-      <Card>
+      <Card className="mt-8">
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5">
             <div className="relative group">

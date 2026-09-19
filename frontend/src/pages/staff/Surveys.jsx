@@ -3,7 +3,7 @@ import { ClipboardList, Plus, Send, Clock, CheckCircle2, XCircle, MessageSquare,
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -197,13 +197,15 @@ export default function StaffSurveys() {
 
   const closeSurveyDialog = () => {
     setSurveyDialogOpen(false);
-    setEditingSurvey(null);
-    setSurveyForm({
-      title: "",
-      description: "",
-      campaign_id: "",
-      questions: [{ question: "", type: "radio", options: ["Yes", "No"] }]
-    });
+    setTimeout(() => {
+      setEditingSurvey(null);
+      setSurveyForm({
+        title: "",
+        description: "",
+        campaign_id: "",
+        questions: [{ question: "", type: "radio", options: ["Yes", "No"] }]
+      });
+    }, 300);
   };
 
   return (
@@ -222,12 +224,10 @@ export default function StaffSurveys() {
             {fetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
             {fetching ? "" : "Refresh"}
           </Button>
-          <Dialog open={surveyDialogOpen} onOpenChange={closeSurveyDialog}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-1" /> Create Survey
-              </Button>
-            </DialogTrigger>
+          <Dialog open={surveyDialogOpen} onOpenChange={setSurveyDialogOpen}>
+            <Button onClick={() => setSurveyDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" /> Create Survey
+            </Button>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingSurvey ? "Edit Survey" : "Create New Survey"}</DialogTitle>
