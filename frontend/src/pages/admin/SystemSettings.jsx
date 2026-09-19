@@ -394,7 +394,7 @@ export default function SystemSettings() {
           <CardDescription>Current system configuration and version details</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-4 border rounded-lg">
               <p className="text-sm text-muted-foreground mb-1">Application</p>
               <p className="font-medium">{systemInfo.appName}</p>
@@ -426,12 +426,12 @@ export default function SystemSettings() {
       </Card>
 
       <Tabs defaultValue="general">
-        <TabsList className={`grid w-full grid-cols-2 ${(user?.role === 'super_admin' || user?.role === 'superadmin') ? 'lg:grid-cols-5' : 'lg:grid-cols-2'}`}>
-          <TabsTrigger value="general">General</TabsTrigger>
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security">Security</TabsTrigger>}
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth">Authentication</TabsTrigger>}
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="features">Features</TabsTrigger>}
+        <TabsList className="w-full overflow-x-auto flex-wrap sm:grid sm:grid-cols-2 lg:grid-cols-2 gap-2">
+          <TabsTrigger value="general" className="whitespace-nowrap">General</TabsTrigger>
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security" className="whitespace-nowrap">Security</TabsTrigger>}
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth" className="whitespace-nowrap">Authentication</TabsTrigger>}
+          <TabsTrigger value="notifications" className="whitespace-nowrap">Notifications</TabsTrigger>
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="features" className="whitespace-nowrap">Features</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="general">
@@ -441,7 +441,7 @@ export default function SystemSettings() {
               <CardDescription>Configure basic system information and behavior</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Application Name</Label>
                   <Input
@@ -575,8 +575,8 @@ export default function SystemSettings() {
                 )}
               </div>
             </CardContent>
-            <CardFooter>
-              <Button onClick={() => handleSave('General')} disabled={saving}>
+            <CardFooter className="flex flex-col sm:flex-row gap-2">
+              <Button onClick={() => handleSave('General')} disabled={saving} className="w-full sm:w-auto">
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Saving...' : 'Save General Settings'}
               </Button>
@@ -673,8 +673,8 @@ export default function SystemSettings() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button onClick={() => handleSave('Security')} disabled={saving}>
+            <CardFooter className="flex flex-col sm:flex-row gap-2">
+              <Button onClick={() => handleSave('Security')} disabled={saving} className="w-full sm:w-auto">
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Saving...' : 'Save Security Settings'}
               </Button>
@@ -691,7 +691,7 @@ export default function SystemSettings() {
               <CardDescription>Configure user authentication and password requirements</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Session Timeout (minutes)</Label>
                   <Input
@@ -786,8 +786,8 @@ export default function SystemSettings() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button onClick={() => handleSave('Authentication')} disabled={saving}>
+            <CardFooter className="flex flex-col sm:flex-row gap-2">
+              <Button onClick={() => handleSave('Authentication')} disabled={saving} className="w-full sm:w-auto">
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Saving...' : 'Save Authentication Settings'}
               </Button>
@@ -901,8 +901,8 @@ export default function SystemSettings() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button onClick={() => handleSave('Notifications')} disabled={saving}>
+            <CardFooter className="flex flex-col sm:flex-row gap-2">
+              <Button onClick={() => handleSave('Notifications')} disabled={saving} className="w-full sm:w-auto">
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Saving...' : 'Save Notification Settings'}
               </Button>
@@ -945,7 +945,7 @@ export default function SystemSettings() {
 
                 {featureSettings.voiceAnnouncementsEnabled && (
                   <div className="space-y-4 pl-4 pt-2">
-                    <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Default Voice</Label>
                         <Select value={aiSettings.defaultVoice} onValueChange={(v) => setAiSettings({ ...aiSettings, defaultVoice: v })}>
@@ -1048,8 +1048,8 @@ export default function SystemSettings() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button onClick={() => handleSave('Features')} disabled={saving}>
+            <CardFooter className="flex flex-col sm:flex-row gap-2">
+              <Button onClick={() => handleSave('Features')} disabled={saving} className="w-full sm:w-auto">
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Saving...' : 'Save Feature Settings'}
               </Button>
