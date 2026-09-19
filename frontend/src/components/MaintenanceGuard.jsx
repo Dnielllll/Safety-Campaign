@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "react-router-dom";
 import Maintenance from "@/pages/Maintenance";
 
 export default function MaintenanceGuard({ children }) {
-  const { user, maintenanceMode, loading } = useAuth();
   const location = useLocation();
   const [showMaintenance, setShowMaintenance] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState(null);
 
-  const checkMaintenanceStatus = () => {
+  const checkMaintenanceStatus = (currentUserRole) => {
     console.log("=== MaintenanceGuard Check ===");
     
     // Check localStorage directly as primary source (more reliable)
@@ -18,8 +18,6 @@ export default function MaintenanceGuard({ children }) {
       maintenance_mode: localStorage.getItem('maintenance_mode'),
       parsed: { maintenance: localMaintenance }
     });
-    
-    console.log("Auth context values:", { maintenanceMode, loading, userRole: user?.role, pathname: location.pathname });
     
     // Use localStorage values as primary (more reliable than context)
     const effectiveMaintenance = localMaintenance;
@@ -36,39 +34,18 @@ export default function MaintenanceGuard({ children }) {
     if (isPublicRoute) {
       console.log("MaintenanceGuard: Public route, skipping check:", location.pathname);
       setShowMaintenance(false);
+      setLoading(false);
       return;
     }
 
-    // Wait for auth to load before checking maintenance mode
-    if (loading) {
-      console.log("MaintenanceGuard: Still loading auth state");
-      return;
-    }
-
-    // If no user is logged in, let the app's routing handle them (they'll be redirected to /login by RequireRole)
-    if (!user) {
-      console.log("MaintenanceGuard: No user, allowing RequireRole to redirect to login");
-      setShowMaintenance(false);
-      return;
-    }
-
-    // Show maintenance page if:
-    // 1. Maintenance mode is enabled AND
-    // 2. User is not logged in OR user is not super_admin
-    console.log("MaintenanceGuard check:", { 
-      effectiveMaintenance, 
-      userRole: user?.role, 
-      userId: user?.id,
-      pathname: location.pathname 
-    });
-    
     // Check for maintenance mode (blocks everyone except super_admin)
     if (effectiveMaintenance) {
-      if (!user || (user.role !== 'super_admin' && user.role !== 'superadmin')) {
-        console.log("MaintenanceGuard: SHOWING maintenance page for:", user?.role || 'no user');
+      const roleToCheck = currentUserRole !== undefined ? currentUserRole : userRole;
+      if (!roleToCheck || (roleToCheck !== 'super_admin' && roleToCheck !== 'superadmin')) {
+        console.log("MaintenanceGuard: SHOWING maintenance page for:", roleToCheck || 'no user');
         setShowMaintenance(true);
       } else {
-        console.log("MaintenanceGuard: Allowing access for super admin during maintenance:", user.role);
+        console.log("MaintenanceGuard: Allowing access for super admin during maintenance:", roleToCheck);
         setShowMaintenance(false);
       }
     } else {
@@ -76,18 +53,39 @@ export default function MaintenanceGuard({ children }) {
       setShowMaintenance(false);
     }
     
+    setLoading(false);
     console.log("=== MaintenanceGuard Decision ===");
     console.log("showMaintenance:", showMaintenance);
   };
 
   useEffect(() => {
-    checkMaintenanceStatus();
+    // Get user role from localStorage (if available)
+    const getUserRole = () => {
+      try {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          const parsed = JSON.parse(userData);
+          return parsed.role;
+        }
+      } catch (e) {
+        console.warn('Could not parse user from localStorage:', e);
+      }
+      return null;
+    };
+
+    const updateUserRoleAndCheck = () => {
+      const newRole = getUserRole();
+      setUserRole(newRole);
+      checkMaintenanceStatus(newRole);
+    };
+
+    updateUserRoleAndCheck();
     
     // Listen for localStorage changes
     const handleStorageChange = (e) => {
-      if (e.key === 'maintenance_mode') {
+      if (e.key === 'maintenance_mode' || e.key === 'user') {
         console.log("localStorage changed, rechecking maintenance status");
-        checkMaintenanceStatus();
+        updateUserRoleAndCheck();
       }
     };
     
@@ -97,14 +95,27 @@ export default function MaintenanceGuard({ children }) {
       checkMaintenanceStatus();
     };
     
+    // Listen for auth state changes from AuthProvider
+    const handleAuthChange = (e) => {
+      console.log("Auth state changed:", e.detail);
+      if (e.detail?.user) {
+        setUserRole(e.detail.user.role);
+      } else {
+        setUserRole(null);
+      }
+      checkMaintenanceStatus();
+    };
+    
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('maintenanceModeChanged', handleCustomEvent);
+    window.addEventListener('authStateChanged', handleAuthChange);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('maintenanceModeChanged', handleCustomEvent);
+      window.removeEventListener('authStateChanged', handleAuthChange);
     };
-  }, [maintenanceMode, user, location.pathname, loading]);
+  }, [location.pathname]);
 
   // Check for maintenance message from login
   useEffect(() => {

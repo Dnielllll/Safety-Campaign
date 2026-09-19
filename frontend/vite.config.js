@@ -14,10 +14,7 @@ export default defineConfig({
     host: true, // Fixes WebSocket connection issues
     strictPort: false, // Allow port to change if 5173 is busy
     hmr: {
-      protocol: 'ws',
-      host: 'localhost',
-      port: 5173,
-      clientPort: 5173,
+      overlay: true,
     },
     watch: {
       usePolling: true, // Fixes file watching issues on some systems

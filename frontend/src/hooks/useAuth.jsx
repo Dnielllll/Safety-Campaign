@@ -86,8 +86,14 @@ export function AuthProvider({ children }) {
         if (session?.user) {
           const profile = await ensureProfile(session.user);
           setUser(profile);
+          localStorage.setItem('user', JSON.stringify(profile));
+          // Dispatch event for MaintenanceGuard
+          window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: profile } }));
         } else {
           setUser(null);
+          localStorage.removeItem('user');
+          // Dispatch event for MaintenanceGuard
+          window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: null } }));
         }
         
         // Load system settings for maintenance mode and auth settings
@@ -192,8 +198,14 @@ export function AuthProvider({ children }) {
         if (loginInProgress.current) return;
         const profile = await ensureProfile(session.user);
         setUser(profile);
+        localStorage.setItem('user', JSON.stringify(profile));
+        // Dispatch event for MaintenanceGuard
+        window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: profile } }));
       } else if (event === "SIGNED_OUT") {
         setUser(null);
+        localStorage.removeItem('user');
+        // Dispatch event for MaintenanceGuard
+        window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: null } }));
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
         // keep current user, just refresh token silently
       }
@@ -559,6 +571,9 @@ export function AuthProvider({ children }) {
       localStorage.setItem('login_time', new Date().toISOString());
 
       setUser(profile);
+      localStorage.setItem('user', JSON.stringify(profile));
+      // Dispatch event for MaintenanceGuard
+      window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: profile } }));
       return profile;
     } finally {
       loginInProgress.current = false;
@@ -593,6 +608,7 @@ export function AuthProvider({ children }) {
       "maintenance_mode",
       "maintenance_message",
       "login_time",
+      "user",
       // Clear all OTP-related data
       ...Object.keys(localStorage).filter(key => key.startsWith('otp_')),
       ...Object.keys(localStorage).filter(key => key.startsWith('otp_verified_at_')),
@@ -623,6 +639,9 @@ export function AuthProvider({ children }) {
     root.classList.add("light");
     
     setUser(null);
+    localStorage.removeItem('user');
+    // Dispatch event for MaintenanceGuard
+    window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: null } }));
   };
 
 
