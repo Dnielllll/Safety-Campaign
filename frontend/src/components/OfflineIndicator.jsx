@@ -110,20 +110,6 @@ export default function OfflineIndicator() {
             </Badge>
           </div>
         )}
-
-        {/* DEBUG: Force offline button for testing */}
-        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
-          <button
-            onClick={() => {
-              console.log('🔴 Forcing offline mode for testing');
-              setIsOnline(false);
-              document.body.style.paddingTop = `${BANNER_HEIGHT}px`;
-            }}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs px-2 py-1 rounded"
-          >
-            Test Offline
-          </button>
-        </div>
       </>
     );
   }
