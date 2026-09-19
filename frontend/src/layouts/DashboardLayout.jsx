@@ -276,29 +276,22 @@ export default function DashboardLayout({ role }) {
               <p className="text-xs text-muted-foreground truncate">{roleLabel}</p>
             </div>
           )}
+          {/* Desktop collapse button - hidden on mobile */}
           <button
-            onClick={() => {
-              setCollapsed((c) => !c);
-              // Close mobile sidebar when collapsing
-              if (mobileOpen && !collapsed) {
-                setMobileOpen(false);
-              }
-            }}
-            className="ml-auto rounded-md p-1.5 text-muted-foreground hover:bg-secondary transition-colors shrink-0"
+            onClick={() => setCollapsed((c) => !c)}
+            className="hidden lg:block ml-auto rounded-md p-1.5 text-muted-foreground hover:bg-secondary transition-colors shrink-0"
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? <Menu className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
-          {/* Mobile close button */}
-          {mobileOpen && (
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="lg:hidden ml-2 rounded-md p-1.5 text-muted-foreground hover:bg-secondary transition-colors shrink-0"
-              title="Close sidebar"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-          )}
+          {/* Mobile close button - only shows on mobile */}
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="lg:hidden ml-auto rounded-md p-1.5 text-muted-foreground hover:bg-secondary transition-colors shrink-0"
+            title="Close sidebar"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
         </div>
 
         <nav className="flex-1 overflow-y-auto p-2 scrollbar-thin">
