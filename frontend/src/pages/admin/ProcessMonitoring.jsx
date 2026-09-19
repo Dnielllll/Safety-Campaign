@@ -151,18 +151,18 @@ export default function ProcessMonitoring() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Process Monitoring</h1>
-          <p className="text-muted-foreground text-sm mt-1">Track campaign performance and system metrics</p>
+          <h1 className="text-xl sm:text-2xl font-bold">Process Monitoring</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-1">Track campaign performance and system metrics</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           {lastUpdated && (
             <span className="text-xs text-muted-foreground">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </span>
           )}
-          <Button onClick={fetchMetrics} size="sm" variant="outline">
+          <Button onClick={fetchMetrics} size="sm" variant="outline" className="w-full sm:w-auto">
             <RefreshCw className="h-4 w-4 mr-1" /> Refresh
           </Button>
         </div>
