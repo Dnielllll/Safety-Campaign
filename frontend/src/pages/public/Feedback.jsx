@@ -63,10 +63,10 @@ export default function Feedback() {
   return (
     <div className="container py-8 max-w-2xl">
       <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-          <MessageSquare className="h-6 w-6 text-primary" /> Submit Feedback
+        <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Submit Feedback
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">
           Share your comments, suggestions, concerns, or complaints about public safety campaigns and barangay services.
         </p>
       </div>

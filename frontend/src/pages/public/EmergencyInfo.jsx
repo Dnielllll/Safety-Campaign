@@ -51,10 +51,10 @@ export default function EmergencyInfo() {
       </div>
 
       <div>
-        <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-          <ShieldAlert className="h-6 w-6 text-destructive" /> Emergency Information
+        <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <ShieldAlert className="h-5 w-5 sm:h-6 sm:w-6 text-destructive" /> Emergency Information
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">
           Important contacts, evacuation centers, and safety guidelines for Barangay 178 residents.
         </p>
       </div>

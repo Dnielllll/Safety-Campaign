@@ -251,10 +251,10 @@ export default function StaffCampaigns() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold">Campaign Management</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="font-display text-xl sm:text-2xl font-bold">Campaign Management</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm">
             Create and manage your own campaigns. Check <a href="/staff/all-campaigns" className="text-primary hover:underline">All Campaigns</a> to see existing campaigns and avoid duplicates.
           </p>
         </div>
@@ -263,7 +263,7 @@ export default function StaffCampaigns() {
           setOpen(val);
         }}>
           <DialogTrigger asChild>
-            <Button onClick={handleNew}><Plus className="h-4 w-4 mr-1" /> New Draft</Button>
+            <Button onClick={handleNew} className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-1" /> New Draft</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>

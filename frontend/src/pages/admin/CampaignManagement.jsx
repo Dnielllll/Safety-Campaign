@@ -286,13 +286,13 @@ export default function CampaignManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold">Campaign Management</h1>
-          <p className="text-muted-foreground text-sm">Create, edit, schedule, and manage public safety campaigns.</p>
+          <h1 className="font-display text-xl sm:text-2xl font-bold">Campaign Management</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm">Create, edit, schedule, and manage public safety campaigns.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={refreshing}>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={refreshing} className="w-full sm:w-auto sm:size-icon">
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           </Button>
           <Dialog open={open} onOpenChange={(val) => {
@@ -300,7 +300,7 @@ export default function CampaignManagement() {
             if (!val) { setRevisionComment(""); setEditingStatus(""); }
           }}>
             <DialogTrigger asChild>
-              <Button onClick={openNewCampaign}><Plus className="h-4 w-4 mr-1" /> New Campaign</Button>
+              <Button onClick={openNewCampaign} className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-1" /> New Campaign</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>

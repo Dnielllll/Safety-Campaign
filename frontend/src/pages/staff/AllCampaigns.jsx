@@ -142,15 +142,15 @@ export default function AllCampaigns() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold">All Campaigns</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="font-display text-xl sm:text-2xl font-bold">All Campaigns</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm">
             View all campaigns from all staff members to avoid creating duplicates.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={fetchAllCampaigns} disabled={loading}>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={fetchAllCampaigns} disabled={loading} className="w-full sm:w-auto">
             <Loader2 className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
@@ -159,7 +159,7 @@ export default function AllCampaigns() {
             setOpen(val);
           }}>
             <DialogTrigger asChild>
-              <Button onClick={handleNewCampaign}><Plus className="h-4 w-4 mr-1" /> Create New Campaign</Button>
+              <Button onClick={handleNewCampaign} className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-1" /> Create New Campaign</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>

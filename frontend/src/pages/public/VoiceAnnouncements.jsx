@@ -74,10 +74,10 @@ export default function VoiceAnnouncements() {
   return (
     <div className="container py-8 space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-          <Volume2 className="h-6 w-6 text-primary" /> AI Voice Announcements
+        <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <Volume2 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> AI Voice Announcements
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">
           Listen to public safety announcements read aloud by your device's built-in Text-to-Speech — improving accessibility for all residents.
         </p>
       </div>

@@ -18,10 +18,10 @@ export default function AboutBarangay() {
   return (
     <div className="container py-8 space-y-8">
       <div>
-        <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-          <Building2 className="h-6 w-6 text-primary" /> About Barangay 178
+        <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> About Barangay 178
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">
           Know your barangay officials and locate the barangay hall in Camarin, North Caloocan City.
         </p>
       </div>

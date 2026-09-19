@@ -128,10 +128,10 @@ export default function Surveys() {
   return (
     <div className="container py-8 space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-          <ClipboardList className="h-6 w-6 text-primary" /> Community Surveys
+        <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <ClipboardList className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Community Surveys
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">
           Participate in surveys to help evaluate the effectiveness of public safety campaigns in Barangay 178.
         </p>
       </div>
