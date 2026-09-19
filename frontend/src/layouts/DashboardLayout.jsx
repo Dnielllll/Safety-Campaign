@@ -208,6 +208,7 @@ export default function DashboardLayout({ role }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState(
     role === "super_admin"
@@ -242,11 +243,24 @@ export default function DashboardLayout({ role }) {
   return (
     <div className="flex min-h-screen bg-background">
       {loggingOut && <LogoutOverlay onDone={doLogout} />}
+      
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+      
       {/* Sidebar */}
       <aside
         className={cn(
-          "flex flex-col border-r border-border bg-card transition-all duration-300 h-screen sticky top-0",
-          collapsed ? "w-16" : "w-64"
+          "flex flex-col border-r border-border bg-card transition-all duration-300 h-screen sticky top-0 z-50",
+          // Desktop: always visible
+          "hidden lg:flex",
+          collapsed ? "w-16" : "w-64",
+          // Mobile: fixed overlay when open
+          mobileOpen && "fixed inset-y-0 left-0 w-64 flex shadow-xl lg:hidden"
         )}
       >
         {/* Sidebar Header with logo */}
@@ -263,12 +277,28 @@ export default function DashboardLayout({ role }) {
             </div>
           )}
           <button
-            onClick={() => setCollapsed((c) => !c)}
+            onClick={() => {
+              setCollapsed((c) => !c);
+              // Close mobile sidebar when collapsing
+              if (mobileOpen && !collapsed) {
+                setMobileOpen(false);
+              }
+            }}
             className="ml-auto rounded-md p-1.5 text-muted-foreground hover:bg-secondary transition-colors shrink-0"
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? <Menu className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
+          {/* Mobile close button */}
+          {mobileOpen && (
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="lg:hidden ml-2 rounded-md p-1.5 text-muted-foreground hover:bg-secondary transition-colors shrink-0"
+              title="Close sidebar"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         <nav className="flex-1 overflow-y-auto p-2 scrollbar-thin">
@@ -330,10 +360,19 @@ export default function DashboardLayout({ role }) {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/95 px-6 backdrop-blur shrink-0">
-          <div>
-            <p className="text-sm font-medium text-foreground hidden sm:block">Barangay 178 Safety Campaign Management System</p>
-            <p className="text-xs text-muted-foreground">Camarin, North Caloocan City</p>
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 lg:px-6 backdrop-blur shrink-0">
+          <div className="flex items-center gap-3">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden rounded-md p-2 text-muted-foreground hover:bg-secondary transition-colors"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <div>
+              <p className="text-sm font-medium text-foreground hidden sm:block">Barangay 178 Safety Campaign Management System</p>
+              <p className="text-xs text-muted-foreground">Camarin, North Caloocan City</p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
@@ -356,7 +395,7 @@ export default function DashboardLayout({ role }) {
           </div>
         </header>
 
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
           <Outlet />
         </main>
       </div>
