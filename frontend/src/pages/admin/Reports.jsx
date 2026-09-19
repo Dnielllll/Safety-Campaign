@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { BarChart3, Loader2, RefreshCw } from "lucide-react";
+import { BarChart3, Loader2, RefreshCw, Download } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { supabaseHelpers } from "@/lib/supabase.js";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import Papa from "papaparse";
+import ExportPasswordDialog from "@/components/ExportPasswordDialog";
 
 export default function AdminReports() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [pendingExportFormat, setPendingExportFormat] = useState(null);
 
   useEffect(() => {
     fetchReports();
@@ -59,6 +65,67 @@ export default function AdminReports() {
     }
   };
 
+  const handleExport = (format) => {
+    setPendingExportFormat(format);
+    setShowExportDialog(true);
+  };
+
+  const handleConfirmedExport = async (password) => {
+    try {
+      if (pendingExportFormat === 'pdf') {
+        const doc = new jsPDF();
+        
+        // Add title
+        doc.setFontSize(18);
+        doc.text('Campaign Engagement Report', 14, 20);
+        doc.setFontSize(10);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
+        
+        // Add table
+        const tableData = data.map(item => [
+          item.fullTitle,
+          item.category?.replace(/_/g, ' ') || 'N/A',
+          item.status?.replace(/_/g, ' ') || 'N/A',
+          item.engagement,
+          item.engagement > 400 ? 'High' : item.engagement > 300 ? 'Good' : item.engagement > 200 ? 'Moderate' : 'Low'
+        ]);
+        
+        autoTable(doc, {
+          head: [['Campaign', 'Category', 'Status', 'Engagements', 'Performance']],
+          body: tableData,
+          startY: 35,
+          styles: {
+            fontSize: 8,
+            cellPadding: 3,
+          },
+        });
+        
+        doc.save('campaign-engagement-report.pdf');
+      } else if (pendingExportFormat === 'csv') {
+        const csvData = data.map(item => ({
+          Campaign: item.fullTitle,
+          Category: item.category?.replace(/_/g, ' ') || 'N/A',
+          Status: item.status?.replace(/_/g, ' ') || 'N/A',
+          Engagements: item.engagement,
+          Performance: item.engagement > 400 ? 'High' : item.engagement > 300 ? 'Good' : item.engagement > 200 ? 'Moderate' : 'Low'
+        }));
+        
+        const csv = Papa.unparse(csvData);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'campaign-engagement-report.csv';
+        link.click();
+      }
+      
+      setShowExportDialog(false);
+      setPendingExportFormat(null);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Export failed. Please try again.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -68,10 +135,20 @@ export default function AdminReports() {
           </h1>
           <p className="text-muted-foreground text-xs sm:text-sm">Performance of all campaigns in the system.</p>
         </div>
-        <Button variant="outline" onClick={fetchReports} disabled={loading} className="w-full sm:w-auto">
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => handleExport('pdf')} disabled={loading} className="w-full sm:w-auto">
+            <Download className="h-4 w-4 mr-1" />
+            Export PDF
+          </Button>
+          <Button variant="outline" onClick={() => handleExport('csv')} disabled={loading} className="w-full sm:w-auto">
+            <Download className="h-4 w-4 mr-1" />
+            Export CSV
+          </Button>
+          <Button variant="outline" onClick={fetchReports} disabled={loading} className="w-full sm:w-auto">
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -150,6 +227,13 @@ export default function AdminReports() {
           </CardContent>
         </Card>
       )}
+      
+      <ExportPasswordDialog
+        open={showExportDialog}
+        onClose={() => setShowExportDialog(false)}
+        onConfirm={handleConfirmedExport}
+        title={`Export ${pendingExportFormat?.toUpperCase() ?? ''} Report`}
+      />
     </div>
   );
 }
