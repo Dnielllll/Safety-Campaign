@@ -492,7 +492,8 @@ export default function AuditTrail() {
             <CardDescription>System activity and user actions</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[600px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Actor</TableHead>
@@ -554,6 +555,7 @@ export default function AuditTrail() {
                 )}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       )}

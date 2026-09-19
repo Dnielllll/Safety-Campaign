@@ -311,14 +311,15 @@ export default function NotificationManagement() {
       ) : (
         <Card>
           <CardContent className="p-0">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[600px]">
               <thead>
                 <tr className="border-b border-border text-left text-muted-foreground">
-                  <th className="p-4 font-medium">Campaign</th>
-                  <th className="p-4 font-medium">Channel</th>
-                  <th className="p-4 font-medium">Recipients</th>
-                  <th className="p-4 font-medium">Status</th>
-                  <th className="p-4 font-medium text-right">Actions</th>
+                  <th className="p-3 sm:p-4 font-medium whitespace-nowrap">Campaign</th>
+                  <th className="p-3 sm:p-4 font-medium whitespace-nowrap">Channel</th>
+                  <th className="p-3 sm:p-4 font-medium whitespace-nowrap">Recipients</th>
+                  <th className="p-3 sm:p-4 font-medium whitespace-nowrap">Status</th>
+                  <th className="p-3 sm:p-4 font-medium text-right whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -327,15 +328,15 @@ export default function NotificationManagement() {
                   const Icon = meta.icon;
                   return (
                     <tr key={n.id} className="border-b border-border last:border-0 hover:bg-secondary/40 transition-colors">
-                      <td className="p-4 font-medium">{n.campaign}</td>
-                      <td className="p-4 capitalize">{n.channel}</td>
-                      <td className="p-4 text-muted-foreground">{(n.count || 0).toLocaleString()}</td>
-                      <td className="p-4">
+                      <td className="p-3 sm:p-4 font-medium whitespace-nowrap">{n.campaign}</td>
+                      <td className="p-3 sm:p-4 capitalize whitespace-nowrap">{n.channel}</td>
+                      <td className="p-3 sm:p-4 text-muted-foreground whitespace-nowrap">{(n.count || 0).toLocaleString()}</td>
+                      <td className="p-3 sm:p-4 whitespace-nowrap">
                         <Badge variant={meta.variant} className="gap-1">
                           <Icon className="h-3 w-3" /> {n.status}
                         </Badge>
                       </td>
-                      <td className="p-4 text-right">
+                      <td className="p-3 sm:p-4 text-right whitespace-nowrap">
                         {n.status === "failed" && (
                           <Button variant="ghost" size="sm" onClick={() => resend(n.id)}>
                             <RefreshCw className="h-4 w-4 mr-1" /> Resend
@@ -354,6 +355,7 @@ export default function NotificationManagement() {
                 )}
               </tbody>
             </table>
+            </div>
           </CardContent>
         </Card>
       )}

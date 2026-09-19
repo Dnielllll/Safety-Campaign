@@ -115,7 +115,7 @@ export default function SuperAdminReports() {
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[600px]">
                 <thead>
                   <tr className="border-b">
                     <th className="text-left py-2 px-3 font-medium">Campaign</th>
