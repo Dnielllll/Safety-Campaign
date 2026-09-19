@@ -266,7 +266,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-6 px-4 sm:px-6 lg:px-8">
       <div>
         <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
           <UserCircle className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Profile Management

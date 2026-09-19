@@ -318,6 +318,35 @@ export default function PublicLayout() {
 
         {/* Desktop main content */}
         <div className="hidden lg:flex flex-1 flex-col">
+          {/* Desktop header */}
+          <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 lg:px-6 backdrop-blur shrink-0">
+            <div className="flex items-center gap-3">
+              <div>
+                <p className="text-sm font-medium text-foreground">Barangay 178 Resident Portal</p>
+                <p className="text-xs text-muted-foreground">Camarin, North Caloocan City</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <span className="text-xs text-muted-foreground hidden sm:inline-flex border border-border px-2 py-1 rounded">
+                Resident
+              </span>
+              <Avatar className="h-8 w-8">
+                {user?.avatar_url ? (
+                  <AvatarImage src={user.avatar_url} alt={user?.name} />
+                ) : (
+                  <AvatarFallback className="bg-primary text-white text-xs font-bold">
+                    {user?.name?.[0] ?? "R"}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <div className="hidden sm:block leading-tight">
+                <p className="text-sm font-medium">{user?.name ?? "Resident User"}</p>
+                <p className="text-xs text-muted-foreground">{user?.email ?? "—"}</p>
+              </div>
+            </div>
+          </header>
+
           <main className="flex-1">
             <Outlet />
           </main>

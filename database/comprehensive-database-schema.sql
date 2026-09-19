@@ -80,6 +80,32 @@ CREATE TABLE IF NOT EXISTS public.feedback (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Surveys Table (created by staff, approved/published by admin)
+CREATE TABLE IF NOT EXISTS public.surveys (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  campaign_id UUID REFERENCES public.campaigns(id) ON DELETE SET NULL,
+  created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  status TEXT DEFAULT 'draft',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  published_at TIMESTAMP WITH TIME ZONE,
+  questions JSONB DEFAULT '[]'::jsonb,
+  admin_notes TEXT,
+  CONSTRAINT valid_survey_status CHECK (status IN ('draft', 'pending_approval', 'published', 'rejected', 'archived'))
+);
+
+-- Survey Responses Table (responses from residents)
+CREATE TABLE IF NOT EXISTS public.survey_responses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  survey_id UUID REFERENCES public.surveys(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  responses JSONB DEFAULT '{}'::jsonb,
+  score INTEGER,
+  comments TEXT,
+  submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Chatbot Training Table
 CREATE TABLE IF NOT EXISTS public.chatbot_training (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -162,6 +188,15 @@ CREATE INDEX IF NOT EXISTS idx_notifications_campaign_id ON public.notifications
 CREATE INDEX IF NOT EXISTS idx_feedback_user_id ON public.feedback(user_id);
 CREATE INDEX IF NOT EXISTS idx_feedback_campaign_id ON public.feedback(campaign_id);
 
+-- Surveys indexes
+CREATE INDEX IF NOT EXISTS idx_surveys_created_by ON public.surveys(created_by);
+CREATE INDEX IF NOT EXISTS idx_surveys_status ON public.surveys(status);
+CREATE INDEX IF NOT EXISTS idx_surveys_campaign_id ON public.surveys(campaign_id);
+
+-- Survey responses indexes
+CREATE INDEX IF NOT EXISTS idx_survey_responses_survey_id ON public.survey_responses(survey_id);
+CREATE INDEX IF NOT EXISTS idx_survey_responses_user_id ON public.survey_responses(user_id);
+
 -- Audit trail indexes
 CREATE INDEX IF NOT EXISTS idx_audit_trail_timestamp ON public.audit_trail(timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_trail_user_id ON public.audit_trail(user_id);
@@ -180,15 +215,17 @@ ALTER TABLE public.campaigns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.content ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feedback ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.surveys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.survey_responses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chatbot_training ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_trail ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.system_settings ENABLE ROW LEVEL SECURITY;
 
 -- Users RLS Policies
-CREATE POLICY "Users can view own profile" ON public.users FOR SELECT
+CREATE POLICY IF NOT EXISTS "Users can view own profile" ON public.users FOR SELECT
   TO authenticated USING (id = auth.uid());
 
-CREATE POLICY "Staff can view users" ON public.users FOR SELECT
+CREATE POLICY IF NOT EXISTS "Staff can view users" ON public.users FOR SELECT
   TO authenticated USING (
     EXISTS (
       SELECT 1 FROM public.users 
@@ -197,7 +234,7 @@ CREATE POLICY "Staff can view users" ON public.users FOR SELECT
     )
   );
 
-CREATE POLICY "Admins can manage users" ON public.users FOR ALL
+CREATE POLICY IF NOT EXISTS "Admins can manage users" ON public.users FOR ALL
   TO authenticated USING (
     EXISTS (
       SELECT 1 FROM public.users 
@@ -207,10 +244,10 @@ CREATE POLICY "Admins can manage users" ON public.users FOR ALL
   );
 
 -- Campaigns RLS Policies
-CREATE POLICY "Public can view published campaigns" ON public.campaigns FOR SELECT
+CREATE POLICY IF NOT EXISTS "Public can view published campaigns" ON public.campaigns FOR SELECT
   TO authenticated USING (status = 'published');
 
-CREATE POLICY "Staff can manage campaigns" ON public.campaigns FOR ALL
+CREATE POLICY IF NOT EXISTS "Staff can manage campaigns" ON public.campaigns FOR ALL
   TO authenticated USING (
     EXISTS (
       SELECT 1 FROM public.users 
@@ -220,7 +257,7 @@ CREATE POLICY "Staff can manage campaigns" ON public.campaigns FOR ALL
   );
 
 -- Content RLS Policies
-CREATE POLICY "Users can view content from published campaigns" ON public.content FOR SELECT
+CREATE POLICY IF NOT EXISTS "Users can view content from published campaigns" ON public.content FOR SELECT
   TO authenticated USING (
     EXISTS (
       SELECT 1 FROM public.campaigns 
@@ -229,7 +266,7 @@ CREATE POLICY "Users can view content from published campaigns" ON public.conten
     )
   );
 
-CREATE POLICY "Staff can manage content" ON public.content FOR ALL
+CREATE POLICY IF NOT EXISTS "Staff can manage content" ON public.content FOR ALL
   TO authenticated USING (
     EXISTS (
       SELECT 1 FROM public.users 
@@ -239,23 +276,23 @@ CREATE POLICY "Staff can manage content" ON public.content FOR ALL
   );
 
 -- Notifications RLS Policies
-CREATE POLICY "Users can view own notifications" ON public.notifications FOR SELECT
+CREATE POLICY IF NOT EXISTS "Users can view own notifications" ON public.notifications FOR SELECT
   TO authenticated USING (user_id = auth.uid());
 
-CREATE POLICY "System can insert notifications" ON public.notifications FOR INSERT
+CREATE POLICY IF NOT EXISTS "System can insert notifications" ON public.notifications FOR INSERT
   TO authenticated WITH CHECK (true);
 
-CREATE POLICY "Users can update own notifications" ON public.notifications FOR UPDATE
+CREATE POLICY IF NOT EXISTS "Users can update own notifications" ON public.notifications FOR UPDATE
   TO authenticated USING (user_id = auth.uid());
 
 -- Feedback RLS Policies
-CREATE POLICY "Users can view all feedback" ON public.feedback FOR SELECT
+CREATE POLICY IF NOT EXISTS "Users can view all feedback" ON public.feedback FOR SELECT
   TO authenticated USING (true);
 
-CREATE POLICY "Users can submit feedback" ON public.feedback FOR INSERT
+CREATE POLICY IF NOT EXISTS "Users can submit feedback" ON public.feedback FOR INSERT
   TO authenticated WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Admins can manage feedback" ON public.feedback FOR ALL
+CREATE POLICY IF NOT EXISTS "Admins can manage feedback" ON public.feedback FOR ALL
   TO authenticated USING (
     EXISTS (
       SELECT 1 FROM public.users 
@@ -264,11 +301,76 @@ CREATE POLICY "Admins can manage feedback" ON public.feedback FOR ALL
     )
   );
 
+-- Surveys RLS Policies
+CREATE POLICY IF NOT EXISTS "Public can view published surveys" ON public.surveys FOR SELECT
+  TO authenticated USING (status = 'published');
+
+CREATE POLICY IF NOT EXISTS "Staff can create surveys" ON public.surveys FOR INSERT
+  TO authenticated WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.users 
+      WHERE users.id = auth.uid() 
+      AND users.role IN ('staff', 'admin', 'super_admin', 'superadmin')
+    )
+  );
+
+CREATE POLICY IF NOT EXISTS "Staff can view own surveys" ON public.surveys FOR SELECT
+  TO authenticated USING (created_by = auth.uid());
+
+CREATE POLICY IF NOT EXISTS "Staff can update own draft surveys" ON public.surveys FOR UPDATE
+  TO authenticated USING (
+    created_by = auth.uid() 
+    AND status IN ('draft', 'pending_approval')
+  );
+
+CREATE POLICY IF NOT EXISTS "Admins can view all surveys" ON public.surveys FOR SELECT
+  TO authenticated USING (
+    EXISTS (
+      SELECT 1 FROM public.users 
+      WHERE users.id = auth.uid() 
+      AND users.role IN ('admin', 'super_admin', 'superadmin')
+    )
+  );
+
+CREATE POLICY IF NOT EXISTS "Admins can approve and publish surveys" ON public.surveys FOR UPDATE
+  TO authenticated USING (
+    EXISTS (
+      SELECT 1 FROM public.users 
+      WHERE users.id = auth.uid() 
+      AND users.role IN ('admin', 'super_admin', 'superadmin')
+    )
+  );
+
+CREATE POLICY IF NOT EXISTS "Admins can delete surveys" ON public.surveys FOR DELETE
+  TO authenticated USING (
+    EXISTS (
+      SELECT 1 FROM public.users 
+      WHERE users.id = auth.uid() 
+      AND users.role IN ('admin', 'super_admin', 'superadmin')
+    )
+  );
+
+-- Survey Responses RLS Policies
+CREATE POLICY IF NOT EXISTS "Users can view own survey responses" ON public.survey_responses FOR SELECT
+  TO authenticated USING (user_id = auth.uid());
+
+CREATE POLICY IF NOT EXISTS "Admins can view all survey responses" ON public.survey_responses FOR SELECT
+  TO authenticated USING (
+    EXISTS (
+      SELECT 1 FROM public.users 
+      WHERE users.id = auth.uid() 
+      AND users.role IN ('admin', 'super_admin', 'superadmin', 'staff')
+    )
+  );
+
+CREATE POLICY IF NOT EXISTS "Users can submit survey responses" ON public.survey_responses FOR INSERT
+  TO authenticated WITH CHECK (user_id = auth.uid());
+
 -- Chatbot Training RLS Policies
-CREATE POLICY "Public can view active training data" ON public.chatbot_training FOR SELECT
+CREATE POLICY IF NOT EXISTS "Public can view active training data" ON public.chatbot_training FOR SELECT
   TO authenticated USING (is_active = true);
 
-CREATE POLICY "Staff can manage training data" ON public.chatbot_training FOR ALL
+CREATE POLICY IF NOT EXISTS "Staff can manage training data" ON public.chatbot_training FOR ALL
   TO authenticated USING (
     EXISTS (
       SELECT 1 FROM public.users 
@@ -278,7 +380,7 @@ CREATE POLICY "Staff can manage training data" ON public.chatbot_training FOR AL
   );
 
 -- Audit Trail RLS Policies
-CREATE POLICY "Super admins can view all audit logs" ON public.audit_trail FOR SELECT
+CREATE POLICY IF NOT EXISTS "Super admins can view all audit logs" ON public.audit_trail FOR SELECT
   TO authenticated USING (
     EXISTS (
       SELECT 1 FROM public.users 
@@ -287,7 +389,7 @@ CREATE POLICY "Super admins can view all audit logs" ON public.audit_trail FOR S
     )
   );
 
-CREATE POLICY "Admins can view audit logs" ON public.audit_trail FOR SELECT
+CREATE POLICY IF NOT EXISTS "Admins can view audit logs" ON public.audit_trail FOR SELECT
   TO authenticated USING (
     EXISTS (
       SELECT 1 FROM public.users 
@@ -296,11 +398,11 @@ CREATE POLICY "Admins can view audit logs" ON public.audit_trail FOR SELECT
     )
   );
 
-CREATE POLICY "System can insert audit logs" ON public.audit_trail FOR INSERT
+CREATE POLICY IF NOT EXISTS "System can insert audit logs" ON public.audit_trail FOR INSERT
   TO authenticated WITH CHECK (true);
 
 -- System Settings RLS Policies
-CREATE POLICY "Super admins can manage system settings" ON public.system_settings FOR ALL
+CREATE POLICY IF NOT EXISTS "Super admins can manage system settings" ON public.system_settings FOR ALL
   TO authenticated USING (
     EXISTS (
       SELECT 1 FROM public.users 
@@ -309,7 +411,7 @@ CREATE POLICY "Super admins can manage system settings" ON public.system_setting
     )
   );
 
-CREATE POLICY "Users can view system settings" ON public.system_settings FOR SELECT
+CREATE POLICY IF NOT EXISTS "Users can view system settings" ON public.system_settings FOR SELECT
   TO authenticated USING (true);
 
 -- ============================================================================

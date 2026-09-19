@@ -230,8 +230,9 @@ export default function ContentManagement() {
           <p className="text-muted-foreground text-xs sm:text-sm">Manage announcements, posters, infographics, videos, and advisories.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={refreshing} className="w-full sm:w-auto sm:size-icon">
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="w-full sm:w-auto">
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>

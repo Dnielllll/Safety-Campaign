@@ -25,6 +25,7 @@ import {
   Database,
   ShieldAlert,
   Globe,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth.jsx";
@@ -97,7 +98,6 @@ const adminNavGroups = [
     title: "Communication",
     items: [
       { to: "/admin/users", label: "Users", icon: Users },
-      { to: "/admin/notifications", label: "Notifications", icon: BellRing },
       { to: "/admin/feedback", label: "Feedback", icon: MessageSquareText },
     ],
   },
@@ -140,6 +140,7 @@ const staffNavGroups = [
     items: [
       { to: "/staff/notifications", label: "Notifications", icon: BellRing },
       { to: "/staff/feedback", label: "Feedback", icon: MessageSquareText },
+      { to: "/staff/surveys", label: "Surveys", icon: ClipboardList },
     ],
   },
   {

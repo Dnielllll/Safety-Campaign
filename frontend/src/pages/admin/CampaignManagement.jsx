@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Search, Calendar, Archive, Trash2, Wand2, Loader2, RefreshCw, CheckSquare, MessageSquare, AlertTriangle, User } from "lucide-react";
+import { Plus, Search, Calendar, Archive, Trash2, Wand2, Loader2, RefreshCw, CheckSquare, MessageSquare, AlertTriangle, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { generateAIResponse } from "@/lib/ai.js";
 import { supabase, supabaseHelpers } from "@/lib/supabase.js";
 import { logAuditEvent } from "@/lib/auditLogger.js";
@@ -51,6 +52,8 @@ export default function CampaignManagement() {
   const [saving, setSaving] = useState(false);
   const [revisionComment, setRevisionComment] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchCampaigns();
@@ -59,18 +62,57 @@ export default function CampaignManagement() {
   const fetchCampaigns = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First try with users join
+      let { data, error } = await supabase
         .from("campaigns")
         .select("*, users(name, email)")
         .order("created_at", { ascending: false });
 
+      if (error) {
+        console.log("Error with users join, trying without:", error);
+        // Fallback: fetch without users join
+        const fallback = await supabase
+          .from("campaigns")
+          .select("*")
+          .order("created_at", { ascending: false });
+        
+        data = fallback.data;
+        error = fallback.error;
+      }
+
       if (error) throw error;
+      
+      console.log("Fetched campaigns:", data);
+      console.log("Total campaigns:", data?.length || 0);
+      
       if (data) {
-        setCampaigns(data.map(c => ({
-          ...c,
-          category: c.campaign_type || "community",
-          creatorName: c.users?.name || c.users?.email || "Unknown",
-        })));
+        // If users join didn't work, fetch user names separately
+        if (data.length > 0 && !data[0].users) {
+          const userIds = [...new Set(data.map(c => c.created_by).filter(Boolean))];
+          const { data: users } = await supabase
+            .from("users")
+            .select("id, name, email")
+            .in("id", userIds);
+          
+          const userMap = {};
+          users?.forEach(u => {
+            userMap[u.id] = u.name || u.email || "Unknown";
+          });
+          
+          setCampaigns(data.map(c => ({
+            ...c,
+            category: c.campaign_type || "community",
+            creatorName: userMap[c.created_by] || c.created_by || "Unknown",
+            createdAt: c.created_at ? new Date(c.created_at).toLocaleDateString() : "N/A",
+          })));
+        } else {
+          setCampaigns(data.map(c => ({
+            ...c,
+            category: c.campaign_type || "community",
+            creatorName: c.users?.name || c.users?.email || c.created_by || "Unknown",
+            createdAt: c.created_at ? new Date(c.created_at).toLocaleDateString() : "N/A",
+          })));
+        }
       }
     } catch (err) {
       console.error("Error fetching campaigns:", err);
@@ -85,9 +127,26 @@ export default function CampaignManagement() {
     setRefreshing(false);
   };
 
-  const filtered = campaigns.filter((c) =>
-    (c.title || "").toLowerCase().includes(query.toLowerCase())
-  );
+  const filtered = campaigns.filter((c) => {
+    const titleMatch = (c.title || "").toLowerCase().includes(query.toLowerCase());
+    const creatorMatch = (c.creatorName || "").toLowerCase().includes(query.toLowerCase());
+    return titleMatch || creatorMatch;
+  });
+
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedCampaigns = filtered.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   const handleAIGenerate = async () => {
     if (!form.title) {
@@ -289,22 +348,20 @@ export default function CampaignManagement() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-display text-xl sm:text-2xl font-bold">Campaign Management</h1>
-          <p className="text-muted-foreground text-xs sm:text-sm">Create, edit, schedule, and manage public safety campaigns.</p>
+          <p className="text-muted-foreground text-xs sm:text-sm">Review, edit, approve, and manage public safety campaigns.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={refreshing} className="w-full sm:w-auto sm:size-icon">
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="w-full sm:w-auto">
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
           <Dialog open={open} onOpenChange={(val) => {
             setOpen(val);
             if (!val) { setRevisionComment(""); setEditingStatus(""); }
           }}>
-            <DialogTrigger asChild>
-              <Button onClick={openNewCampaign} className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-1" /> New Campaign</Button>
-            </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingId ? "Edit Campaign" : "Create New Campaign"}</DialogTitle>
+                <DialogTitle>{editingId ? "Edit Campaign" : "Review Campaign"}</DialogTitle>
               </DialogHeader>
 
               {/* Submitted-for-review notice */}
@@ -322,23 +379,11 @@ export default function CampaignManagement() {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Campaign Topic or Title</Label>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleAIGenerate}
-                      disabled={isGenerating || !form.title}
-                      className="h-8 text-primary hover:text-primary hover:bg-primary/10"
-                    >
-                      {isGenerating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wand2 className="h-4 w-4 mr-2" />}
-                      {isGenerating ? "Generating..." : "Generate with AI"}
-                    </Button>
-                  </div>
+                  <Label>Campaign Topic or Title</Label>
                   <Input
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    placeholder="Type a topic and click Generate with AI..."
+                    disabled={isSubmittedForReview}
                   />
                 </div>
 
@@ -348,6 +393,7 @@ export default function CampaignManagement() {
                     rows={6}
                     value={form.objectives}
                     onChange={(e) => setForm({ ...form, objectives: e.target.value })}
+                    disabled={isSubmittedForReview}
                     placeholder="Describe the campaign objectives..."
                   />
                 </div>
@@ -355,7 +401,7 @@ export default function CampaignManagement() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Category</Label>
-                    <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                    <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })} disabled={isSubmittedForReview}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="emergency">Emergency</SelectItem>
@@ -368,7 +414,7 @@ export default function CampaignManagement() {
                   </div>
                   <div className="space-y-2">
                     <Label>Priority</Label>
-                    <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v })}>
+                    <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v })} disabled={isSubmittedForReview}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="low">Low</SelectItem>
@@ -459,55 +505,128 @@ export default function CampaignManagement() {
         />
       </div>
 
+      {/* Debug info - remove in production */}
+      <div className="text-xs text-muted-foreground mb-2">
+        Total campaigns fetched: {campaigns.length} | Filtered: {filtered.length} | Page: {currentPage}/{totalPages}
+      </div>
+
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-4">
-          {filtered.map((c) => (
-            <Card key={c.id} className={c.status === "submitted" || c.status === "pending_approval" ? "border-amber-300" : ""}>
-              <CardHeader>
-                <div className="flex items-center justify-between mb-1">
-                  <Badge variant={statusVariant[c.status] || "outline"}>
-                    {statusLabel[c.status] || c.status?.replace(/_/g, " ")}
-                  </Badge>
-                  <Badge variant="outline">{c.priority || "medium"}</Badge>
-                </div>
-                <CardTitle className="text-base">{c.title || "Untitled Campaign"}</CardTitle>
-                <CardDescription className="capitalize">
-                  {(c.category || c.campaign_type || "general").replace(/_/g, " ")}
-                </CardDescription>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                  <User className="h-3 w-3" />
-                  <span>Created by: {c.creatorName}</span>
-                </div>
-                {(c.status === "submitted" || c.status === "pending_approval") && (
-                  <p className="text-xs text-amber-600 mt-1">⚠️ Awaiting your review</p>
-                )}
-              </CardHeader>
-              <CardFooter className="justify-between">
-                <Button variant="ghost" size="sm" onClick={() => openEditCampaign(c)}>
-                  <Calendar className="h-4 w-4 mr-1" />
-                  {c.status === "submitted" || c.status === "pending_approval" ? "Review" : "Edit / Schedule"}
-                </Button>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => archive(c.id)} title="Archive">
-                    <Archive className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => remove(c.id)} title="Delete">
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
-          {filtered.length === 0 && (
-            <div className="col-span-full text-center py-12 text-muted-foreground">
-              No campaigns found.
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table className="min-w-[800px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap">Campaign Title</TableHead>
+                    <TableHead className="whitespace-nowrap">Creator</TableHead>
+                    <TableHead className="whitespace-nowrap">Category</TableHead>
+                    <TableHead className="whitespace-nowrap">Status</TableHead>
+                    <TableHead className="whitespace-nowrap">Priority</TableHead>
+                    <TableHead className="whitespace-nowrap">Created Date</TableHead>
+                    <TableHead className="whitespace-nowrap text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedCampaigns.map((c) => (
+                    <TableRow key={c.id} className={c.status === "submitted" || c.status === "pending_approval" ? "bg-amber-50/50" : ""}>
+                      <TableCell className="font-medium">
+                        {c.title || "Untitled Campaign"}
+                        {(c.status === "submitted" || c.status === "pending_approval") && (
+                          <span className="block text-xs text-amber-600 mt-1">⚠️ Awaiting review</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <div className="flex items-center gap-1">
+                          <User className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-sm">{c.creatorName}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap capitalize">
+                        {(c.category || c.campaign_type || "general").replace(/_/g, " ")}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <Badge variant={statusVariant[c.status] || "outline"}>
+                          {statusLabel[c.status] || c.status?.replace(/_/g, " ")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <Badge variant="outline">{c.priority || "medium"}</Badge>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                        {c.createdAt}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => openEditCampaign(c)}>
+                            <Calendar className="h-4 w-4 mr-1" />
+                            {c.status === "submitted" || c.status === "pending_approval" ? "Review" : "Edit"}
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => archive(c.id)} title="Archive">
+                            <Archive className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => remove(c.id)} title="Delete">
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filtered.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                        No campaigns found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </div>
-          )}
-        </div>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1} to {Math.min(endIndex, filtered.length)} of {filtered.length} campaigns
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(page)}
+                        className="w-8 h-8"
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
     </div>
   );

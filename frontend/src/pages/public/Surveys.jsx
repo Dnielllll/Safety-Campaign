@@ -14,7 +14,7 @@ export default function Surveys() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.from('surveys').select('*, survey_questions(*)').eq('status', 'active').order('created_at', { ascending: false })
+    supabase.from('surveys').select('*').eq('status', 'published').order('created_at', { ascending: false })
       .then(({ data }) => setSurveys(Array.isArray(data) && data.length > 0 ? data : mockSurveys))
       .catch(() => setSurveys(mockSurveys));
   }, []);

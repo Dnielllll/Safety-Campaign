@@ -120,6 +120,8 @@ export default function SystemSettings() {
           console.log('=== Auth settings saved ===');
           console.log('To localStorage:', authSettings);
           console.log('To database:', settingsData);
+          // Force reload system settings to apply changes immediately
+          await reloadSystemSettings();
           break;
         case 'Notifications':
           settingsData = {
@@ -426,12 +428,12 @@ export default function SystemSettings() {
       </Card>
 
       <Tabs defaultValue="general">
-        <TabsList className="w-full overflow-x-auto flex-wrap sm:grid sm:grid-cols-2 lg:grid-cols-2 gap-2">
-          <TabsTrigger value="general" className="whitespace-nowrap">General</TabsTrigger>
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security" className="whitespace-nowrap">Security</TabsTrigger>}
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth" className="whitespace-nowrap">Authentication</TabsTrigger>}
-          <TabsTrigger value="notifications" className="whitespace-nowrap">Notifications</TabsTrigger>
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="features" className="whitespace-nowrap">Features</TabsTrigger>}
+        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+          <TabsTrigger value="general">General</TabsTrigger>
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security">Security</TabsTrigger>}
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth">Authentication</TabsTrigger>}
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="features">Features</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="general">
@@ -696,10 +698,15 @@ export default function SystemSettings() {
                   <Label>Session Timeout (minutes)</Label>
                   <Input
                     type="number"
+                    min="1"
+                    max="1440"
                     value={authSettings.sessionTimeout}
-                    onChange={(e) => setAuthSettings({ ...authSettings, sessionTimeout: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      setAuthSettings({ ...authSettings, sessionTimeout: isNaN(value) || value < 1 ? 4 : value });
+                    }}
                   />
-                  <p className="text-xs text-muted-foreground">Auto-logout after inactivity</p>
+                  <p className="text-xs text-muted-foreground">Auto-logout after inactivity (1-1440 minutes)</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Max Login Attempts</Label>

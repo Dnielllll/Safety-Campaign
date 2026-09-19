@@ -62,6 +62,7 @@ import StaffNotifications from "@/pages/staff/Notifications";
 import StaffFeedback from "@/pages/staff/Feedback";
 import StaffReports from "@/pages/staff/Reports";
 import StaffProfile from "@/pages/staff/Profile";
+import StaffSurveys from "@/pages/staff/Surveys";
 
 export default function App() {
   return (
@@ -178,6 +179,7 @@ export default function App() {
         <Route path="submission" element={<StaffSubmission />} />
         <Route path="notifications" element={<StaffNotifications />} />
         <Route path="feedback" element={<StaffFeedback />} />
+        <Route path="surveys" element={<StaffSurveys />} />
         <Route path="reports" element={<StaffReports />} />
         <Route path="profile" element={<StaffProfile />} />
       </Route>
