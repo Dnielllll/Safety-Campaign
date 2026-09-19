@@ -43,6 +43,23 @@ export default function OfflineIndicator() {
     };
   }, []);
 
+  // Additional check for failed network requests
+  useEffect(() => {
+    const handleNetworkError = () => {
+      console.log('🔴 Network error detected, setting offline');
+      setIsOnline(false);
+      document.body.style.paddingTop = `${BANNER_HEIGHT}px`;
+    };
+
+    window.addEventListener('error', handleNetworkError);
+    window.addEventListener('unhandledrejection', handleNetworkError);
+
+    return () => {
+      window.removeEventListener('error', handleNetworkError);
+      window.removeEventListener('unhandledrejection', handleNetworkError);
+    };
+  }, []);
+
   const loadCachedCampaigns = () => {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       const channel = new MessageChannel();
