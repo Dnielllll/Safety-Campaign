@@ -87,12 +87,12 @@ export default function PublicDashboard() {
                 <Link
                   key={ql.to}
                   to={ql.to}
-                  className="flex flex-col items-center gap-2 rounded-xl border border-border bg-orange-50 p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-orange-100 transition-all text-center group"
+                  className="flex flex-col items-center gap-2 rounded-xl border border-border bg-white p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-gray-50 transition-all text-center group"
                 >
                   <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${ql.color} ${isEmergency ? 'animate-pulse' : ''} group-hover:scale-110 transition-transform`}>
                     <Icon className={`h-5 w-5 ${isEmergency ? 'animate-bounce' : ''}`} />
                   </div>
-                  <span className="text-xs font-medium leading-tight text-orange-900">{ql.label}</span>
+                  <span className="text-xs font-medium leading-tight text-gray-900">{ql.label}</span>
                 </Link>
               );
             })}
