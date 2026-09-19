@@ -200,21 +200,21 @@ export default function AnalyticsReports() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-primary" /> Analytics & Reports
+          <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Analytics & Reports
           </h1>
-          <p className="text-muted-foreground text-sm">Campaign reach, engagement, participation, and performance.</p>
+          <p className="text-muted-foreground text-xs sm:text-sm">Campaign reach, engagement, participation, and performance.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="w-full sm:w-auto">
             <Filter className="h-4 w-4 mr-1" /> Filters
           </Button>
-          <Button variant="outline" onClick={() => handleExport('pdf')}>
+          <Button variant="outline" onClick={() => handleExport('pdf')} className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-1" /> Export PDF
           </Button>
-          <Button variant="outline" onClick={() => handleExport('csv')}>
+          <Button variant="outline" onClick={() => handleExport('csv')} className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-1" /> Export CSV
           </Button>
         </div>

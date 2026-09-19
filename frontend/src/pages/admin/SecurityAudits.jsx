@@ -262,17 +262,17 @@ export default function SecurityAudits() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold font-display">Security & Audits</h1>
-          <p className="text-sm text-muted-foreground">Monitor system security and audit logs</p>
+          <h1 className="text-xl sm:text-2xl font-bold font-display">Security & Audits</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">Monitor system security and audit logs</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setShowExportDialog(true)}>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => setShowExportDialog(true)} className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
             Export Logs
           </Button>
-          <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
+          <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="w-full sm:w-auto">
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
