@@ -16,12 +16,16 @@ const CACHE_PREFIX = 'campaign-';
 // Install event - cache essential assets
 self.addEventListener('install', (event) => {
   console.log('[Service Worker] Installing...');
-  
+
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('[Service Worker] Caching app shell');
-        return cache.addAll(ASSETS_TO_CACHE);
+        return cache.addAll(ASSETS_TO_CACHE).catch(err => {
+          console.log('[Service Worker] Some assets failed to cache:', err);
+          // Continue even if some assets fail
+          return Promise.resolve();
+        });
       })
       .then(() => {
         console.log('[Service Worker] Installation complete');
@@ -95,6 +99,7 @@ self.addEventListener('fetch', (event) => {
           .catch(() => {
             // If offline and request is for a page, serve offline page
             if (event.request.destination === 'document') {
+              console.log('[Service Worker] Serving offline page for:', event.request.url);
               return caches.match(OFFLINE_URL);
             }
           });
