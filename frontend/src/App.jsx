@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import PublicLayout from "@/layouts/PublicLayout";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import RequireRole from "@/routes/RequireRole";
+import OfflineIndicator from "@/components/OfflineIndicator";
 
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -64,7 +65,9 @@ import StaffProfile from "@/pages/staff/Profile";
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <OfflineIndicator />
+      <Routes>
       {/* Auth */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -182,5 +185,6 @@ export default function App() {
       <Route path="/404" element={<NotFound />} />
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
+    </>
   );
 }
