@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { MessageSquareText, Reply, RefreshCw, Loader2, ClipboardList, Plus, User, CheckCircle2, XCircle, AlertTriangle, Edit } from "lucide-react";
+import { MessageSquareText, Reply, RefreshCw, Loader2, ClipboardList, User, CheckCircle2, XCircle, AlertTriangle, Edit } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { supabaseHelpers } from "@/lib/supabase.js";
 import { supabase } from "@/lib/supabase";
 
@@ -29,45 +28,13 @@ export default function FeedbackManagement() {
   // Survey states
   const [surveys, setSurveys] = useState([]);
   const [surveyResponses, setSurveyResponses] = useState([]);
-  const [surveyDialogOpen, setSurveyDialogOpen] = useState(false);
-  const [editingSurvey, setEditingSurvey] = useState(null);
-  const [surveyForm, setSurveyForm] = useState({
-    title: "",
-    description: "",
-    campaign_id: "",
-    questions: [{ question: "", type: "radio", options: ["Yes", "No"] }]
-  });
   const [surveyLoading, setSurveyLoading] = useState(false);
-  const [campaigns, setCampaigns] = useState([]);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(null);
 
   useEffect(() => {
     fetchFeedback();
     fetchSurveys();
-    fetchCampaigns();
   }, []);
-
-  const fetchCampaigns = async () => {
-    try {
-      const { data } = await supabase
-        .from("campaigns")
-        .select("id, title")
-        .in("status", ["published", "approved"])
-        .order("created_at", { ascending: false });
-      
-      // Remove duplicates based on title, keeping the most recent one
-      const uniqueCampaigns = (data || []).reduce((acc, campaign) => {
-        const existingIndex = acc.findIndex(c => c.title === campaign.title);
-        if (existingIndex === -1) {
-          acc.push(campaign);
-        }
-        return acc;
-      }, []);
-      
-      setCampaigns(uniqueCampaigns);
-    } catch (err) {
-      console.error("Error fetching campaigns:", err);
-    }
-  };
 
   const fetchSurveys = async () => {
     setSurveyLoading(true);
@@ -139,58 +106,6 @@ export default function FeedbackManagement() {
     setRefreshing(false);
   };
 
-  const addQuestion = () => {
-    setSurveyForm(prev => ({
-      ...prev,
-      questions: [...prev.questions, { question: "", type: "radio", options: ["Yes", "No"] }]
-    }));
-  };
-
-  const removeQuestion = (index) => {
-    setSurveyForm(prev => ({
-      ...prev,
-      questions: prev.questions.filter((_, i) => i !== index)
-    }));
-  };
-
-  const updateQuestion = (index, field, value) => {
-    setSurveyForm(prev => ({
-      ...prev,
-      questions: prev.questions.map((q, i) => 
-        i === index ? { ...q, [field]: value } : q
-      )
-    }));
-  };
-
-  const createSurvey = async () => {
-    if (!surveyForm.title || surveyForm.questions.length === 0) {
-      alert("Please provide a title and at least one question");
-      return;
-    }
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      const { error } = await supabase.from("surveys").insert({
-        title: surveyForm.title,
-        description: surveyForm.description,
-        campaign_id: surveyForm.campaign_id || null,
-        created_by: user?.id,
-        status: "draft",
-        questions: surveyForm.questions
-      });
-
-      if (error) throw error;
-
-      closeSurveyDialog();
-      await fetchSurveys();
-      alert("Survey created successfully!");
-    } catch (err) {
-      console.error("Error creating survey:", err);
-      alert("Failed to create survey");
-    }
-  };
-
   const respond = async (id) => {
     try {
       if (typeof id === 'string') {
@@ -243,196 +158,37 @@ export default function FeedbackManagement() {
 
       if (error) throw error;
       await fetchSurveys();
-      alert("Survey rejected. Staff will be notified.");
+      alert("Survey rejected with feedback. Staff will be notified to make revisions.");
     } catch (err) {
       console.error("Error rejecting survey:", err);
       alert("Failed to reject survey");
     }
   };
 
-  const editSurvey = (survey) => {
-    setEditingSurvey(survey);
-    setSurveyForm({
-      title: survey.title,
-      description: survey.description,
-      campaign_id: survey.campaign_id || "",
-      questions: survey.questions || [{ question: "", type: "radio", options: ["Yes", "No"] }]
-    });
-    setSurveyDialogOpen(true);
-  };
 
-  const updateSurvey = async () => {
-    if (!surveyForm.title || surveyForm.questions.length === 0) {
-      alert("Please provide a title and at least one question");
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from("surveys")
-        .update({
-          title: surveyForm.title,
-          description: surveyForm.description,
-          campaign_id: surveyForm.campaign_id || null,
-          questions: surveyForm.questions
-        })
-        .eq("id", editingSurvey.id);
-
-      if (error) throw error;
-
-      setSurveyDialogOpen(false);
-      setEditingSurvey(null);
-      setSurveyForm({
-        title: "",
-        description: "",
-        campaign_id: "",
-        questions: [{ question: "", type: "rating" }]
-      });
-      await fetchSurveys();
-      alert("Survey updated successfully!");
-    } catch (err) {
-      console.error("Error updating survey:", err);
-      alert("Failed to update survey");
-    }
-  };
-
-  const closeSurveyDialog = () => {
-    setSurveyDialogOpen(false);
-    setEditingSurvey(null);
-    setSurveyForm({
-      title: "",
-      description: "",
-      campaign_id: "",
-      questions: [{ question: "", type: "radio", options: ["Yes", "No"] }]
-    });
-  };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <MessageSquareText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Feedback & Surveys
+            <MessageSquareText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Feedback & Survey Management
           </h1>
-          <p className="text-muted-foreground text-xs sm:text-sm">Review resident feedback, complaints, suggestions, and survey responses.</p>
+          <p className="text-muted-foreground text-xs sm:text-sm">Review resident feedback, survey responses, and approve/reject staff-created surveys.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="w-full sm:w-auto">
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Dialog open={surveyDialogOpen} onOpenChange={closeSurveyDialog}>
-            <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto">
-                <Plus className="h-4 w-4 mr-1" /> Create Survey
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingSurvey ? "Edit Survey" : "Create New Survey"}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <Label>Survey Title</Label>
-                  <Input
-                    value={surveyForm.title}
-                    onChange={(e) => setSurveyForm({ ...surveyForm, title: e.target.value })}
-                    placeholder="e.g., Fire Safety Campaign Feedback"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Textarea
-                    value={surveyForm.description}
-                    onChange={(e) => setSurveyForm({ ...surveyForm, description: e.target.value })}
-                    placeholder="Describe the purpose of this survey..."
-                    rows={3}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Related Campaign (Optional)</Label>
-                  <Select value={surveyForm.campaign_id} onValueChange={(v) => setSurveyForm({ ...surveyForm, campaign_id: v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a campaign (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">No campaign</SelectItem>
-                      {campaigns.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Questions</Label>
-                    <Button variant="outline" size="sm" onClick={addQuestion}>
-                      <Plus className="h-4 w-4 mr-1" /> Add Question
-                    </Button>
-                  </div>
-                  {surveyForm.questions.map((q, index) => (
-                    <div key={index} className="border rounded-md p-3 space-y-3">
-                      <div className="flex gap-2 items-start">
-                        <div className="flex-1 space-y-2">
-                          <Input
-                            value={q.question}
-                            onChange={(e) => updateQuestion(index, "question", e.target.value)}
-                            placeholder={`Question ${index + 1}`}
-                          />
-                          <Select
-                            value={q.type}
-                            onValueChange={(v) => updateQuestion(index, "type", v)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="radio">Multiple Choice</SelectItem>
-                              <SelectItem value="text">Text Answer</SelectItem>
-                              <SelectItem value="scale">Rating (1-5)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        {surveyForm.questions.length > 1 && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeQuestion(index)}
-                          >
-                            ×
-                          </Button>
-                        )}
-                      </div>
-                      
-                      {q.type === "radio" && (
-                        <div className="space-y-2">
-                          <Label className="text-sm">Options (comma-separated)</Label>
-                          <Input
-                            value={q.options?.join(", ") || ""}
-                            onChange={(e) => updateQuestion(index, "options", e.target.value.split(", ").filter(opt => opt.trim()))}
-                            placeholder="e.g., Always, Sometimes, Rarely"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={closeSurveyDialog}>Cancel</Button>
-                <Button onClick={editingSurvey ? updateSurvey : createSurvey}>
-                  {editingSurvey ? "Update Survey" : "Create Draft"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
 
       <Tabs defaultValue="feedback" className="space-y-4">
         <TabsList>
           <TabsTrigger value="feedback"><MessageSquareText className="h-4 w-4 mr-2" /> Feedback Messages</TabsTrigger>
-          <TabsTrigger value="surveys"><ClipboardList className="h-4 w-4 mr-2" /> Survey Results</TabsTrigger>
+          <TabsTrigger value="survey-results"><ClipboardList className="h-4 w-4 mr-2" /> Survey Feedback</TabsTrigger>
+          <TabsTrigger value="surveys"><ClipboardList className="h-4 w-4 mr-2" /> Survey Approval</TabsTrigger>
         </TabsList>
 
         <TabsContent value="feedback">
@@ -462,10 +218,17 @@ export default function FeedbackManagement() {
                     </div>
                     
                     {f.status !== "responded" && (
-                      <Dialog open={respondingTo === f.id} onOpenChange={(open) => setRespondingTo(open ? f.id : null)}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm"><Reply className="h-4 w-4 mr-1" /> Respond</Button>
-                        </DialogTrigger>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setRespondingTo(f.id)}
+                      >
+                        <Reply className="h-4 w-4 mr-1" /> Respond
+                      </Button>
+                    )}
+
+                    {respondingTo === f.id && (
+                      <Dialog open={respondingTo === f.id} onOpenChange={(open) => !open && setRespondingTo(null)}>
                         <DialogContent>
                           <DialogHeader><DialogTitle>Respond to {f.resident}</DialogTitle></DialogHeader>
                           <p className="text-sm text-muted-foreground whitespace-pre-wrap">"{f.message}"</p>
@@ -476,6 +239,7 @@ export default function FeedbackManagement() {
                             onChange={(e) => setResponse(e.target.value)} 
                           />
                           <DialogFooter>
+                            <Button variant="outline" onClick={() => setRespondingTo(null)}>Cancel</Button>
                             <Button onClick={() => respond(f.id)} disabled={!response.trim()}>Send Response</Button>
                           </DialogFooter>
                         </DialogContent>
@@ -503,8 +267,8 @@ export default function FeedbackManagement() {
               {surveys.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <ClipboardList className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                  <p className="font-medium">No surveys created yet.</p>
-                  <p className="text-xs mt-1">Create a survey to gather resident feedback.</p>
+                  <p className="font-medium">No surveys pending approval.</p>
+                  <p className="text-xs mt-1">Staff-created surveys awaiting review will appear here.</p>
                 </div>
               ) : (
                 surveys.map((survey) => {
@@ -536,15 +300,6 @@ export default function FeedbackManagement() {
                             <Badge variant={statusVariant}>
                               {survey.status.replace('_', ' ')}
                             </Badge>
-                            {(survey.status === 'draft' || survey.status === 'pending_approval' || survey.status === 'rejected') && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => editSurvey(survey)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
@@ -585,20 +340,17 @@ export default function FeedbackManagement() {
                         </div>
                         {responses.length > 0 && (
                           <div className="space-y-2">
-                            <p className="text-sm font-semibold">Recent Responses:</p>
-                            {responses.slice(0, 3).map((response) => (
-                              <div key={response.id} className="p-3 bg-muted/30 rounded-md text-sm">
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="font-medium">{response.users?.name || 'Resident'}</span>
-                                  {response.score && (
-                                    <Badge variant="outline">{response.score}/5</Badge>
-                                  )}
-                                </div>
-                                {response.comments && (
-                                  <p className="text-muted-foreground text-xs">{response.comments}</p>
-                                )}
+                            <p className="text-sm font-semibold">Response Summary:</p>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div className="p-2 bg-muted/30 rounded">
+                                <span className="font-medium">Total Responses:</span> {responses.length}
                               </div>
-                            ))}
+                              {avgScore && (
+                                <div className="p-2 bg-muted/30 rounded">
+                                  <span className="font-medium">Average Score:</span> {avgScore}/5
+                                </div>
+                              )}
+                            </div>
                           </div>
                         )}
                       </CardContent>
@@ -611,43 +363,14 @@ export default function FeedbackManagement() {
                             <CheckCircle2 className="h-4 w-4 mr-1" />
                             Approve & Publish
                           </Button>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="destructive" className="flex-1">
-                                <XCircle className="h-4 w-4 mr-1" />
-                                Reject
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Reject Survey</DialogTitle>
-                              </DialogHeader>
-                              <p className="text-sm text-muted-foreground">
-                                Please provide feedback for the staff member about why this survey was rejected.
-                              </p>
-                              <Textarea 
-                                placeholder="Enter your feedback..."
-                                id={`reject-notes-${survey.id}`}
-                              />
-                              <DialogFooter>
-                                <DialogTrigger asChild>
-                                  <Button variant="outline">Cancel</Button>
-                                </DialogTrigger>
-                                <Button 
-                                  onClick={() => {
-                                    const notes = document.getElementById(`reject-notes-${survey.id}`).value;
-                                    if (notes.trim()) {
-                                      rejectSurvey(survey.id, notes);
-                                    } else {
-                                      alert("Please provide feedback for rejection");
-                                    }
-                                  }}
-                                >
-                                  Reject Survey
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
+                          <Button 
+                            variant="destructive" 
+                            className="flex-1"
+                            onClick={() => setRejectDialogOpen(survey.id)}
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Reject
+                          </Button>
                         </CardFooter>
                       )}
                     </Card>
@@ -657,7 +380,94 @@ export default function FeedbackManagement() {
             </div>
           )}
         </TabsContent>
+
+        <TabsContent value="survey-results">
+          {surveyLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {surveyResponses.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <ClipboardList className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                  <p className="font-medium">No survey responses yet.</p>
+                  <p className="text-xs mt-1">Resident survey responses will appear here.</p>
+                </div>
+              ) : (
+                surveyResponses.map((response) => {
+                  const relatedSurvey = surveys.find(s => s.id === response.survey_id);
+                  return (
+                    <Card key={response.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <p className="font-medium text-sm">{response.users?.name || 'Resident'}</p>
+                              <Badge variant="outline">{relatedSurvey?.title || 'Unknown Survey'}</Badge>
+                              {response.score && (
+                                <Badge variant="secondary">{response.score}/5</Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Responded: {new Date(response.created_at).toLocaleDateString()}
+                            </p>
+                            {response.comments && (
+                              <div className="p-3 bg-muted/50 rounded-md mb-2">
+                                <p className="text-sm font-semibold text-primary mb-1">Comments:</p>
+                                <p className="text-sm text-muted-foreground">{response.comments}</p>
+                              </div>
+                            )}
+                            {response.answers && (
+                              <div className="p-3 bg-muted/50 rounded-md">
+                                <p className="text-sm font-semibold text-primary mb-1">Survey Answers:</p>
+                                <pre className="text-xs text-muted-foreground whitespace-pre-wrap">{JSON.stringify(response.answers, null, 2)}</pre>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
+
+      {rejectDialogOpen && (
+        <Dialog open={!!rejectDialogOpen} onOpenChange={(open) => !open && setRejectDialogOpen(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reject Survey</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              Please provide feedback for the staff member about why this survey was rejected and what revisions are needed.
+            </p>
+            <Textarea 
+              placeholder="Enter your feedback and revision requirements..."
+              id={`reject-notes-${rejectDialogOpen}`}
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setRejectDialogOpen(null)}>Cancel</Button>
+              <Button 
+                onClick={() => {
+                  const notes = document.getElementById(`reject-notes-${rejectDialogOpen}`).value;
+                  if (notes.trim()) {
+                    rejectSurvey(rejectDialogOpen, notes);
+                    setRejectDialogOpen(null);
+                  } else {
+                    alert("Please provide feedback for rejection");
+                  }
+                }}
+              >
+                Reject Survey
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Siren, Megaphone, Volume2, ArrowRight, Bell, MessageSquare, ClipboardList, ShieldAlert, Building2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -6,41 +6,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabaseHelpers } from "@/lib/supabase.js";
 import { useAuth } from "@/hooks/useAuth.jsx";
-import { useLanguage, getLocalizedField } from "@/components/LanguageToggle.jsx";
-import { t } from "@/lib/translations.js";
 
 const priorityVariant = { critical: "destructive", high: "warning", medium: "secondary", low: "outline" };
 
 const quickLinks = [
-  { to: "/campaigns", labelKey: "safetyCampaigns", icon: Megaphone, color: "bg-orange-200 text-orange-600" },
-  { to: "/voice-announcements", labelKey: "aiVoice", icon: Volume2, color: "bg-orange-200 text-orange-600", requirePublic: true },
-  { to: "/emergency", labelKey: "emergencyInfo", icon: ShieldAlert, color: "bg-orange-200 text-orange-600" },
-  { to: "/notifications", labelKey: "notifications", icon: Bell, color: "bg-orange-200 text-orange-600" },
-  { to: "/feedback", labelKey: "feedback", icon: MessageSquare, color: "bg-orange-200 text-orange-600" },
-  { to: "/surveys", labelKey: "surveys", icon: ClipboardList, color: "bg-orange-200 text-orange-600" },
-  { to: "/about", labelKey: "aboutBarangay", icon: Building2, color: "bg-orange-200 text-orange-600" },
+  { to: "/campaigns", label: "Safety Campaigns", icon: Megaphone, color: "bg-orange-200 text-orange-600" },
+  { to: "/voice-announcements", label: "AI Voice Announcements", icon: Volume2, color: "bg-orange-200 text-orange-600", requirePublic: true },
+  { to: "/emergency", label: "Emergency Info", icon: ShieldAlert, color: "bg-orange-200 text-orange-600" },
+  { to: "/notifications", label: "Notifications", icon: Bell, color: "bg-orange-200 text-orange-600" },
+  { to: "/feedback", label: "Submit Feedback", icon: MessageSquare, color: "bg-orange-200 text-orange-600" },
+  { to: "/surveys", label: "Surveys", icon: ClipboardList, color: "bg-orange-200 text-orange-600" },
+  { to: "/about", label: "About Barangay", icon: Building2, color: "bg-orange-200 text-orange-600" },
 ];
 
 export default function PublicDashboard() {
   const { user } = useAuth();
   const [campaigns, setCampaigns] = useState([]);
-  const language = useLanguage();
-  const [, forceUpdate] = useState({});
-
-  // Listen for language changes and force re-render
-  useEffect(() => {
-    const handleLanguageChange = () => {
-      forceUpdate({});
-    };
-    window.addEventListener('languageChanged', handleLanguageChange);
-    return () => window.removeEventListener('languageChanged', handleLanguageChange);
-  }, []);
-
-  // Get translation function that responds to language changes
-  const translate = (key) => {
-    const currentLang = localStorage.getItem('language') || 'en';
-    return t(key);
-  };
 
   useEffect(() => {
     supabaseHelpers.getCampaigns({ status: "published" })
@@ -69,22 +50,23 @@ export default function PublicDashboard() {
             <img src="/logo.png" alt="Barangay 178 Seal" className="h-14 w-14 rounded-full object-contain border-2 border-white/30 shadow-lg" />
             <div>
               <Badge className="bg-primary/80 text-white border-0 mb-1">Barangay 178 · Camarin, North Caloocan City</Badge>
-              <h1 className="font-display text-3xl md:text-4xl font-bold leading-tight">{translate('welcome')}</h1>
+              <h1 className="font-display text-3xl md:text-4xl font-bold leading-tight">Stay Informed. Stay Safe.</h1>
             </div>
           </div>
           <p className="text-white/85 max-w-2xl text-sm md:text-base mb-6">
-            {translate('welcomeDescription')}
+            Get the latest public safety announcements, emergency alerts, and community campaigns —
+            available in text and AI-generated voice for all residents.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button asChild className="bg-primary hover:bg-primary/90 text-white shadow-lg">
-              <Link to="/campaigns">{translate('browseCampaigns')} <ArrowRight className="h-4 w-4 ml-1" /></Link>
+              <Link to="/campaigns">Browse Campaigns <ArrowRight className="h-4 w-4 ml-1" /></Link>
             </Button>
             <Button variant="outline" asChild className="bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm">
-              <Link to="/emergency"><Siren className="h-4 w-4 mr-1" /> {translate('emergencyInfo')}</Link>
+              <Link to="/emergency"><Siren className="h-4 w-4 mr-1" /> Emergency Info</Link>
             </Button>
             {!user && (
               <Button variant="outline" asChild className="bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm">
-                <Link to="/voice-announcements"><Volume2 className="h-4 w-4 mr-1" /> {translate('voiceAnnouncement')}</Link>
+                <Link to="/voice-announcements"><Volume2 className="h-4 w-4 mr-1" /> Voice Announcement</Link>
               </Button>
             )}
           </div>
@@ -94,7 +76,7 @@ export default function PublicDashboard() {
       <div className="container py-8 space-y-8">
         {/* Quick access links */}
         <section>
-          <h2 className="font-display text-lg font-semibold mb-4 text-orange-600">{translate('quickAccess')}</h2>
+          <h2 className="font-display text-lg font-semibold mb-4 text-orange-600">Quick Access</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {quickLinks.map((ql) => {
               if (!user && (ql.to === "/feedback" || ql.to === "/surveys")) return null;
@@ -105,12 +87,12 @@ export default function PublicDashboard() {
                 <Link
                   key={ql.to}
                   to={ql.to}
-                  className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-accent transition-all text-center group"
+                  className="flex flex-col items-center gap-2 rounded-xl border border-border bg-white p-4 hover:shadow-md hover:-translate-y-0.5 hover:bg-gray-50 transition-all text-center group"
                 >
                   <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${ql.color} group-hover:scale-110 transition-transform`}>
                     <Icon className={`h-5 w-5 ${isQuickAccessCard ? 'animate-bounce' : ''}`} />
                   </div>
-                  <span className="text-xs font-medium leading-tight text-foreground">{translate(ql.labelKey)}</span>
+                  <span className="text-xs font-medium leading-tight text-gray-900">{ql.label}</span>
                 </Link>
               );
             })}
@@ -121,7 +103,7 @@ export default function PublicDashboard() {
         {urgent.length > 0 && (
           <section>
             <h2 className="font-display text-lg font-semibold mb-3 flex items-center gap-2">
-              <Siren className="h-5 w-5 text-destructive" /> {translate('priorityAlerts')}
+              <Siren className="h-5 w-5 text-destructive" /> Priority Alerts
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
               {urgent.map((c) => (
@@ -135,9 +117,9 @@ export default function PublicDashboard() {
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-display text-lg font-semibold flex items-center gap-2">
-              <Megaphone className="h-5 w-5 text-primary" /> {translate('latestCampaigns')}
+              <Megaphone className="h-5 w-5 text-primary" /> Latest Campaigns
             </h2>
-            <Link to="/campaigns" className="text-sm text-primary font-medium hover:underline">{translate('viewAll')}</Link>
+            <Link to="/campaigns" className="text-sm text-primary font-medium hover:underline">View all →</Link>
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             {list.slice(0, 6).map((c) => (
@@ -152,23 +134,6 @@ export default function PublicDashboard() {
 
 function CampaignCard({ campaign }) {
   const [playing, setPlaying] = useState(false);
-  const language = useLanguage();
-  const [, forceUpdate] = useState({});
-
-  // Listen for language changes and force re-render
-  useEffect(() => {
-    const handleLanguageChange = () => {
-      forceUpdate({});
-    };
-    window.addEventListener('languageChanged', handleLanguageChange);
-    return () => window.removeEventListener('languageChanged', handleLanguageChange);
-  }, []);
-
-  // Get translation function
-  const translate = (key) => {
-    const currentLang = localStorage.getItem('language') || 'en';
-    return t(key);
-  };
 
   const handleListen = () => {
     if (playing) {
@@ -180,32 +145,16 @@ function CampaignCard({ campaign }) {
     window.speechSynthesis.cancel();
     setPlaying(true);
 
-    // Get localized content based on current language
-    const title = getLocalizedField(campaign, 'title', language);
-    const objectives = getLocalizedField(campaign, 'objectives', language) || getLocalizedField(campaign, 'description', language) || '';
-
-    const utterance = new SpeechSynthesisUtterance(`${title}. ${objectives}`);
+    const utterance = new SpeechSynthesisUtterance(`${campaign.title}. ${campaign.objectives}`);
     utterance.rate = 0.9;
-    utterance.lang = language === 'tl' ? 'fil-PH' : 'en-US';
+    utterance.lang = 'en-US';
     utterance.onend = () => setPlaying(false);
     utterance.onerror = () => setPlaying(false);
 
-    // Try to set appropriate voice for the language
+    // Try to set appropriate voice
     const voices = window.speechSynthesis.getVoices();
-    if (language === 'tl') {
-      const tagalogVoice = voices.find(v => v.lang.includes('fil') || v.lang.includes('tl'));
-      if (tagalogVoice) {
-        utterance.voice = tagalogVoice;
-      } else {
-        // Fallback to English if Tagalog voice not available
-        console.warn('Tagalog voice not available, using English voice');
-        const englishVoice = voices.find(v => v.lang.includes('en'));
-        if (englishVoice) utterance.voice = englishVoice;
-      }
-    } else {
-      const englishVoice = voices.find(v => v.lang.includes('en'));
-      if (englishVoice) utterance.voice = englishVoice;
-    }
+    const englishVoice = voices.find(v => v.lang.includes('en'));
+    if (englishVoice) utterance.voice = englishVoice;
 
     window.speechSynthesis.speak(utterance);
   };
@@ -217,15 +166,15 @@ function CampaignCard({ campaign }) {
           <Badge variant={priorityVariant[campaign.priority] || "secondary"}>{campaign.priority}</Badge>
           <span className="text-xs text-muted-foreground">{campaign.category?.replace("_", " ")}</span>
         </div>
-        <CardTitle className="text-base">{getLocalizedField(campaign, 'title', language)}</CardTitle>
-        <CardDescription>{getLocalizedField(campaign, 'objectives', language) || getLocalizedField(campaign, 'description', language)}</CardDescription>
+        <CardTitle className="text-base">{campaign.title}</CardTitle>
+        <CardDescription>{campaign.objectives}</CardDescription>
       </CardHeader>
       <CardFooter className="justify-between">
         <Button variant="ghost" size="sm" asChild>
-          <Link to={`/campaigns/${campaign.id}`}>{translate('readMore')}</Link>
+          <Link to={`/campaigns/${campaign.id}`}>Read more</Link>
         </Button>
         <Button variant="outline" size="sm" onClick={handleListen}>
-          <Volume2 className="h-4 w-4 mr-1" /> {playing ? translate('playing') : translate('listen')}
+          <Volume2 className="h-4 w-4 mr-1" /> {playing ? "Playing…" : "Listen"}
         </Button>
       </CardFooter>
     </Card>

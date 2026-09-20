@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Database, Download, Upload, RefreshCw, Trash2, Calendar, Clock, HardDrive, Plus, Loader2, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { Database, Download, Upload, RefreshCw, Trash2, Calendar, Clock, HardDrive, Plus, Loader2, CheckCircle, XCircle, AlertTriangle, Lock, Eye, EyeOff } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,12 @@ export default function BackupRestore() {
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
   const [selectedBackup, setSelectedBackup] = useState(null);
   const [backupProgress, setBackupProgress] = useState(0);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [passwordAction, setPasswordAction] = useState(null); // 'download' or 'restore'
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [verifyingPassword, setVerifyingPassword] = useState(false);
 
   const [backupStats, setBackupStats] = useState({
     totalBackups: 0,
@@ -130,25 +136,7 @@ export default function BackupRestore() {
     }
   };
 
-  const handleRestoreBackup = async () => {
-    if (!selectedBackup) return;
 
-    setRestoringBackup(true);
-    try {
-      // Simulate restore process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // In production, restore from Supabase
-      alert('Backup restored successfully');
-      setShowRestoreDialog(false);
-      setSelectedBackup(null);
-    } catch (error) {
-      console.error('Error restoring backup:', error);
-      alert('Error restoring backup');
-    } finally {
-      setRestoringBackup(false);
-    }
-  };
 
   const handleDeleteBackup = async (backupId) => {
     if (!confirm('Are you sure you want to delete this backup? This action cannot be undone.')) return;
@@ -171,12 +159,76 @@ export default function BackupRestore() {
   };
 
   const handleDownloadBackup = async (backup) => {
+    setSelectedBackup(backup);
+    setPasswordAction('download');
+    setPassword('');
+    setPasswordError('');
+    setShowPasswordDialog(true);
+  };
+
+  const handleRestoreBackup = async () => {
+    if (!selectedBackup) return;
+
+    setRestoringBackup(true);
     try {
-      // In production, download from Supabase storage
-      alert(`Downloading backup: ${backup.name}`);
+      // Simulate restore process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // In production, restore from Supabase
+      alert('Backup restored successfully');
+      setShowRestoreDialog(false);
+      setShowPasswordDialog(false);
+      setSelectedBackup(null);
+      setPassword('');
     } catch (error) {
-      console.error('Error downloading backup:', error);
-      alert('Error downloading backup');
+      console.error('Error restoring backup:', error);
+      alert('Error restoring backup');
+    } finally {
+      setRestoringBackup(false);
+    }
+  };
+
+  const verifyPassword = async () => {
+    if (!password) {
+      setPasswordError('Please enter your password');
+      return;
+    }
+
+    setVerifyingPassword(true);
+    setPasswordError('');
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setPasswordError('User not authenticated');
+        return;
+      }
+
+      // Verify password by attempting to sign in
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: password
+      });
+
+      if (error) {
+        setPasswordError('Invalid password');
+        return;
+      }
+
+      // Password verified, proceed with action
+      if (passwordAction === 'download') {
+        alert(`Downloading backup: ${selectedBackup.name}`);
+        setShowPasswordDialog(false);
+        setPassword('');
+      } else if (passwordAction === 'restore') {
+        setShowPasswordDialog(false);
+        setShowRestoreDialog(true);
+      }
+    } catch (error) {
+      console.error('Password verification error:', error);
+      setPasswordError('Password verification failed');
+    } finally {
+      setVerifyingPassword(false);
     }
   };
 
@@ -347,7 +399,7 @@ export default function BackupRestore() {
           <CardTitle className="text-base flex items-center gap-2">
             <HardDrive className="h-4 w-4 text-primary" /> Available Backups
           </CardTitle>
-          <CardDescription>View and manage all system backups</CardDescription>
+          <CardDescription>View and manage all system backups. Download and restore require password verification.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -393,7 +445,10 @@ export default function BackupRestore() {
                       variant="outline"
                       onClick={() => {
                         setSelectedBackup(backup);
-                        setShowRestoreDialog(true);
+                        setPasswordAction('restore');
+                        setPassword('');
+                        setPasswordError('');
+                        setShowPasswordDialog(true);
                       }}
                     >
                       <Upload className="h-4 w-4 mr-2" />
@@ -414,6 +469,73 @@ export default function BackupRestore() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Password Verification Dialog */}
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-primary" />
+              Password Verification Required
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 border rounded-lg bg-blue-50">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-blue-800">Security Verification</p>
+                  <p className="text-sm text-blue-700 mt-1">
+                    {passwordAction === 'download' 
+                      ? 'Downloading backups requires password verification to prevent unauthorized access.'
+                      : 'Restoring backups requires password verification to prevent unauthorized data restoration.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="backup-password">Enter your password</Label>
+              <div className="relative">
+                <Input
+                  id="backup-password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && verifyPassword()}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {passwordError && (
+                <p className="text-sm text-destructive">{passwordError}</p>
+              )}
+            </div>
+
+            {selectedBackup && (
+              <div className="p-3 border rounded-lg bg-muted/50">
+                <p className="text-sm font-medium">Action: {passwordAction === 'download' ? 'Download' : 'Restore'}</p>
+                <p className="text-sm text-muted-foreground">Backup: {selectedBackup.name}</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPasswordDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={verifyPassword} disabled={verifyingPassword}>
+              {verifyingPassword ? 'Verifying...' : 'Verify & Continue'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Restore Confirmation Dialog */}
       <Dialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>

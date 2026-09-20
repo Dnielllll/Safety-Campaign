@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/lib/supabase";
 
 const statusMeta = {
@@ -20,6 +21,7 @@ const statusMeta = {
 
 export default function StaffSurveys() {
   const [surveys, setSurveys] = useState([]);
+  const [surveyResponses, setSurveyResponses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [surveyDialogOpen, setSurveyDialogOpen] = useState(false);
@@ -31,11 +33,19 @@ export default function StaffSurveys() {
     questions: [{ question: "", type: "radio", options: ["Yes", "No"] }]
   });
   const [campaigns, setCampaigns] = useState([]);
+  const [activeTab, setActiveTab] = useState("surveys");
 
   useEffect(() => {
     fetchSurveys();
     fetchCampaigns();
+    fetchSurveyResponses();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "responses") {
+      fetchSurveyResponses();
+    }
+  }, [activeTab]);
 
   const fetchCampaigns = async () => {
     try {
@@ -59,6 +69,37 @@ export default function StaffSurveys() {
     }
   };
 
+  const calculateScore = (responseData) => {
+    if (!responseData || typeof responseData !== 'object') return 0;
+    
+    let totalScore = 0;
+    let maxScore = 0;
+    
+    Object.values(responseData).forEach((answer) => {
+      // If answer is a number (rating), add it to total
+      if (typeof answer === 'number') {
+        totalScore += answer;
+        maxScore += 5; // Assuming max rating is 5
+      } 
+      // If answer is a positive response (like "Yes"), give full points
+      else if (typeof answer === 'string') {
+        const positiveResponses = ['Yes', 'Always', 'Very aware', 'Regularly'];
+        if (positiveResponses.some(response => answer.toLowerCase().includes(response.toLowerCase()))) {
+          totalScore += 2;
+          maxScore += 2;
+        } else {
+          maxScore += 2;
+        }
+      }
+    });
+    
+    // Normalize to 10-point scale
+    if (maxScore > 0) {
+      return Math.round((totalScore / maxScore) * 10);
+    }
+    return 0;
+  };
+
   const fetchSurveys = async () => {
     setFetching(true);
     try {
@@ -77,6 +118,43 @@ export default function StaffSurveys() {
       console.error("Failed to fetch surveys:", err);
     } finally {
       setFetching(false);
+    }
+  };
+
+  const fetchSurveyResponses = async () => {
+    try {
+      // Get all published surveys (not just staff's own surveys)
+      const { data: publishedSurveys } = await supabase
+        .from("surveys")
+        .select("id, title, created_at")
+        .eq("status", "published");
+      
+      if (publishedSurveys && publishedSurveys.length > 0) {
+        const surveyIds = publishedSurveys.map(s => s.id);
+        
+        // Fetch all responses for published surveys
+        const { data: responses } = await supabase
+          .from("survey_responses")
+          .select("*, survey_id, users(name, email)")
+          .in("survey_id", surveyIds)
+          .order("created_at", { ascending: false });
+        
+        // Merge survey information with responses
+        const responsesWithSurveyInfo = (responses || []).map(response => {
+          const survey = publishedSurveys.find(s => s.id === response.survey_id);
+          return {
+            ...response,
+            survey_title: survey?.title || 'Unknown Survey',
+            survey_created_at: survey?.created_at
+          };
+        });
+        
+        setSurveyResponses(responsesWithSurveyInfo);
+      } else {
+        setSurveyResponses([]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch survey responses:", err);
     }
   };
 
@@ -196,6 +274,7 @@ export default function StaffSurveys() {
   };
 
   const closeSurveyDialog = () => {
+    console.log("Closing survey dialog");
     setSurveyDialogOpen(false);
     setTimeout(() => {
       setEditingSurvey(null);
@@ -208,6 +287,18 @@ export default function StaffSurveys() {
     }, 300);
   };
 
+  const handleCreateSurveyClick = () => {
+    console.log("Create survey button clicked");
+    setEditingSurvey(null);
+    setSurveyForm({
+      title: "",
+      description: "",
+      campaign_id: "",
+      questions: [{ question: "", type: "radio", options: ["Yes", "No"] }]
+    });
+    setSurveyDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -216,218 +307,304 @@ export default function StaffSurveys() {
             <ClipboardList className="h-6 w-6 text-primary" /> Survey Management
           </h1>
           <p className="text-muted-foreground text-sm">
-            Create surveys and submit them for admin approval and publishing.
+            Create surveys and view resident responses.
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={fetchSurveys} disabled={fetching}>
+          <Button variant="outline" size="sm" onClick={() => { fetchSurveys(); fetchSurveyResponses(); }} disabled={fetching}>
             {fetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
             {fetching ? "" : "Refresh"}
           </Button>
-          <Dialog open={surveyDialogOpen} onOpenChange={setSurveyDialogOpen}>
-            <Button onClick={() => setSurveyDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" /> Create Survey
-            </Button>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingSurvey ? "Edit Survey" : "Create New Survey"}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <Label>Survey Title</Label>
-                  <Input
-                    value={surveyForm.title}
-                    onChange={(e) => setSurveyForm({ ...surveyForm, title: e.target.value })}
-                    placeholder="e.g., Fire Safety Campaign Feedback"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Textarea
-                    value={surveyForm.description}
-                    onChange={(e) => setSurveyForm({ ...surveyForm, description: e.target.value })}
-                    placeholder="Describe the purpose of this survey..."
-                    rows={3}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Related Campaign (Optional)</Label>
-                  <Select value={surveyForm.campaign_id} onValueChange={(v) => setSurveyForm({ ...surveyForm, campaign_id: v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a campaign (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">No campaign</SelectItem>
-                      {campaigns.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Questions</Label>
-                    <Button variant="outline" size="sm" onClick={addQuestion}>
-                      <Plus className="h-4 w-4 mr-1" /> Add Question
-                    </Button>
-                  </div>
-                  {surveyForm.questions.map((q, index) => (
-                    <div key={index} className="border rounded-md p-3 space-y-3">
-                      <div className="flex gap-2 items-start">
-                        <div className="flex-1 space-y-2">
-                          <Input
-                            value={q.question}
-                            onChange={(e) => updateQuestion(index, "question", e.target.value)}
-                            placeholder={`Question ${index + 1}`}
-                          />
-                          <Select
-                            value={q.type}
-                            onValueChange={(v) => updateQuestion(index, "type", v)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="radio">Multiple Choice</SelectItem>
-                              <SelectItem value="text">Text Answer</SelectItem>
-                              <SelectItem value="scale">Rating (1-5)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        {surveyForm.questions.length > 1 && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeQuestion(index)}
-                          >
-                            ×
-                          </Button>
-                        )}
-                      </div>
-                      
-                      {q.type === "radio" && (
-                        <div className="space-y-2">
-                          <Label className="text-sm">Options (comma-separated)</Label>
-                          <Input
-                            value={q.options?.join(", ") || ""}
-                            onChange={(e) => updateQuestion(index, "options", e.target.value.split(", ").filter(opt => opt.trim()))}
-                            placeholder="e.g., Always, Sometimes, Rarely"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={closeSurveyDialog}>Cancel</Button>
-                <Button onClick={editingSurvey ? updateSurvey : createSurvey}>
-                  {editingSurvey ? "Update Survey" : "Create Draft"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
 
-      {fetching ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
-          <span className="text-muted-foreground text-sm">Loading surveys...</span>
-        </div>
-      ) : surveys.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <ClipboardList className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p className="font-medium">No surveys created yet.</p>
-          <p className="text-sm mt-1">Create a survey to gather resident feedback.</p>
-        </div>
-      ) : (
-        <div className="grid md:grid-cols-2 gap-4">
-          {surveys.map((survey) => {
-            const meta = statusMeta[survey.status] || statusMeta.draft;
-            const Icon = meta.icon;
-            const canSubmit = survey.status === "draft" || survey.status === "rejected";
-            const isRejected = survey.status === "rejected";
+      <Tabs defaultValue="surveys" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="surveys"><ClipboardList className="h-4 w-4 mr-2" /> My Surveys</TabsTrigger>
+          <TabsTrigger value="responses"><MessageSquare className="h-4 w-4 mr-2" /> Resident Responses</TabsTrigger>
+        </TabsList>
 
-            return (
-              <Card key={survey.id} className={isRejected ? "border-red-300 bg-red-50/30" : ""}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <Badge variant={meta.variant} className="w-fit mb-1 gap-1">
-                        <Icon className="h-3 w-3" /> {meta.label}
-                      </Badge>
-                      <CardTitle className="text-base">{survey.title}</CardTitle>
-                      <CardDescription className="line-clamp-2">{survey.description}</CardDescription>
+        <TabsContent value="surveys">
+          <div className="flex justify-end mb-4">
+            <Button onClick={handleCreateSurveyClick}>
+              <Plus className="h-4 w-4 mr-1" /> Create Survey
+            </Button>
+          </div>
+
+        <Dialog open={surveyDialogOpen} onOpenChange={setSurveyDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingSurvey ? "Edit Survey" : "Create New Survey"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label>Survey Title</Label>
+                <Input
+                  value={surveyForm.title}
+                  onChange={(e) => setSurveyForm({ ...surveyForm, title: e.target.value })}
+                  placeholder="e.g., Fire Safety Campaign Feedback"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea
+                  value={surveyForm.description}
+                  onChange={(e) => setSurveyForm({ ...surveyForm, description: e.target.value })}
+                  placeholder="Describe the purpose of this survey..."
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Related Campaign (Optional)</Label>
+                <Select value={surveyForm.campaign_id} onValueChange={(v) => setSurveyForm({ ...surveyForm, campaign_id: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a campaign (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No campaign</SelectItem>
+                    {campaigns.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Questions</Label>
+                  <Button variant="outline" size="sm" onClick={addQuestion}>
+                    <Plus className="h-4 w-4 mr-1" /> Add Question
+                  </Button>
+                </div>
+                {surveyForm.questions.map((q, index) => (
+                  <div key={index} className="border rounded-md p-3 space-y-3">
+                    <div className="flex gap-2 items-start">
+                      <div className="flex-1 space-y-2">
+                        <Input
+                          value={q.question}
+                          onChange={(e) => updateQuestion(index, "question", e.target.value)}
+                          placeholder={`Question ${index + 1}`}
+                        />
+                        <Select
+                          value={q.type}
+                          onValueChange={(v) => updateQuestion(index, "type", v)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="radio">Multiple Choice</SelectItem>
+                            <SelectItem value="text">Text Answer</SelectItem>
+                            <SelectItem value="scale">Rating (1-5)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {surveyForm.questions.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeQuestion(index)}
+                        >
+                          ×
+                        </Button>
+                      )}
                     </div>
-                    {(survey.status === 'draft' || survey.status === 'rejected') && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => editSurvey(survey)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                    
+                    {q.type === "radio" && (
+                      <div className="space-y-2">
+                        <Label className="text-sm">Options (comma-separated)</Label>
+                        <Input
+                          value={q.options?.join(", ") || ""}
+                          onChange={(e) => updateQuestion(index, "options", e.target.value.split(", ").filter(opt => opt.trim()))}
+                          placeholder="e.g., Always, Sometimes, Rarely"
+                        />
+                      </div>
                     )}
                   </div>
-                  
-                  {survey.campaigns && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Campaign: {survey.campaigns.title}
-                    </p>
-                  )}
+                ))}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={closeSurveyDialog}>Cancel</Button>
+              <Button onClick={editingSurvey ? updateSurvey : createSurvey}>
+                {editingSurvey ? "Update Survey" : "Create Draft"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-                  {/* Admin comment box for rejected surveys */}
-                  {isRejected && survey.admin_notes && (
-                    <div className="mt-3 flex gap-2 items-start rounded-md border border-red-300 bg-red-50 p-3">
-                      <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-500" />
-                      <div>
-                        <p className="text-xs font-semibold text-red-800 mb-0.5">Admin Comment:</p>
-                        <p className="text-sm text-red-900">&ldquo;{survey.admin_notes}&rdquo;</p>
-                        <p className="text-xs text-red-600 mt-1">
-                          Please edit the survey before resubmitting.
-                        </p>
+        {fetching ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+            <span className="text-muted-foreground text-sm">Loading surveys...</span>
+          </div>
+        ) : surveys.length === 0 ? (
+          <div className="text-center py-16 text-muted-foreground">
+            <ClipboardList className="h-10 w-10 mx-auto mb-3 opacity-30" />
+            <p className="font-medium">No surveys created yet.</p>
+            <p className="text-sm mt-1">Create a survey to gather resident feedback.</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-4">
+            {surveys.map((survey) => {
+              const meta = statusMeta[survey.status] || statusMeta.draft;
+              const Icon = meta.icon;
+              const canSubmit = survey.status === "draft" || survey.status === "rejected";
+              const isRejected = survey.status === "rejected";
+              const responses = surveyResponses.filter(r => r.survey_id === survey.id);
+
+              return (
+                <Card key={survey.id} className={isRejected ? "border-red-300 bg-red-50/30" : ""}>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <Badge variant={meta.variant} className="w-fit mb-1 gap-1">
+                          <Icon className="h-3 w-3" /> {meta.label}
+                        </Badge>
+                        <CardTitle className="text-base">{survey.title}</CardTitle>
+                        <CardDescription className="line-clamp-2">{survey.description}</CardDescription>
                       </div>
+                      {(survey.status === 'draft' || survey.status === 'rejected') && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => editSurvey(survey)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <User className="h-3 w-3" />
-                      <span>{survey.questions?.length || 0} questions</span>
+                    
+                    {survey.campaigns && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Campaign: {survey.campaigns.title}
+                      </p>
+                    )}
+
+                    {/* Admin comment box for rejected surveys */}
+                    {isRejected && survey.admin_notes && (
+                      <div className="mt-3 flex gap-2 items-start rounded-md border border-red-300 bg-red-50 p-3">
+                        <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-500" />
+                        <div>
+                          <p className="text-xs font-semibold text-red-800 mb-0.5">Admin Comment:</p>
+                          <p className="text-sm text-red-900">&ldquo;{survey.admin_notes}&rdquo;</p>
+                          <p className="text-xs text-red-600 mt-1">
+                            Please edit the survey before resubmitting.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
+                      <div className="flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        <span>{survey.questions?.length || 0} questions</span>
+                      </div>
+                      <span>•</span>
+                      <span>{new Date(survey.created_at).toLocaleDateString()}</span>
+                      <span>•</span>
+                      <span>{responses.length} responses</span>
                     </div>
-                    <span>•</span>
-                    <span>{new Date(survey.created_at).toLocaleDateString()}</span>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  {canSubmit ? (
-                    <Button
-                      onClick={() => submitSurvey(survey.id)}
-                      disabled={loading}
-                      className="w-full"
-                    >
-                      {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
-                      {isRejected ? "Resubmit for Review" : "Submit for Review"}
-                    </Button>
-                  ) : (
-                    <Button variant="outline" className="w-full" disabled>
-                      {survey.status === "pending_approval"
-                        ? "Awaiting Admin Decision"
-                        : survey.status === "published"
-                        ? "Published"
-                        : survey.status === "rejected"
-                        ? "Rejected by Admin"
-                        : "No action needed"}
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                  </CardContent>
+                  <CardFooter>
+                    {canSubmit ? (
+                      <Button
+                        onClick={() => submitSurvey(survey.id)}
+                        disabled={loading}
+                        className="w-full"
+                      >
+                        {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
+                        {isRejected ? "Resubmit for Review" : "Submit for Review"}
+                      </Button>
+                    ) : (
+                      <Button variant="outline" className="w-full" disabled>
+                        {survey.status === "pending_approval"
+                          ? "Awaiting Admin Decision"
+                          : survey.status === "published"
+                          ? "Published"
+                          : survey.status === "rejected"
+                          ? "Rejected by Admin"
+                          : "No action needed"}
+                      </Button>
+                    )}
+                  </CardFooter>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+        </TabsContent>
+
+        <TabsContent value="responses">
+          {surveyResponses.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-30" />
+              <p className="font-medium">No resident responses yet.</p>
+              <p className="text-xs mt-1">Resident survey responses will appear here.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {surveyResponses.map((response) => {
+                return (
+                  <Card key={response.id}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="outline">{response.survey_title}</Badge>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(response.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <p className="font-medium text-sm">{response.users?.name || 'Resident'}</p>
+                            {response.users?.email && (
+                              <p className="text-xs text-muted-foreground">({response.users.email})</p>
+                            )}
+                          </div>
+                          {/* Score display */}
+                          {response.response_data && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-sm font-medium">Score:</span>
+                              <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                                {calculateScore(response.response_data)}/10
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {response.response_data && Object.keys(response.response_data).length > 0 && (
+                        <div className="p-3 bg-muted/50 rounded-md">
+                          <p className="text-sm font-semibold text-primary mb-2">Survey Answers:</p>
+                          <div className="space-y-2">
+                            {Object.entries(response.response_data).map(([questionIndex, answer]) => (
+                              <div key={questionIndex} className="text-sm">
+                                <p className="font-medium text-muted-foreground mb-1">
+                                  Question {parseInt(questionIndex) + 1}:
+                                </p>
+                                <p className="text-foreground">{answer}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {response.comments && (
+                        <div className="p-3 bg-primary/10 rounded-md border border-primary/20">
+                          <p className="text-sm font-semibold text-primary mb-1">Comments:</p>
+                          <p className="text-sm text-muted-foreground">{response.comments}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

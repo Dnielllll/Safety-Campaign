@@ -6,21 +6,19 @@ import { useAuth } from "@/hooks/useAuth.jsx";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ThemeToggle.jsx";
-import LanguageThemeToggle from "@/components/LanguageThemeToggle.jsx";
 import LogoutOverlay from "@/components/LogoutOverlay.jsx";
 import AIChatbot from "@/components/AIChatbot.jsx";
-import { t } from "@/lib/translations.js";
 
 
 const navItems = [
-  { to: "/", label: "home", icon: Home },
-  { to: "/campaigns", label: "safetyCampaigns", icon: Megaphone },
-  { to: "/voice-announcements", label: "aiVoice", icon: Volume2 },
-  { to: "/notifications", label: "notifications", icon: Bell },
-  { to: "/feedback", label: "feedback", icon: MessageSquare },
-  { to: "/surveys", label: "surveys", icon: ClipboardList },
-  { to: "/emergency", label: "emergencyInfo", icon: Siren },
-  { to: "/about", label: "aboutBarangay", icon: Building2 },
+  { to: "/", label: "Home", icon: Home },
+  { to: "/campaigns", label: "Safety Campaigns", icon: Megaphone },
+  { to: "/voice-announcements", label: "AI Voice", icon: Volume2 },
+  { to: "/notifications", label: "Notifications", icon: Bell },
+  { to: "/feedback", label: "Feedback", icon: MessageSquare },
+  { to: "/surveys", label: "Surveys", icon: ClipboardList },
+  { to: "/emergency", label: "Emergency Info", icon: Siren },
+  { to: "/about", label: "About Barangay", icon: Building2 },
 ];
 
 export default function PublicLayout() {
@@ -50,7 +48,7 @@ export default function PublicLayout() {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         {/* Top navigation bar */}
-        <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur shadow-sm">
+        <header className="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur shadow-sm">
           <div className="container flex h-16 items-center justify-between">
             <Link to="/" className="flex items-center gap-2 shrink-0">
               <img src="/logo.png" alt="Barangay 178 Seal" className="h-10 w-10 rounded-full object-contain" />
@@ -80,19 +78,18 @@ export default function PublicLayout() {
                     )}
                   >
                     <Icon className="h-4 w-4" />
-                    {t(item.label)}
+                    {item.label}
                   </Link>
                 );
               })}
             </nav>
 
             <div className="flex items-center gap-2">
-              <LanguageThemeToggle />
               <Button size="sm" asChild className="hidden sm:flex">
-                <Link to="/login">{t('login')}</Link>
+                <Link to="/login">Log in</Link>
               </Button>
               <Button size="sm" asChild variant="outline" className="hidden sm:flex">
-                <Link to="/register">{t('signup')}</Link>
+                <Link to="/register">Sign up</Link>
               </Button>
               <button
                 className="md:hidden rounded-md p-2 text-muted-foreground hover:bg-secondary"
@@ -105,7 +102,7 @@ export default function PublicLayout() {
 
           {/* Mobile navigation drawer */}
           {mobileOpen && (
-            <nav className="md:hidden border-t border-border bg-card px-4 pb-4 pt-2 flex flex-col gap-1">
+            <nav className="md:hidden border-t border-border bg-white px-4 pb-4 pt-2 flex flex-col gap-1">
               {navItems.map((item) => {
                 if (item.to === "/feedback" || item.to === "/surveys") return null;
 
@@ -124,7 +121,7 @@ export default function PublicLayout() {
                     )}
                   >
                     <Icon className="h-4 w-4" />
-                    {t(item.label)}
+                    {item.label}
                   </Link>
                 );
               })}
@@ -144,7 +141,7 @@ export default function PublicLayout() {
           <Outlet />
         </main>
 
-        <footer className="border-t border-border py-8 mt-16 bg-card">
+        <footer className="border-t border-border py-8 mt-16 bg-white">
           <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <img src="/logo.png" alt="Barangay 178 Seal" className="h-8 w-8 rounded-full object-contain" />
@@ -166,9 +163,9 @@ export default function PublicLayout() {
         {loggingOut && <LogoutOverlay onDone={doLogout} />}
         <div className="flex flex-1">
         {/* Sidebar - Desktop */}
-        <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-card sticky top-0 h-[calc(100vh-40px)]">
+        <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-white sticky top-0 h-[calc(100vh-40px)]">
           {/* Logo section */}
-          <div className="p-4 border-b border-border bg-card">
+          <div className="p-4 border-b border-border">
             <Link to="/" className="flex items-center gap-2">
               <img src="/logo.png" alt="Barangay 178 Seal" className="h-10 w-10 rounded-full object-contain" />
               <div className="leading-tight">
@@ -226,7 +223,6 @@ export default function PublicLayout() {
                   Log out
                 </button>
                 <div className="flex items-center gap-2">
-                  <LanguageThemeToggle />
                 </div>
               </div>
             </div>
@@ -236,7 +232,7 @@ export default function PublicLayout() {
         {/* Mobile layout */}
         <div className="flex-1 flex flex-col lg:hidden">
           {/* Mobile header */}
-          <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur shadow-sm">
+          <header className="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur shadow-sm">
             <div className="container flex h-16 items-center justify-between">
               <Link to="/" className="flex items-center gap-2 shrink-0">
                 <img src="/logo.png" alt="Barangay 178 Seal" className="h-10 w-10 rounded-full object-contain" />
@@ -247,7 +243,6 @@ export default function PublicLayout() {
               </Link>
 
               <div className="flex items-center gap-2">
-                <LanguageThemeToggle />
                 <Link to="/profile">
                   <Avatar>
                     {user?.avatar_url ? (
@@ -268,7 +263,7 @@ export default function PublicLayout() {
 
             {/* Mobile nav drawer */}
             {mobileOpen && (
-              <nav className="border-t border-border bg-card px-4 pb-4 pt-2 flex flex-col gap-1 max-h-[70vh] overflow-y-auto">
+              <nav className="border-t border-border bg-white px-4 pb-4 pt-2 flex flex-col gap-1 max-h-[70vh] overflow-y-auto">
                 {navItems.map((item) => {
                   // Hide AI Voice from resident accounts
                   if (item.to === "/voice-announcements") return null;
@@ -310,7 +305,7 @@ export default function PublicLayout() {
             <Outlet />
           </main>
 
-          <footer className="border-t border-border py-8 mt-16 bg-card">
+          <footer className="border-t border-border py-8 mt-16 bg-white">
             <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <img src="/logo.png" alt="Barangay 178 Seal" className="h-8 w-8 rounded-full object-contain" />
@@ -332,7 +327,6 @@ export default function PublicLayout() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <LanguageThemeToggle />
               <span className="text-xs text-muted-foreground hidden sm:inline-flex border border-border px-2 py-1 rounded">
                 Resident
               </span>
@@ -356,7 +350,7 @@ export default function PublicLayout() {
             <Outlet />
           </main>
 
-          <footer className="border-t border-border py-8 mt-16 bg-card">
+          <footer className="border-t border-border py-8 mt-16 bg-white">
             <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <img src="/logo.png" alt="Barangay 178 Seal" className="h-8 w-8 rounded-full object-contain" />
@@ -374,27 +368,25 @@ export default function PublicLayout() {
 
   // For admin/staff/super_admin users, redirect them to their respective dashboards
   // if they land on public routes, rather than returning a blank screen (null)
-  // TEMPORARILY DISABLED FOR TESTING - let users stay in public view
-  // if (user.role === 'super_admin') {
-  //   return <Navigate to="/super-admin" replace />;
-  // }
+  if (user.role === 'super_admin') {
+    return <Navigate to="/super-admin" replace />;
+  }
   
   // Don't redirect admin/staff to their dashboards if under maintenance 
   // because MaintenanceGuard will just block them. Let them see the public view.
-  // TEMPORARILY DISABLED FOR TESTING - let users stay in public view
-  // if (!isMaintenance) {
-  //   if (user.role === 'admin') {
-  //     return <Navigate to="/admin" replace />;
-  //   }
-  //   if (user.role === 'staff') {
-  //     return <Navigate to="/staff" replace />;
-  //   }
-  // }
+  if (!isMaintenance) {
+    if (user.role === 'admin') {
+      return <Navigate to="/admin" replace />;
+    }
+    if (user.role === 'staff') {
+      return <Navigate to="/staff" replace />;
+    }
+  }
 
   // Fallback for any other case
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur shadow-sm">
+      <header className="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur shadow-sm">
         <div className="container flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <img src="/logo.png" alt="Barangay 178 Seal" className="h-10 w-10 rounded-full object-contain" />
@@ -404,7 +396,6 @@ export default function PublicLayout() {
             </div>
           </Link>
           <div className="flex items-center gap-2">
-            <LanguageThemeToggle />
             <Button size="sm" onClick={handleLogout}>Log out</Button>
           </div>
         </div>

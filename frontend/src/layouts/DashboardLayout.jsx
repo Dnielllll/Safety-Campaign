@@ -35,7 +35,6 @@ import { Badge } from "@/components/ui/badge";
 import LogoutOverlay from "@/components/LogoutOverlay.jsx";
 import { supabase } from "@/lib/supabase.js";
 import { ThemeToggle } from "@/components/ThemeToggle.jsx";
-import LanguageToggle from "@/components/LanguageToggle.jsx";
 
 const superAdminNavGroups = [
   {
@@ -370,7 +369,6 @@ export default function DashboardLayout({ role }) {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <LanguageToggle />
             <ThemeToggle />
             <Badge variant="outline" className="hidden sm:inline-flex border-primary/40 text-primary">
               {roleLabel}
