@@ -374,20 +374,22 @@ export default function PublicLayout() {
 
   // For admin/staff/super_admin users, redirect them to their respective dashboards
   // if they land on public routes, rather than returning a blank screen (null)
-  if (user.role === 'super_admin') {
-    return <Navigate to="/super-admin" replace />;
-  }
+  // TEMPORARILY DISABLED FOR TESTING - let users stay in public view
+  // if (user.role === 'super_admin') {
+  //   return <Navigate to="/super-admin" replace />;
+  // }
   
   // Don't redirect admin/staff to their dashboards if under maintenance 
   // because MaintenanceGuard will just block them. Let them see the public view.
-  if (!isMaintenance) {
-    if (user.role === 'admin') {
-      return <Navigate to="/admin" replace />;
-    }
-    if (user.role === 'staff') {
-      return <Navigate to="/staff" replace />;
-    }
-  }
+  // TEMPORARILY DISABLED FOR TESTING - let users stay in public view
+  // if (!isMaintenance) {
+  //   if (user.role === 'admin') {
+  //     return <Navigate to="/admin" replace />;
+  //   }
+  //   if (user.role === 'staff') {
+  //     return <Navigate to="/staff" replace />;
+  //   }
+  // }
 
   // Fallback for any other case
   return (
