@@ -8,17 +8,31 @@ export default function MaintenanceGuard({ children }) {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
 
+  // Get user role from localStorage directly to avoid auth context dependency
+  const getUserRole = () => {
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const parsed = JSON.parse(userData);
+        return parsed.role;
+      }
+    } catch (e) {
+      console.warn('Could not parse user from localStorage:', e);
+    }
+    return null;
+  };
+
   const checkMaintenanceStatus = (currentUserRole) => {
     console.log("=== MaintenanceGuard Check ===");
-    
+
     // Check localStorage directly as primary source (more reliable)
     const localMaintenance = localStorage.getItem('maintenance_mode') === 'true';
-    
-    console.log("localStorage values:", { 
+
+    console.log("localStorage values:", {
       maintenance_mode: localStorage.getItem('maintenance_mode'),
       parsed: { maintenance: localMaintenance }
     });
-    
+
     // Use localStorage values as primary (more reliable than context)
     const effectiveMaintenance = localMaintenance;
     
@@ -59,20 +73,6 @@ export default function MaintenanceGuard({ children }) {
   };
 
   useEffect(() => {
-    // Get user role from localStorage (if available)
-    const getUserRole = () => {
-      try {
-        const userData = localStorage.getItem('user');
-        if (userData) {
-          const parsed = JSON.parse(userData);
-          return parsed.role;
-        }
-      } catch (e) {
-        console.warn('Could not parse user from localStorage:', e);
-      }
-      return null;
-    };
-
     const updateUserRoleAndCheck = () => {
       const newRole = getUserRole();
       setUserRole(newRole);
@@ -80,7 +80,7 @@ export default function MaintenanceGuard({ children }) {
     };
 
     updateUserRoleAndCheck();
-    
+
     // Listen for localStorage changes
     const handleStorageChange = (e) => {
       if (e.key === 'maintenance_mode' || e.key === 'user') {
@@ -88,13 +88,13 @@ export default function MaintenanceGuard({ children }) {
         updateUserRoleAndCheck();
       }
     };
-    
+
     // Listen for custom events from SystemSettings
     const handleCustomEvent = (e) => {
       console.log("Custom maintenance event received:", e.detail);
       checkMaintenanceStatus();
     };
-    
+
     // Listen for auth state changes from AuthProvider
     const handleAuthChange = (e) => {
       console.log("Auth state changed:", e.detail);
@@ -105,11 +105,11 @@ export default function MaintenanceGuard({ children }) {
       }
       checkMaintenanceStatus();
     };
-    
+
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('maintenanceModeChanged', handleCustomEvent);
     window.addEventListener('authStateChanged', handleAuthChange);
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('maintenanceModeChanged', handleCustomEvent);
