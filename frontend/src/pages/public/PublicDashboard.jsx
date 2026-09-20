@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabaseHelpers } from "@/lib/supabase.js";
 import { useAuth } from "@/hooks/useAuth.jsx";
+import { useLanguage, getLocalizedField } from "@/components/LanguageToggle.jsx";
 
 const priorityVariant = { critical: "destructive", high: "warning", medium: "secondary", low: "outline" };
 
@@ -134,6 +135,7 @@ export default function PublicDashboard() {
 
 function CampaignCard({ campaign }) {
   const [playing, setPlaying] = useState(false);
+  const language = useLanguage();
 
   const handleListen = () => {
     if (playing) {
@@ -141,15 +143,37 @@ function CampaignCard({ campaign }) {
       setPlaying(false);
       return;
     }
-    
+
     window.speechSynthesis.cancel();
     setPlaying(true);
-    
-    const utterance = new SpeechSynthesisUtterance(`${campaign.title}. ${campaign.objectives}`);
+
+    // Get localized content based on current language
+    const title = getLocalizedField(campaign, 'title', language);
+    const objectives = getLocalizedField(campaign, 'objectives', language);
+
+    const utterance = new SpeechSynthesisUtterance(`${title}. ${objectives}`);
     utterance.rate = 0.9;
+    utterance.lang = language === 'tl' ? 'fil-PH' : 'en-US';
     utterance.onend = () => setPlaying(false);
     utterance.onerror = () => setPlaying(false);
-    
+
+    // Try to set appropriate voice for the language
+    const voices = window.speechSynthesis.getVoices();
+    if (language === 'tl') {
+      const tagalogVoice = voices.find(v => v.lang.includes('fil') || v.lang.includes('tl'));
+      if (tagalogVoice) {
+        utterance.voice = tagalogVoice;
+      } else {
+        // Fallback to English if Tagalog voice not available
+        console.warn('Tagalog voice not available, using English voice');
+        const englishVoice = voices.find(v => v.lang.includes('en'));
+        if (englishVoice) utterance.voice = englishVoice;
+      }
+    } else {
+      const englishVoice = voices.find(v => v.lang.includes('en'));
+      if (englishVoice) utterance.voice = englishVoice;
+    }
+
     window.speechSynthesis.speak(utterance);
   };
 

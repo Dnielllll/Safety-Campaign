@@ -18,14 +18,23 @@ CREATE TABLE IF NOT EXISTS public.users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   failed_login_attempts INTEGER DEFAULT 0,
   locked_until TIMESTAMP WITH TIME ZONE,
-  CONSTRAINT valid_role CHECK (role IN ('public', 'citizen', 'staff', 'admin', 'super_admin', 'superadmin'))
+  preferred_language TEXT DEFAULT 'en',
+  CONSTRAINT valid_role CHECK (role IN ('public', 'citizen', 'staff', 'admin', 'super_admin', 'superadmin')),
+  CONSTRAINT valid_user_language CHECK (preferred_language IN ('en', 'tl'))
 );
 
 -- Campaigns Table
 CREATE TABLE IF NOT EXISTS public.campaigns (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
+  title_en TEXT,
+  title_tl TEXT,
   description TEXT,
+  description_en TEXT,
+  description_tl TEXT,
+  objectives TEXT,
+  objectives_en TEXT,
+  objectives_tl TEXT,
   campaign_type TEXT DEFAULT 'community',
   category TEXT DEFAULT 'community',
   priority TEXT DEFAULT 'medium',
@@ -49,6 +58,14 @@ CREATE TABLE IF NOT EXISTS public.content (
   content_type TEXT NOT NULL,
   media_url TEXT,
   caption TEXT,
+  caption_en TEXT,
+  caption_tl TEXT,
+  content TEXT,
+  content_en TEXT,
+  content_tl TEXT,
+  heading TEXT,
+  heading_en TEXT,
+  heading_tl TEXT,
   order_index INTEGER DEFAULT 0,
   ai_generated BOOLEAN DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -61,7 +78,11 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
   campaign_id UUID REFERENCES public.campaigns(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
+  title_en TEXT,
+  title_tl TEXT,
   message TEXT NOT NULL,
+  message_en TEXT,
+  message_tl TEXT,
   type TEXT DEFAULT 'info',
   status TEXT DEFAULT 'unread',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -77,6 +98,8 @@ CREATE TABLE IF NOT EXISTS public.feedback (
   campaign_id UUID REFERENCES public.campaigns(id) ON DELETE SET NULL,
   rating INTEGER CHECK (rating >= 1 AND rating <= 5),
   comment TEXT,
+  form_labels_en JSONB DEFAULT '{}'::jsonb,
+  form_labels_tl JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -84,7 +107,11 @@ CREATE TABLE IF NOT EXISTS public.feedback (
 CREATE TABLE IF NOT EXISTS public.surveys (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
+  title_en TEXT,
+  title_tl TEXT,
   description TEXT,
+  description_en TEXT,
+  description_tl TEXT,
   campaign_id UUID REFERENCES public.campaigns(id) ON DELETE SET NULL,
   created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
   status TEXT DEFAULT 'draft',
@@ -144,7 +171,7 @@ CREATE TABLE IF NOT EXISTS public.system_settings (
     "contact_email": "admin@barangay178.com"
   }'::jsonb,
   auth_settings JSONB DEFAULT '{
-    "sessionTimeout": 4,
+    "sessionTimeout": 30,
     "maxLoginAttempts": 5,
     "lockoutDuration": 15,
     "passwordMinLength": 8,
@@ -153,6 +180,11 @@ CREATE TABLE IF NOT EXISTS public.system_settings (
     "passwordRequireSpecialChars": true,
     "twoFactorEnabled": false,
     "ipWhitelist": ""
+  }'::jsonb,
+  language_settings JSONB DEFAULT '{
+    "default_language": "en",
+    "supported_languages": ["en", "tl"],
+    "auto_detect": true
   }'::jsonb,
   security_settings JSONB DEFAULT '{}'::jsonb,
   notification_settings JSONB DEFAULT '{}'::jsonb,

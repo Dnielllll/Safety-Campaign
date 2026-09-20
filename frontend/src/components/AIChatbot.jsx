@@ -6,11 +6,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { generateAIResponse } from "@/lib/ai.js";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase.js";
+import { useLanguage } from "@/components/LanguageToggle.jsx";
 
 export default function AIChatbot() {
   const [isOpen, setIsOpen] = useState(false);
+  const language = useLanguage();
   const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hello! I am your Barangay 178 Assistant. How can I help you prepare or stay safe today?" }
+    { 
+      role: "assistant", 
+      content: language === 'tl' 
+        ? "Kumusta! Ako ang iyong Barangay 178 Assistant. Paano kita makatulong sa paghahanda o pagiging ligtas ngayon?" 
+        : "Hello! I am your Barangay 178 Assistant. How can I help you prepare or stay safe today?"
+    }
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -24,6 +31,18 @@ export default function AIChatbot() {
     scrollToBottom();
   }, [messages, isTyping]);
 
+  // Update initial message when language changes
+  useEffect(() => {
+    setMessages([
+      { 
+        role: "assistant", 
+        content: language === 'tl' 
+          ? "Kumusta! Ako ang iyong Barangay 178 Assistant. Paano kita makatulong sa paghahanda o pagiging ligtas ngayon?" 
+          : "Hello! I am your Barangay 178 Assistant. How can I help you prepare or stay safe today?"
+      }
+    ]);
+  }, [language]);
+
   const handleSend = async (e) => {
     e?.preventDefault();
     if (!input.trim() || isTyping) return;
@@ -36,24 +55,33 @@ export default function AIChatbot() {
     try {
       const history = messages.map(m => `${m.role}: ${m.content}`).join("\n");
       const prompt = `${history}\nuser: ${userMsg.content}`;
-      
-      const response = await generateAIResponse(
-        "You are a helpful, brief, and accurate safety assistant for the Barangay 178 Public Safety Campaign System. FAST FACTS: The current Punong Barangay (Barangay Captain) of Barangay 178 in Caloocan City is Editha Labasbas. ABOUT THE SYSTEM: The Barangay 178 Safety Campaign System is an online portal for residents to view public safety campaigns (fire safety, health, disaster preparedness, anti-drug, etc.), read emergency info, hear AI voice announcements of safety content, take community surveys, receive real-time notifications, and submit feedback/complaints directly to the barangay officials. It also includes an offline mode that allows residents to access previously saved campaigns even without internet. STRICT RULES: 1) You may ONLY answer questions related to the Public Safety Campaign system and basic Barangay 178 official info. 2) If a user asks an unrelated question, you MUST politely refuse and say: 'I'm sorry, but I can only assist with questions related to the Public Safety Campaign system and Barangay 178.' 3) If a user simply greets you ('Hi', 'Hello'), respond normally, introduce yourself as the Public Safety Campaign Assistant, and offer help. 4) If they ask how to submit concerns, complaints, feedback, or suggestions, you MUST tell them: 'Please sign up or log in to your Resident account, then go to the Feedback section to submit your concern.' Keep answers under 3 short paragraphs.",
-        prompt
-      );
-      
+
+      // Language-specific system prompt
+      const systemPrompt = language === 'tl' 
+        ? "Ikaw ay isang mabuti, maikli, at tumpak na katulong sa kaligtasan para sa Barangay 178 Public Safety Campaign System. MGA BILIS NG IMPORMASYON: Ang kasalukuyang Punong Barangay (Barangay Captain) ng Barangay 178 sa Caloocan City ay si Editha Labasbas. TUNGKOL SA SISTEMA: Ang Barangay 178 Safety Campaign System ay isang online portal para sa mga residente na tingnan ang mga public safety campaigns (kaligtasan sa sunog, kalusugan, paghahanda sa disaster, anti-drug, etc.), basahin ang emergency info, makinig sa AI voice announcements ng safety content, kumuha ng community surveys, tumanggap ng real-time notifications, at mag-submit ng feedback/complaints nang direkta sa mga barangay officials. Kasama rito ang offline mode na nagpapahintulot sa mga residente na ma-access ang mga na-save na campaigns kahit walang internet. MGA KATITIKAN: 1) Maaari kang SAGOT LANG ng mga katanungan tungkol sa Public Safety Campaign system at basic Barangay 178 official info. 2) Kung magtanong ang user ng hindi kaugnay na katanungan, KAILANGAN mong tumanggi nang maayos at sabihin: 'Paumanhin po, pero makakatulong lang ako sa mga katanungan tungkol sa Public Safety Campaign system at Barangay 178.' 3) Kung lang mag-greet ang user ('Kumusta', 'Hello'), sumagot nang normal, ipakilala ang iyong sarili bilang Public Safety Campaign Assistant, at mag-alok ng tulong. 4) Kung magtanong sila kung paano magsumit ng concerns, complaints, feedback, o suggestions, KAILANGAN mong sabihin sa kanila: 'Mangyaring mag-sign up o mag-log in sa iyong Resident account, pagkatapos ay pumunta sa Feedback section para magsumit ng iyong concern.' Panatilihin ang mga sagot na hindi aabot sa 3 maikling parapo."
+        : "You are a helpful, brief, and accurate safety assistant for the Barangay 178 Public Safety Campaign System. FAST FACTS: The current Punong Barangay (Barangay Captain) of Barangay 178 in Caloocan City is Editha Labasbas. ABOUT THE SYSTEM: The Barangay 178 Safety Campaign System is an online portal for residents to view public safety campaigns (fire safety, health, disaster preparedness, anti-drug, etc.), read emergency info, hear AI voice announcements of safety content, take community surveys, receive real-time notifications, and submit feedback/complaints directly to the barangay officials. It also includes an offline mode that allows residents to access previously saved campaigns even without internet. STRICT RULES: 1) You may ONLY answer questions related to the Public Safety Campaign system and basic Barangay 178 official info. 2) If a user asks an unrelated question, you MUST politely refuse and say: 'I'm sorry, but I can only assist with questions related to the Public Safety Campaign system and Barangay 178.' 3) If a user simply greets you ('Hi', 'Hello'), respond normally, introduce yourself as the Public Safety Campaign Assistant, and offer help. 4) If they ask how to submit concerns, complaints, feedback, or suggestions, you MUST tell them: 'Please sign up or log in to your Resident account, then go to the Feedback section to submit your concern.' Keep answers under 3 short paragraphs.";
+
+      const response = await generateAIResponse(systemPrompt, prompt);
+
       setMessages((prev) => [...prev, { role: "assistant", content: response }]);
     } catch (error) {
       console.error("Chatbot error:", error);
       const errorStr = error.message?.toLowerCase() || "";
       const isKeyMissing = errorStr.includes("api key is not configured") || errorStr.includes("api_key");
       const isRateLimit = errorStr.includes("429") || errorStr.includes("quota") || errorStr.includes("too many requests");
+
+      let errMsg = language === 'tl'
+        ? "Paumanhin, may problema sa koneksyon ngayon. Mangyaring subukan ulit mamaya."
+        : "Sorry, I am having trouble connecting right now. Please try again later.";
       
-      let errMsg = "Sorry, I am having trouble connecting right now. Please try again later.";
       if (isKeyMissing) {
-        errMsg = "The Gemini API key is missing. Please add VITE_GEMINI_API_KEY to your environment variables.";
+        errMsg = language === 'tl'
+          ? "Ang Gemini API key ay nawawala. Mangyaring magdagdag ng VITE_GEMINI_API_KEY sa iyong environment variables."
+          : "The Gemini API key is missing. Please add VITE_GEMINI_API_KEY to your environment variables.";
       } else if (isRateLimit) {
-        errMsg = "You are asking questions a bit too quickly and we have hit the API rate limit. Please wait about a minute and try asking again!";
+        errMsg = language === 'tl'
+          ? "Masyadong mabilis ang iyong pagtatanong at naabot natin ang API rate limit. Mangyaring maghintay ng isang minuto at subukang magtanong ulit!"
+          : "You are asking questions a bit too quickly and we have hit the API rate limit. Please wait about a minute and try asking again!";
       }
       setMessages((prev) => [...prev, { role: "assistant", content: errMsg }]);
     } finally {

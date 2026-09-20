@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth.jsx";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ThemeToggle.jsx";
+import LanguageToggle from "@/components/LanguageToggle.jsx";
 import LogoutOverlay from "@/components/LogoutOverlay.jsx";
 import AIChatbot from "@/components/AIChatbot.jsx";
 
@@ -85,6 +86,8 @@ export default function PublicLayout() {
             </nav>
 
             <div className="flex items-center gap-2">
+              <LanguageToggle />
+              <ThemeToggle />
               <Button size="sm" asChild className="hidden sm:flex">
                 <Link to="/login">Log in</Link>
               </Button>
@@ -222,7 +225,10 @@ export default function PublicLayout() {
                   <LogOut className="h-4 w-4" />
                   Log out
                 </button>
-                <ThemeToggle />
+                <div className="flex items-center gap-2">
+                  <LanguageToggle />
+                  <ThemeToggle />
+                </div>
               </div>
             </div>
           </div>
@@ -242,6 +248,7 @@ export default function PublicLayout() {
               </Link>
 
               <div className="flex items-center gap-2">
+                <LanguageToggle />
                 <ThemeToggle />
                 <Link to="/profile">
                   <Avatar>
@@ -327,6 +334,7 @@ export default function PublicLayout() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <LanguageToggle />
               <ThemeToggle />
               <span className="text-xs text-muted-foreground hidden sm:inline-flex border border-border px-2 py-1 rounded">
                 Resident
@@ -397,6 +405,8 @@ export default function PublicLayout() {
             </div>
           </Link>
           <div className="flex items-center gap-2">
+            <LanguageToggle />
+            <ThemeToggle />
             <Button size="sm" onClick={handleLogout}>Log out</Button>
           </div>
         </div>
