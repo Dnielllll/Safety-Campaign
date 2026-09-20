@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabaseHelpers, supabase } from "@/lib/supabase.js";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { t } from "@/lib/translations.js";
 
 export default function Notifications() {
   const navigate = useNavigate();
@@ -159,14 +160,14 @@ export default function Notifications() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Notifications
+            <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> {t('notifications')}
           </h1>
           <p className="text-muted-foreground text-xs sm:text-sm mt-1">Real-time campaign alerts and emergency notifications.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           {unread > 0 && <Badge>{unread} unread</Badge>}
           <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing} className="w-full sm:w-auto">
-            <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} /> Refresh
+            <RefreshCw className={cn("h-4 w-4 mr-1", refreshing && "animate-spin")} /> {t('refresh')}
           </Button>
           <Button variant="ghost" size="sm" onClick={markAllRead} disabled={unread === 0} className="w-full sm:w-auto">
             <CheckCheck className="h-4 w-4 mr-1" /> Mark all read

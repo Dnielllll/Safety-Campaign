@@ -6,20 +6,21 @@ import { useAuth } from "@/hooks/useAuth.jsx";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ThemeToggle.jsx";
-import LanguageToggle from "@/components/LanguageToggle.jsx";
+import LanguageThemeToggle from "@/components/LanguageThemeToggle.jsx";
 import LogoutOverlay from "@/components/LogoutOverlay.jsx";
 import AIChatbot from "@/components/AIChatbot.jsx";
+import { t } from "@/lib/translations.js";
 
 
 const navItems = [
-  { to: "/", label: "Home", icon: Home },
-  { to: "/campaigns", label: "Safety Campaigns", icon: Megaphone },
-  { to: "/voice-announcements", label: "AI Voice", icon: Volume2 },
-  { to: "/notifications", label: "Notifications", icon: Bell },
-  { to: "/feedback", label: "Feedback", icon: MessageSquare },
-  { to: "/surveys", label: "Surveys", icon: ClipboardList },
-  { to: "/emergency", label: "Emergency Info", icon: Siren },
-  { to: "/about", label: "About Barangay", icon: Building2 },
+  { to: "/", label: "home", icon: Home },
+  { to: "/campaigns", label: "safetyCampaigns", icon: Megaphone },
+  { to: "/voice-announcements", label: "aiVoice", icon: Volume2 },
+  { to: "/notifications", label: "notifications", icon: Bell },
+  { to: "/feedback", label: "feedback", icon: MessageSquare },
+  { to: "/surveys", label: "surveys", icon: ClipboardList },
+  { to: "/emergency", label: "emergencyInfo", icon: Siren },
+  { to: "/about", label: "aboutBarangay", icon: Building2 },
 ];
 
 export default function PublicLayout() {
@@ -79,20 +80,19 @@ export default function PublicLayout() {
                     )}
                   >
                     <Icon className="h-4 w-4" />
-                    {item.label}
+                    {t(item.label)}
                   </Link>
                 );
               })}
             </nav>
 
             <div className="flex items-center gap-2">
-              <LanguageToggle />
-              <ThemeToggle />
+              <LanguageThemeToggle />
               <Button size="sm" asChild className="hidden sm:flex">
-                <Link to="/login">Log in</Link>
+                <Link to="/login">{t('login')}</Link>
               </Button>
               <Button size="sm" asChild variant="outline" className="hidden sm:flex">
-                <Link to="/register">Sign up</Link>
+                <Link to="/register">{t('signup')}</Link>
               </Button>
               <button
                 className="md:hidden rounded-md p-2 text-muted-foreground hover:bg-secondary"
@@ -124,7 +124,7 @@ export default function PublicLayout() {
                     )}
                   >
                     <Icon className="h-4 w-4" />
-                    {item.label}
+                    {t(item.label)}
                   </Link>
                 );
               })}
@@ -226,8 +226,7 @@ export default function PublicLayout() {
                   Log out
                 </button>
                 <div className="flex items-center gap-2">
-                  <LanguageToggle />
-                  <ThemeToggle />
+                  <LanguageThemeToggle />
                 </div>
               </div>
             </div>
@@ -248,8 +247,7 @@ export default function PublicLayout() {
               </Link>
 
               <div className="flex items-center gap-2">
-                <LanguageToggle />
-                <ThemeToggle />
+                <LanguageThemeToggle />
                 <Link to="/profile">
                   <Avatar>
                     {user?.avatar_url ? (
@@ -290,7 +288,7 @@ export default function PublicLayout() {
                       )}
                     >
                       <Icon className="h-4 w-4" />
-                      {item.label}
+                      {t(item.label)}
                     </Link>
                   );
                 })}
@@ -334,8 +332,7 @@ export default function PublicLayout() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <LanguageToggle />
-              <ThemeToggle />
+              <LanguageThemeToggle />
               <span className="text-xs text-muted-foreground hidden sm:inline-flex border border-border px-2 py-1 rounded">
                 Resident
               </span>
@@ -405,8 +402,7 @@ export default function PublicLayout() {
             </div>
           </Link>
           <div className="flex items-center gap-2">
-            <LanguageToggle />
-            <ThemeToggle />
+            <LanguageThemeToggle />
             <Button size="sm" onClick={handleLogout}>Log out</Button>
           </div>
         </div>

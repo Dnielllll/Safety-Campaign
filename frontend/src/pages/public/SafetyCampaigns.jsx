@@ -140,7 +140,7 @@ export default function SafetyCampaigns() {
     setTimeout(() => {
       const utterance = new SpeechSynthesisUtterance(`${campaign.title}. ${content}`);
       // Use standard English if en-PH fails on some devices
-      utterance.lang = 'en-US'; 
+      utterance.lang = 'en-US';
       utterance.rate = 0.9;
       
       utterance.onend = () => setPlaying(null);
@@ -182,6 +182,7 @@ export default function SafetyCampaigns() {
               ) : (
                 <>
                   <Volume2 className="h-4 w-4 mr-2" />
+                  Listen
                   Voice Announcement
                 </>
               )}

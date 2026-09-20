@@ -8,21 +8,9 @@ const LANGUAGE_OPTIONS = [
 ];
 
 export default function LanguageToggle({ className }) {
-  const [currentLanguage, setCurrentLanguage] = useState('en');
+  const [currentLanguage, setCurrentLanguage] = useState(() => localStorage.getItem('language') || 'en');
 
   useEffect(() => {
-    // Load language preference from localStorage
-    const savedLanguage = localStorage.getItem('language');
-    if (savedLanguage && LANGUAGE_OPTIONS.find(opt => opt.code === savedLanguage)) {
-      setCurrentLanguage(savedLanguage);
-    } else {
-      // Auto-detect browser language
-      const browserLang = navigator.language || navigator.userLanguage;
-      const autoLanguage = browserLang.startsWith('tl') || browserLang.startsWith('fil') ? 'tl' : 'en';
-      setCurrentLanguage(autoLanguage);
-      localStorage.setItem('language', autoLanguage);
-    }
-
     // Listen for language changes from other components
     const handleLanguageChange = (e) => {
       if (e.detail?.language) {
@@ -37,11 +25,11 @@ export default function LanguageToggle({ className }) {
   const handleLanguageChange = (languageCode) => {
     setCurrentLanguage(languageCode);
     localStorage.setItem('language', languageCode);
-    
+
     // Dispatch event for other components to listen to
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: languageCode } }));
-    
-    // Reload page to apply language changes
+
+    // Reload page to apply language changes and persist
     window.location.reload();
   };
 
@@ -73,12 +61,9 @@ export default function LanguageToggle({ className }) {
 
 // Hook to get current language in components
 export function useLanguage() {
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState(() => localStorage.getItem('language') || 'en');
 
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') || 'en';
-    setLanguage(savedLanguage);
-
     const handleLanguageChange = (e) => {
       if (e.detail?.language) {
         setLanguage(e.detail.language);

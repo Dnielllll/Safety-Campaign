@@ -15,14 +15,15 @@ const quickLinks = [
   { to: "/voice-announcements", label: "AI Voice Announcements", icon: Volume2, color: "bg-orange-200 text-orange-600", requirePublic: true },
   { to: "/emergency", label: "Emergency Info", icon: ShieldAlert, color: "bg-orange-200 text-orange-600" },
   { to: "/notifications", label: "Notifications", icon: Bell, color: "bg-orange-200 text-orange-600" },
-  { to: "/feedback", label: "Submit Feedback", icon: MessageSquare, color: "bg-muted text-muted-foreground" },
-  { to: "/surveys", label: "Surveys", icon: ClipboardList, color: "bg-muted text-muted-foreground" },
+  { to: "/feedback", label: "Submit Feedback", icon: MessageSquare, color: "bg-orange-200 text-orange-600" },
+  { to: "/surveys", label: "Surveys", icon: ClipboardList, color: "bg-orange-200 text-orange-600" },
   { to: "/about", label: "About Barangay", icon: Building2, color: "bg-orange-200 text-orange-600" },
 ];
 
 export default function PublicDashboard() {
   const { user } = useAuth();
   const [campaigns, setCampaigns] = useState([]);
+  const language = useLanguage();
 
   useEffect(() => {
     supabaseHelpers.getCampaigns({ status: "published" })

@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
 import { AuthProvider, useAuth } from "./hooks/useAuth.jsx";
 import { ThemeProvider } from "./components/ThemeProvider.jsx";
+import MaintenanceGuard from "./components/MaintenanceGuard.jsx";
 import "./index.css";
 
 // Register Service Worker for offline functionality
@@ -50,7 +51,7 @@ class ErrorBoundary extends React.Component {
 
 function AppWithAuth() {
   const { loading } = useAuth();
-  
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -61,8 +62,12 @@ function AppWithAuth() {
       </div>
     );
   }
-  
-  return <App />;
+
+  return (
+    <MaintenanceGuard>
+      <App />
+    </MaintenanceGuard>
+  );
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(

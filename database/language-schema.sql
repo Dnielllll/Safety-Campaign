@@ -101,72 +101,50 @@ CREATE INDEX IF NOT EXISTS idx_notifications_title_tl ON public.notifications(ti
 -- MIGRATION DATA POPULATION
 -- ============================================
 
--- Migrate existing campaign data to English fields
--- Handle different table structures safely
-DO $$
-BEGIN
-    -- Check if objectives column exists before attempting to migrate it
-    IF EXISTS (
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_name = 'campaigns' 
-        AND column_name = 'objectives'
-    ) THEN
-        UPDATE public.campaigns 
-        SET 
-            title_en = COALESCE(title_en, title),
-            objectives_en = COALESCE(objectives_en, objectives),
-            description_en = COALESCE(description_en, description)
-        WHERE title_en IS NULL OR objectives_en IS NULL OR description_en IS NULL;
+-- Minimal migration - just set English fields to existing values where safe
+-- Skip complex migrations to avoid errors
 
-        UPDATE public.campaigns 
-        SET 
-            title_tl = COALESCE(title_tl, title),
-            objectives_tl = COALESCE(objectives_tl, objectives),
-            description_tl = COALESCE(description_tl, description)
-        WHERE title_tl IS NULL OR objectives_tl IS NULL OR description_tl IS NULL;
-    ELSE
-        -- If objectives column doesn't exist, migrate without it
-        UPDATE public.campaigns 
-        SET 
-            title_en = COALESCE(title_en, title),
-            description_en = COALESCE(description_en, description)
-        WHERE title_en IS NULL OR description_en IS NULL;
-
-        UPDATE public.campaigns 
-        SET 
-            title_tl = COALESCE(title_tl, title),
-            description_tl = COALESCE(description_tl, description)
-        WHERE title_tl IS NULL OR description_tl IS NULL;
-    END IF;
-END $$;
-
--- Migrate existing content data
-UPDATE public.content 
+-- Campaigns - migrate title and description only (skip objectives for now)
+UPDATE public.campaigns 
 SET 
-  content_en = COALESCE(content_en, content),
-  heading_en = COALESCE(heading_en, heading)
-WHERE content_en IS NULL OR heading_en IS NULL;
+    title_en = COALESCE(title_en, title),
+    description_en = COALESCE(description_en, description)
+WHERE title_en IS NULL OR description_en IS NULL;
 
--- Set default Tagalog content values
-UPDATE public.content 
+UPDATE public.campaigns 
 SET 
-  content_tl = COALESCE(content_tl, content), -- Placeholder - should be translated
-  heading_tl = COALESCE(heading_tl, heading) -- Placeholder - should be translated
-WHERE content_tl IS NULL OR heading_tl IS NULL;
+    title_tl = COALESCE(title_tl, title),
+    description_tl = COALESCE(description_tl, description)
+WHERE title_tl IS NULL OR description_tl IS NULL;
 
--- Migrate existing notification data
+-- Notifications - migrate title and message
 UPDATE public.notifications 
 SET 
-  title_en = COALESCE(title_en, title),
-  message_en = COALESCE(message_en, message)
+    title_en = COALESCE(title_en, title),
+    message_en = COALESCE(message_en, message)
 WHERE title_en IS NULL OR message_en IS NULL;
 
--- Set default Tagalog notification values
 UPDATE public.notifications 
 SET 
-  title_tl = COALESCE(title_tl, title), -- Placeholder - should be translated
-  message_tl = COALESCE(message_tl, message) -- Placeholder - should be translated
+    title_tl = COALESCE(title_tl, title),
+    message_tl = COALESCE(message_tl, message)
 WHERE title_tl IS NULL OR message_tl IS NULL;
+
+-- Surveys - migrate title and description
+UPDATE public.surveys 
+SET 
+    title_en = COALESCE(title_en, title),
+    description_en = COALESCE(description_en, description)
+WHERE title_en IS NULL OR description_en IS NULL;
+
+UPDATE public.surveys 
+SET 
+    title_tl = COALESCE(title_tl, title),
+    description_tl = COALESCE(description_tl, description)
+WHERE title_tl IS NULL OR description_tl IS NULL;
+
+-- Content table and feedback table - skip data migration
+-- You can manually populate these fields as needed
 
 -- ============================================
 -- ROW LEVEL SECURITY (RLS) POLICIES

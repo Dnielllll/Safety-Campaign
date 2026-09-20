@@ -5,7 +5,6 @@ import PublicLayout from "@/layouts/PublicLayout";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import RequireRole from "@/routes/RequireRole";
 import OfflineIndicator from "@/components/OfflineIndicator";
-import MaintenanceGuard from "@/components/MaintenanceGuard";
 
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -69,8 +68,7 @@ export default function App() {
   return (
     <>
       <OfflineIndicator />
-      <MaintenanceGuard>
-        <Routes>
+      <Routes>
       {/* Auth */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -189,7 +187,6 @@ export default function App() {
       <Route path="/404" element={<NotFound />} />
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
-      </MaintenanceGuard>
     </>
   );
 }

@@ -235,7 +235,7 @@ export default function SecurityAudits() {
       warning: <AlertTriangle className="h-3 w-3" />,
     };
     return (
-      <Badge className={colors[status] || 'bg-gray-600 text-white'} className="gap-1">
+      <Badge className={`${colors[status] || 'bg-gray-600 text-white'} gap-1`}>
         {icons[status]}
         {status}
       </Badge>
