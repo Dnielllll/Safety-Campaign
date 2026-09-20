@@ -31,6 +31,7 @@ export default function Login() {
   const [showOtpBypassNotice, setShowOtpBypassNotice] = useState(false);
   const [bypassTimeRemaining, setBypassTimeRemaining] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   React.useEffect(() => {
     const logoutMsg = localStorage.getItem("logout_message");
@@ -61,6 +62,73 @@ export default function Login() {
     const passwordInput = document.querySelector('input[type="password"]');
     if (emailInput) emailInput.value = '';
     if (passwordInput) passwordInput.value = '';
+
+    // Handle OAuth callback from Google Sign-In
+    const handleOAuthCallback = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        try {
+          // Check if user exists in database
+          const { data: existingUser } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          if (!existingUser) {
+            // Create user profile from Google OAuth data - ONLY for residents (public role)
+            const { error: insertError } = await supabase
+              .from('users')
+              .insert({
+                id: session.user.id,
+                email: session.user.email,
+                name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+                role: 'public', // Google Sign-In only for residents
+                is_active: true,
+              });
+
+            if (insertError) {
+              console.error('Error creating user profile:', insertError);
+            }
+          } else {
+            // Check if existing user has restricted role (staff, admin, super_admin)
+            if (existingUser.role === 'staff' || existingUser.role === 'admin' || existingUser.role === 'super_admin') {
+              // Sign out restricted users from Google Sign-In
+              await supabase.auth.signOut();
+              setError('Google Sign-In is only available for residents. Staff and admin accounts must use email/password login.');
+              return;
+            }
+          }
+
+          // Navigate based on user role (should only be public/resident)
+          const { data: userProfile } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+
+          const userRole = userProfile?.role || 'public';
+          
+          // Only allow public/resident users from Google Sign-In
+          if (userRole === 'public' || userRole === 'citizen') {
+            window.location.href = '/';
+          } else {
+            // Sign out and show error for non-public roles
+            await supabase.auth.signOut();
+            setError('Google Sign-In is only available for residents. Staff and admin accounts must use email/password login.');
+          }
+        } catch (error) {
+          console.error('OAuth callback error:', error);
+          setError('Authentication failed. Please try again.');
+        }
+      }
+    };
+
+    // Check for OAuth callback on mount
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('access_token') || urlParams.has('code')) {
+      handleOAuthCallback();
+    }
   }, []);
 
   // Check for recent OTP verification when email changes
@@ -387,6 +455,34 @@ export default function Login() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    setError("");
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/login`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      });
+
+      if (error) throw error;
+      
+      // The OAuth flow will redirect, so we don't need to handle navigation here
+      // The redirect will handle the authentication
+    } catch (err) {
+      console.error("Google sign-in error:", err);
+      setError("Google sign-in failed. Please try again or use email login.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
 
 
 
@@ -564,6 +660,18 @@ export default function Login() {
                         </button>
                       </div>
                     </div>
+
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowForgotPassword(true)}
+                        className="text-xs"
+                      >
+                        Forgot password?
+                      </Button>
+                    </div>
                   </>
                 )}
 
@@ -636,24 +744,61 @@ export default function Login() {
               </CardContent>
               <CardFooter className="flex flex-col gap-3">
                 <Button type="submit" className="w-full" disabled={loading || resetLoading}>
-                  {resetLoading ? "Sending…" : (loading ? "Processing…" : (showForgotPassword ? "Send Reset Link" : (showOTP ? "Verify & Sign in" : "Continue")))}
+                  {resetLoading ? "Sending…" : loading ? "Processing…" : showForgotPassword ? "Send Reset Link" : showOTP ? "Verify & Sign in" : "Login"}
                 </Button>
 
                 {!showForgotPassword && !showOTP && (
                   <>
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                      </div>
+                    </div>
+                    
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowForgotPassword(true)}
+                      variant="outline"
                       className="w-full"
+                      onClick={handleGoogleSignIn}
+                      disabled={googleLoading}
                     >
-                      Forgot password?
+                      {googleLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                          Connecting to Google...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
+                            <path
+                              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                              fill="#4285F4"
+                            />
+                            <path
+                              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-.25 0-1.93-.67-2.67-1.84l-2.77 2.77h-8.8v4.25H12z"
+                              fill="#34A853"
+                            />
+                            <path
+                              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                              fill="#FBBC05"
+                            />
+                            <path
+                              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.98 1 4.63 3.6 2.18 7.07l3.66 2.84c.87-2.6 3.3-5.53 3.3-5.53z"
+                              fill="#EA4335"
+                            />
+                          </svg>
+                          Sign in with Google
+                        </>
+                      )}
                     </Button>
+
                     <p className="text-xs text-muted-foreground text-center w-full">
-                      New resident?{" "}
+                      Don't have an account?{" "}
                       <Link to="/register" className="text-primary font-medium hover:underline">
-                        Create a resident account
+                        Register here
                       </Link>
                     </p>
                   </>
