@@ -50,7 +50,7 @@ export default function PublicLayout() {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         {/* Top navigation bar */}
-        <header className="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur shadow-sm">
+        <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur shadow-sm">
           <div className="container flex h-16 items-center justify-between">
             <Link to="/" className="flex items-center gap-2 shrink-0">
               <img src="/logo.png" alt="Barangay 178 Seal" className="h-10 w-10 rounded-full object-contain" />
@@ -105,7 +105,7 @@ export default function PublicLayout() {
 
           {/* Mobile navigation drawer */}
           {mobileOpen && (
-            <nav className="md:hidden border-t border-border bg-white px-4 pb-4 pt-2 flex flex-col gap-1">
+            <nav className="md:hidden border-t border-border bg-card px-4 pb-4 pt-2 flex flex-col gap-1">
               {navItems.map((item) => {
                 if (item.to === "/feedback" || item.to === "/surveys") return null;
 
@@ -144,7 +144,7 @@ export default function PublicLayout() {
           <Outlet />
         </main>
 
-        <footer className="border-t border-border py-8 mt-16 bg-white">
+        <footer className="border-t border-border py-8 mt-16 bg-card">
           <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <img src="/logo.png" alt="Barangay 178 Seal" className="h-8 w-8 rounded-full object-contain" />
@@ -166,9 +166,9 @@ export default function PublicLayout() {
         {loggingOut && <LogoutOverlay onDone={doLogout} />}
         <div className="flex flex-1">
         {/* Sidebar - Desktop */}
-        <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-white sticky top-0 h-[calc(100vh-40px)]">
+        <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-card sticky top-0 h-[calc(100vh-40px)]">
           {/* Logo section */}
-          <div className="p-4 border-b border-border">
+          <div className="p-4 border-b border-border bg-card">
             <Link to="/" className="flex items-center gap-2">
               <img src="/logo.png" alt="Barangay 178 Seal" className="h-10 w-10 rounded-full object-contain" />
               <div className="leading-tight">
@@ -198,7 +198,7 @@ export default function PublicLayout() {
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  {item.label}
+                  {t(item.label)}
                 </Link>
               );
             })}
@@ -236,7 +236,7 @@ export default function PublicLayout() {
         {/* Mobile layout */}
         <div className="flex-1 flex flex-col lg:hidden">
           {/* Mobile header */}
-          <header className="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur shadow-sm">
+          <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur shadow-sm">
             <div className="container flex h-16 items-center justify-between">
               <Link to="/" className="flex items-center gap-2 shrink-0">
                 <img src="/logo.png" alt="Barangay 178 Seal" className="h-10 w-10 rounded-full object-contain" />
@@ -268,7 +268,7 @@ export default function PublicLayout() {
 
             {/* Mobile nav drawer */}
             {mobileOpen && (
-              <nav className="border-t border-border bg-white px-4 pb-4 pt-2 flex flex-col gap-1 max-h-[70vh] overflow-y-auto">
+              <nav className="border-t border-border bg-card px-4 pb-4 pt-2 flex flex-col gap-1 max-h-[70vh] overflow-y-auto">
                 {navItems.map((item) => {
                   // Hide AI Voice from resident accounts
                   if (item.to === "/voice-announcements") return null;
@@ -310,7 +310,7 @@ export default function PublicLayout() {
             <Outlet />
           </main>
 
-          <footer className="border-t border-border py-8 mt-16 bg-white">
+          <footer className="border-t border-border py-8 mt-16 bg-card">
             <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <img src="/logo.png" alt="Barangay 178 Seal" className="h-8 w-8 rounded-full object-contain" />
@@ -356,7 +356,7 @@ export default function PublicLayout() {
             <Outlet />
           </main>
 
-          <footer className="border-t border-border py-8 mt-16 bg-white">
+          <footer className="border-t border-border py-8 mt-16 bg-card">
             <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <img src="/logo.png" alt="Barangay 178 Seal" className="h-8 w-8 rounded-full object-contain" />
@@ -392,7 +392,7 @@ export default function PublicLayout() {
   // Fallback for any other case
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur shadow-sm">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur shadow-sm">
         <div className="container flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <img src="/logo.png" alt="Barangay 178 Seal" className="h-10 w-10 rounded-full object-contain" />
