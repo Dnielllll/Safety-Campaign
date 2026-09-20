@@ -149,7 +149,7 @@ function CampaignCard({ campaign }) {
 
     // Get localized content based on current language
     const title = getLocalizedField(campaign, 'title', language);
-    const objectives = getLocalizedField(campaign, 'objectives', language);
+    const objectives = getLocalizedField(campaign, 'objectives', language) || getLocalizedField(campaign, 'description', language) || '';
 
     const utterance = new SpeechSynthesisUtterance(`${title}. ${objectives}`);
     utterance.rate = 0.9;

@@ -110,22 +110,27 @@ export function getLocalizedContent(content, language = 'en') {
 // Helper function to get localized field from database object
 export function getLocalizedField(obj, fieldName, language = 'en') {
   if (!obj) return '';
-  
+
   const languageField = `${fieldName}_${language}`;
   const englishField = `${fieldName}_en`;
   const tagalogField = `${fieldName}_tl`;
-  
+
   // Try language-specific field first
   if (obj[languageField]) return obj[languageField];
-  
+
   // Fallback to English
   if (obj[englishField]) return obj[englishField];
-  
+
   // Fallback to Tagalog
   if (obj[tagalogField]) return obj[tagalogField];
-  
+
   // Fallback to original field
   if (obj[fieldName]) return obj[fieldName];
-  
+
+  // Final fallback - try description if field is objectives and it doesn't exist
+  if (fieldName === 'objectives' && obj['description']) return obj['description'];
+  if (fieldName === 'objectives' && obj['description_en']) return obj['description_en'];
+  if (fieldName === 'objectives' && obj['description_tl']) return obj['description_tl'];
+
   return '';
 }

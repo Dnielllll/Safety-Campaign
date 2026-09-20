@@ -102,20 +102,43 @@ CREATE INDEX IF NOT EXISTS idx_notifications_title_tl ON public.notifications(ti
 -- ============================================
 
 -- Migrate existing campaign data to English fields
-UPDATE public.campaigns 
-SET 
-  title_en = COALESCE(title_en, title),
-  objectives_en = COALESCE(objectives_en, objectives),
-  description_en = COALESCE(description_en, description)
-WHERE title_en IS NULL OR objectives_en IS NULL OR description_en IS NULL;
+-- Handle different table structures safely
+DO $$
+BEGIN
+    -- Check if objectives column exists before attempting to migrate it
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'campaigns' 
+        AND column_name = 'objectives'
+    ) THEN
+        UPDATE public.campaigns 
+        SET 
+            title_en = COALESCE(title_en, title),
+            objectives_en = COALESCE(objectives_en, objectives),
+            description_en = COALESCE(description_en, description)
+        WHERE title_en IS NULL OR objectives_en IS NULL OR description_en IS NULL;
 
--- Set default Tagalog values (you should update these with actual translations)
-UPDATE public.campaigns 
-SET 
-  title_tl = COALESCE(title_tl, title), -- Placeholder - should be translated
-  objectives_tl = COALESCE(objectives_tl, objectives), -- Placeholder - should be translated
-  description_tl = COALESCE(description_tl, description) -- Placeholder - should be translated
-WHERE title_tl IS NULL OR objectives_tl IS NULL OR description_tl IS NULL;
+        UPDATE public.campaigns 
+        SET 
+            title_tl = COALESCE(title_tl, title),
+            objectives_tl = COALESCE(objectives_tl, objectives),
+            description_tl = COALESCE(description_tl, description)
+        WHERE title_tl IS NULL OR objectives_tl IS NULL OR description_tl IS NULL;
+    ELSE
+        -- If objectives column doesn't exist, migrate without it
+        UPDATE public.campaigns 
+        SET 
+            title_en = COALESCE(title_en, title),
+            description_en = COALESCE(description_en, description)
+        WHERE title_en IS NULL OR description_en IS NULL;
+
+        UPDATE public.campaigns 
+        SET 
+            title_tl = COALESCE(title_tl, title),
+            description_tl = COALESCE(description_tl, description)
+        WHERE title_tl IS NULL OR description_tl IS NULL;
+    END IF;
+END $$;
 
 -- Migrate existing content data
 UPDATE public.content 
@@ -159,7 +182,6 @@ WHERE title_tl IS NULL OR message_tl IS NULL;
 -- Example: Update sample campaign with real Tagalog translation
 -- UPDATE public.campaigns 
 -- SET title_tl = 'Mga Tip sa Kaligtasan ng Sunog',
---     objectives_tl = 'Bawasan ang insidente ng sunog sa mga pook paninirahan.',
 --     description_tl = 'Mahalagang impormasyon tungkol sa kaligtasan ng sunog para sa mga residente.'
 -- WHERE title_en = 'Fire Safety Tips';
 
