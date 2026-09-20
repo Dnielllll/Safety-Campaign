@@ -203,7 +203,7 @@ export default function AnalyticsReports() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Analytics & Reports
+            <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Analytics
           </h1>
           <p className="text-muted-foreground text-xs sm:text-sm">Campaign reach, engagement, participation, and performance.</p>
         </div>
@@ -337,22 +337,7 @@ export default function AnalyticsReports() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Available Reports</CardTitle>
-        </CardHeader>
-        <CardContent className="divide-y divide-border">
-          {["Monthly Campaign Performance — June 2026", "Resident Engagement Summary — Q2 2026", "Notification Delivery Report — June 2026"].map((r) => (
-            <div key={r} className="flex items-center justify-between py-3">
-              <span className="text-sm font-medium">{r}</span>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">PDF</Badge>
-                <Button variant="ghost" size="sm"><Download className="h-4 w-4" /></Button>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+
 
       <Card>
         <CardHeader>

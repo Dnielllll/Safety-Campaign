@@ -104,6 +104,7 @@ const adminNavGroups = [
   {
     title: "Analytics",
     items: [
+      { to: "/admin/analytics-reports", label: "Analytics", icon: BarChart3 },
       { to: "/admin/reports", label: "Reports", icon: BarChart3 },
       { to: "/admin/process-monitoring", label: "Monitoring", icon: Activity },
       { to: "/admin/audit-trail", label: "Audit Trail", icon: History },

@@ -157,7 +157,7 @@ export default function App() {
         <Route path="notifications" element={<NotificationManagement />} />
         <Route path="feedback" element={<FeedbackManagement />} />
         <Route path="reports" element={<AdminReports />} />
-        <Route path="analytics" element={<AnalyticsReports />} />
+        <Route path="analytics-reports" element={<AnalyticsReports />} />
         <Route path="process-monitoring" element={<ProcessMonitoring />} />
         <Route path="audit-trail" element={<AuditTrail />} />
         <Route path="settings" element={<SystemSettings />} />
