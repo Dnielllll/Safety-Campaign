@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Search, Filter, Volume2, ArrowRight, Megaphone, Image as ImageIcon, Video, Square } from "lucide-react";
+import { Search, Filter, Volume2, ArrowRight, Megaphone, Image as ImageIcon, Video, Square, Languages } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,72 @@ const categories = ["All", "Fire Safety", "Disaster Preparedness", "Health", "An
 const priorities = ["All", "critical", "high", "medium", "low"];
 const priorityVariant = { critical: "destructive", high: "warning", medium: "secondary", low: "outline" };
 
+// Translation dictionary for campaign content
+const translations = {
+  english: {
+    backToCampaigns: "← Back to campaigns",
+    listenVoiceAnnouncement: "Listen Voice Announcement",
+    stop: "Stop",
+    campaignContent: "Campaign Content",
+    activityDate: "Activity Date",
+    searchCampaigns: "Search campaigns…",
+    loadingCampaigns: "Loading campaigns…",
+    noPublishedCampaigns: "No published campaigns yet.",
+    campaignsWillAppear: "Campaigns approved by the admin will appear here.",
+    readMore: "Read more",
+    listen: "Listen",
+    // Anti-Drug Campaign translations
+    antiDrugTitle: "Anti-Drug Awareness Program",
+    antiDrugAdvisory: "🚫 ANTI-DRUG AWARENESS ADVISORY",
+    antiDrugAttention: "ATTENTION Barangay 178 Residents:",
+    antiDrugCommitment: "Our barangay is committed to being drug-free. Here is what you need to know:",
+    antiDrugDangers: "Dangers of Drug Abuse:",
+    antiDrugDanger1: "• Destroys health and family relationships",
+    antiDrugDanger2: "• Leads to criminal behavior and imprisonment",
+    antiDrugDanger3: "• Affects the entire community's safety",
+    antiDrugWhatToDo: "What You Can Do:",
+    antiDrugAction1: "• Report drug activities anonymously to the Barangay Anti-Drug Abuse Council (BADAC)",
+    antiDrugAction2: "• Support community rehabilitation programs",
+    antiDrugAction3: "• Educate your children about the dangers of drugs",
+    antiDrugAction4: "• Participate in Barangay Drug Clearing activities",
+    antiDrugSupport: "Support Services:",
+    antiDrugBadac: "📍 BADAC Office: Barangay Hall, Room 2",
+    antiDrugHotline: "📞 Anonymous Hotline: 0917-DRUG-FREE",
+    antiDrugTogether: "Together, we build a drug-free Barangay 178. Mabuhay!",
+  },
+  tagalog: {
+    backToCampaigns: "← Bumalik sa mga kampanya",
+    listenVoiceAnnouncement: "Makinig sa Voice Announcement",
+    stop: "Itigil",
+    campaignContent: "Nilalaman ng Kampanya",
+    activityDate: "Petsa ng Aktibidad",
+    searchCampaigns: "Maghanap ng mga kampanya…",
+    loadingCampaigns: "Naglo-load ng mga kampanya…",
+    noPublishedCampaigns: "Walang nai-publish na mga kampanya pa.",
+    campaignsWillAppear: "Ang mga kampanyang na-approve ng admin ay lalabas dito.",
+    readMore: "Magbasa pa",
+    listen: "Makinig",
+    // Anti-Drug Campaign translations
+    antiDrugTitle: "Programa sa Kamalayan Laban sa Droga",
+    antiDrugAdvisory: "🚫 ADVISORY SA KAMALAYAN LABAN SA DROGA",
+    antiDrugAttention: "PANSIN Mga Residente ng Barangay 178:",
+    antiDrugCommitment: "Ang ating barangay ay nakatuon sa pagiging drug-free. Narito ang kailangan mong malaman:",
+    antiDrugDangers: "Panganib ng Pag-abuso sa Droga:",
+    antiDrugDanger1: "• Sumisira sa kalusugan at relasyon sa pamilya",
+    antiDrugDanger2: "• Nangunguna sa kriminal na pag-uugali at pagkakapi",
+    antiDrugDanger3: "• Nakakaapekto sa kaligtasan ng buong komunidad",
+    antiDrugWhatToDo: "Ang Maaari Mong Gawin:",
+    antiDrugAction1: "• I-ulat ang mga aktibidad sa droga nang anonymous sa Barangay Anti-Drug Abuse Council (BADAC)",
+    antiDrugAction2: "• Suportahan ang mga programa sa rehabilitasyon ng komunidad",
+    antiDrugAction3: "Edukahan ang iyong mga anak tungkol sa panganib ng droga",
+    antiDrugAction4: "• Lumahok sa mga aktibidad sa Barangay Drug Clearing",
+    antiDrugSupport: "Mga Serbisyong Suporta:",
+    antiDrugBadac: "📍 Opisina ng BADAC: Barangay Hall, Room 2",
+    antiDrugHotline: "📞 Anonymous Hotline: 0917-DRUG-FREE",
+    antiDrugTogether: "Magkasama, binubuo natin ang drug-free na Barangay 178. Mabuhay!",
+  }
+};
+
 export default function SafetyCampaigns() {
   const { id } = useParams();
   const [campaigns, setCampaigns] = useState([]);
@@ -22,6 +88,7 @@ export default function SafetyCampaigns() {
   const [priority, setPriority] = useState("All");
   const [selected, setSelected] = useState(null);
   const [playing, setPlaying] = useState(false);
+  const [language, setLanguage] = useState("english"); // 'english' or 'tagalog'
 
   const [loading, setLoading] = useState(true);
   const [useMock, setUseMock] = useState(false);
@@ -130,17 +197,28 @@ export default function SafetyCampaigns() {
     setPlaying(campaign.id);
 
     // Use objectives or description, stripping emojis for cleaner speech
-    const content = (campaign.objectives || campaign.description || "")
+    let content = (campaign.objectives || campaign.description || "")
       .replace(/[\u{1F300}-\u{1FAFF}]/gu, '') // remove emojis
       .replace(/[•✅📍📞📅🏆🚫🚗🌧️🔥🧹🏥]/g, '')  // remove special symbols
       .replace(/\n+/g, '. ')  // replace newlines with pauses
       .trim();
 
+    // If language is Tagalog and it's Anti-Drug campaign, use translated content
+    if (language === 'tagalog') {
+      const isAntiDrugCampaign = campaign.title.toLowerCase().includes('anti-drug') || 
+                                  campaign.category?.toLowerCase().includes('anti_drug');
+      
+      if (isAntiDrugCampaign) {
+        const t = translations.tagalog;
+        content = `${t.antiDrugAdvisory} ${t.antiDrugAttention} ${t.antiDrugCommitment} ${t.antiDrugDangers} ${t.antiDrugDanger1} ${t.antiDrugDanger2} ${t.antiDrugDanger3} ${t.antiDrugWhatToDo} ${t.antiDrugAction1} ${t.antiDrugAction2} ${t.antiDrugAction3} ${t.antiDrugAction4} ${t.antiDrugSupport} ${t.antiDrugBadac} ${t.antiDrugHotline} ${t.antiDrugTogether}`;
+      }
+    }
+
     // Small timeout fixes iOS/Android bug where cancel() blocks the next speak()
     setTimeout(() => {
       const utterance = new SpeechSynthesisUtterance(`${campaign.title}. ${content}`);
-      // Use standard English if en-PH fails on some devices
-      utterance.lang = 'en-US';
+      // Use appropriate language for speech
+      utterance.lang = language === 'tagalog' ? 'fil-PH' : 'en-US';
       utterance.rate = 0.9;
       
       utterance.onend = () => setPlaying(null);
@@ -158,45 +236,71 @@ export default function SafetyCampaigns() {
 
   if (selected) {
     const contentList = campaignContent[selected.id] || [];
+    const t = translations[language];
+    
+    // Check if this is the Anti-Drug campaign and translate accordingly
+    const isAntiDrugCampaign = selected.title.toLowerCase().includes('anti-drug') || 
+                                selected.category?.toLowerCase().includes('anti_drug');
+    
+    const displayTitle = isAntiDrugCampaign && language === 'tagalog' 
+      ? t.antiDrugTitle 
+      : selected.title;
+    
+    const displayContent = isAntiDrugCampaign && language === 'tagalog'
+      ? `${t.antiDrugAdvisory}\n\n${t.antiDrugAttention}\n${t.antiDrugCommitment}\n\n${t.antiDrugDangers}\n${t.antiDrugDanger1}\n${t.antiDrugDanger2}\n${t.antiDrugDanger3}\n\n${t.antiDrugWhatToDo}\n${t.antiDrugAction1}\n${t.antiDrugAction2}\n${t.antiDrugAction3}\n${t.antiDrugAction4}\n\n${t.antiDrugSupport}\n${t.antiDrugBadac}\n${t.antiDrugHotline}\n\n${t.antiDrugTogether}`
+      : (selected.description || selected.objectives || "No additional description provided.");
+
     return (
       <div className="container py-8">
         <button onClick={() => { stopVoiceOnClick(); setSelected(null); }} className="text-sm text-primary mb-4 flex items-center gap-1 hover:underline">
-          ← Back to campaigns
+          {t.backToCampaigns}
         </button>
         <Card className="max-w-3xl mx-auto">
           <CardHeader>
-            <div className="flex flex-wrap gap-2 mb-2">
-              <Badge variant={priorityVariant[selected.priority] || "secondary"}>{selected.priority} priority</Badge>
-              <Badge variant="outline">{selected.category?.replace("_", " ")}</Badge>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <div className="flex flex-wrap gap-2">
+                <Badge variant={priorityVariant[selected.priority] || "secondary"}>{selected.priority} priority</Badge>
+                <Badge variant="outline">{selected.category?.replace("_", " ")}</Badge>
+              </div>
+              {/* Language Toggle */}
+              <button
+                onClick={() => {
+                  setLanguage(language === 'english' ? 'tagalog' : 'english');
+                  stopVoiceOnClick();
+                }}
+                className="flex items-center gap-2 text-sm text-primary hover:underline underline decoration-dotted"
+              >
+                <Languages className="h-4 w-4" />
+                {language === 'english' ? 'Translate to Tagalog' : 'Translate to English'}
+              </button>
             </div>
-            <CardTitle className="text-2xl">{selected.title}</CardTitle>
+            <CardTitle className="text-2xl">{displayTitle}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm whitespace-pre-line">{selected.description || selected.objectives || "No additional description provided."}</p>
+            <p className="text-sm whitespace-pre-line">{displayContent}</p>
             <Button onClick={() => handleListen(selected)} variant="outline">
               {playing === selected.id ? (
                 <>
                   <Square className="h-4 w-4 mr-2" />
-                  Stop
+                  {t.stop}
                 </>
               ) : (
                 <>
                   <Volume2 className="h-4 w-4 mr-2" />
-                  Listen
-                  Voice Announcement
+                  {t.listenVoiceAnnouncement}
                 </>
               )}
             </Button>
 
             {contentList.length > 0 && (
               <div className="mt-6">
-                <h3 className="font-semibold mb-3">Campaign Content</h3>
+                <h3 className="font-semibold mb-3">{t.campaignContent}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {contentList.map((item) => (
                     <div key={item.id} className="rounded-lg overflow-hidden bg-muted">
                       {item.activity_date && (
                         <div className="px-3 py-2 bg-primary/10 text-xs text-primary">
-                          Activity Date: {new Date(item.activity_date).toLocaleDateString()}
+                          {t.activityDate}: {new Date(item.activity_date).toLocaleDateString()}
                         </div>
                       )}
                       {item.content_type === 'video' ? (
@@ -220,11 +324,24 @@ export default function SafetyCampaigns() {
 
   return (
     <div className="container py-8 space-y-6">
-      <div>
-        <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
-          <Megaphone className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Safety Campaigns
-        </h1>
-        <p className="text-muted-foreground text-xs sm:text-sm mt-1">Browse and search public safety awareness campaigns from Barangay 178.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <Megaphone className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Safety Campaigns
+          </h1>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-1">Browse and search public safety awareness campaigns from Barangay 178.</p>
+        </div>
+        {/* Language Toggle */}
+        <button
+          onClick={() => {
+            setLanguage(language === 'english' ? 'tagalog' : 'english');
+            stopVoiceOnClick();
+          }}
+          className="flex items-center gap-2 text-sm text-primary hover:underline underline decoration-dotted"
+        >
+          <Languages className="h-4 w-4" />
+          {language === 'english' ? 'Translate to Tagalog' : 'Translate to English'}
+        </button>
       </div>
 
       {/* Filters */}
@@ -232,7 +349,7 @@ export default function SafetyCampaigns() {
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search campaigns…"
+            placeholder={translations[language].searchCampaigns}
             className="pl-9"
             value={search}
             onChange={(e) => { stopVoiceOnClick(); setSearch(e.target.value); }}
@@ -258,7 +375,7 @@ export default function SafetyCampaigns() {
       {loading ? (
         <div className="flex items-center justify-center py-16 text-muted-foreground">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-3"></div>
-          Loading campaigns…
+          {translations[language].loadingCampaigns}
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -267,6 +384,7 @@ export default function SafetyCampaigns() {
             const firstImage = contentList.find(item => item.content_type !== 'video' && item.media_url);
             const firstVideo = contentList.find(item => item.content_type === 'video' && item.media_url);
             const hasContent = contentList.length > 0;
+            const t = translations[language];
 
             return (
               <Card key={c.id} className="hover:shadow-md transition-shadow flex flex-col">
@@ -297,19 +415,19 @@ export default function SafetyCampaigns() {
                 </CardHeader>
                 <CardFooter className="justify-between mt-auto">
                   <Button variant="ghost" size="sm" onClick={() => { stopVoiceOnClick(); setSelected(c); }}>
-                    Read more <ArrowRight className="h-3 w-3 ml-1" />
+                    {t.readMore} <ArrowRight className="h-3 w-3 ml-1" />
                   </Button>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => handleListen(c)}>
                       {playing === c.id ? (
                         <>
                           <Square className="h-4 w-4 mr-1" />
-                          Stop
+                          {t.stop}
                         </>
                       ) : (
                         <>
                           <Volume2 className="h-4 w-4 mr-1" />
-                          Listen
+                          {t.listen}
                         </>
                       )}
                     </Button>
@@ -324,8 +442,8 @@ export default function SafetyCampaigns() {
       {!loading && displayed.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <Megaphone className="h-10 w-10 mx-auto mb-2 opacity-30" />
-          <p className="font-medium">No published campaigns yet.</p>
-          <p className="text-xs mt-1">Campaigns approved by the admin will appear here.</p>
+          <p className="font-medium">{translations[language].noPublishedCampaigns}</p>
+          <p className="text-xs mt-1">{translations[language].campaignsWillAppear}</p>
         </div>
       )}
     </div>
