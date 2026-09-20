@@ -29,8 +29,7 @@ export default function LanguageToggle({ className }) {
     // Dispatch event for other components to listen to
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: languageCode } }));
 
-    // Reload page to apply language changes and persist
-    window.location.reload();
+    // No page reload - let components respond to language change event dynamically
   };
 
   const currentOption = LANGUAGE_OPTIONS.find(opt => opt.code === currentLanguage) || LANGUAGE_OPTIONS[0];

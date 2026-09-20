@@ -34,7 +34,7 @@ export const translations = {
     voiceAnnouncement: "Voice Announcement",
     submitFeedback: "Submit Feedback",
     safetyCampaigns: "Safety Campaigns",
-    aiVoice: "AI Voice",
+    aiVoice: "AI Voice Announcements",
     emergencyInfo: "Emergency Info",
     notifications: "Notifications",
     surveys: "Surveys",
@@ -87,7 +87,7 @@ export const translations = {
     voiceAnnouncement: "Boses ng Anunsyo",
     submitFeedback: "Magsumit ng Feedback",
     safetyCampaigns: "Mga Kampanya sa Kaligtasan",
-    aiVoice: "AI Boses",
+    aiVoice: "AI Boses ng Anunsyo",
     emergencyInfo: "Impormasyon sa Emergency",
     notifications: "Mga Pabatid",
     surveys: "Mga Survey",
@@ -109,6 +109,7 @@ export const translations = {
 };
 
 export function t(key) {
+  // Get language from localStorage on each call to support dynamic changes
   const language = localStorage.getItem('language') || 'en';
   return translations[language]?.[key] || translations.en[key] || key;
 }

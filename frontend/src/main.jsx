@@ -4,7 +4,6 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
 import { AuthProvider, useAuth } from "./hooks/useAuth.jsx";
 import { ThemeProvider } from "./components/ThemeProvider.jsx";
-import MaintenanceGuard from "./components/MaintenanceGuard.jsx";
 import "./index.css";
 
 // Register Service Worker for offline functionality
@@ -63,11 +62,7 @@ function AppWithAuth() {
     );
   }
 
-  return (
-    <MaintenanceGuard>
-      <App />
-    </MaintenanceGuard>
-  );
+  return <App />;
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(

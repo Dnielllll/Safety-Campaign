@@ -19,8 +19,7 @@ export default function LanguageThemeToggle() {
     setCurrentLang(newLang);
     localStorage.setItem('language', newLang);
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: newLang } }));
-    // Reload page to apply language changes and persist
-    window.location.reload();
+    // No page reload - let components respond to language change event dynamically
   };
 
   return (
