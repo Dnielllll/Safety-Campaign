@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [error, setError] = useState(null);
   const loginInProgress = useRef(false); // guard against race with onAuthStateChange
 
   const ensureProfile = async (authUser) => {
@@ -182,6 +183,7 @@ export function AuthProvider({ children }) {
         }
       } catch (err) {
         console.error("AuthProvider: session init failed:", err);
+        setError(err);
         setUser(null);
       } finally {
         setLoading(false);
@@ -667,6 +669,21 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  if (!ctx) {
+    console.error("useAuth must be used within AuthProvider");
+    // Return a safe fallback to prevent app crash
+    return {
+      user: null,
+      setUser: () => {},
+      loading: true,
+      onlineUsers: new Set(),
+      maintenanceMode: false,
+      reloadSystemSettings: () => {},
+      cleanupAuthSettings: () => {},
+      login: async () => ({ error: new Error("Auth context not available") }),
+      logout: async () => {},
+      validatePassword: () => ({ valid: false, errors: [] }),
+    };
+  }
   return ctx;
 }
