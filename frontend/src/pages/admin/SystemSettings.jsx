@@ -39,7 +39,7 @@ export default function SystemSettings() {
   });
 
   const [authSettings, setAuthSettings] = useState({
-    sessionTimeout: 4,
+    sessionTimeout: 30, // Increased from 4 to 30 minutes for better development experience
     maxLoginAttempts: 5,
     lockoutDuration: 15,
     passwordMinLength: 8,

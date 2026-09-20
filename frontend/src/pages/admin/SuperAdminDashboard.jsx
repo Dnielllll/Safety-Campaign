@@ -24,7 +24,7 @@ export default function SuperAdminDashboard() {
     registrationEnabled: true,
     apiRateLimiting: true,
     maxApiRequests: 1000,
-    sessionTimeout: 30,
+    sessionTimeout: 30, // Already set to 30 minutes - good for development
   });
   const [systemStats, setSystemStats] = useState({
     totalUsers: 0,

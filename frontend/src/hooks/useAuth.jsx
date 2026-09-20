@@ -146,8 +146,8 @@ export function AuthProvider({ children }) {
               
               // Ensure numeric values are safe
               const safeAuthSettings = {
-                sessionTimeout: typeof settingsData.auth_settings.sessionTimeout === 'number' && !isNaN(settingsData.auth_settings.sessionTimeout) && settingsData.auth_settings.sessionTimeout > 0 
-                  ? settingsData.auth_settings.sessionTimeout : 4,
+                sessionTimeout: typeof settingsData.auth_settings.sessionTimeout === 'number' && !isNaN(settingsData.auth_settings.sessionTimeout) && settingsData.auth_settings.sessionTimeout > 0
+                  ? settingsData.auth_settings.sessionTimeout : 30,
                 maxLoginAttempts: typeof settingsData.auth_settings.maxLoginAttempts === 'number' && !isNaN(settingsData.auth_settings.maxLoginAttempts) && settingsData.auth_settings.maxLoginAttempts > 0 
                   ? settingsData.auth_settings.maxLoginAttempts : 5,
                 lockoutDuration: typeof settingsData.auth_settings.lockoutDuration === 'number' && !isNaN(settingsData.auth_settings.lockoutDuration) && settingsData.auth_settings.lockoutDuration > 0 
@@ -224,7 +224,7 @@ export function AuthProvider({ children }) {
         const parsed = JSON.parse(stored);
         const cleaned = {
           ...parsed,
-          sessionTimeout: (parsed.sessionTimeout && !isNaN(parsed.sessionTimeout) && parsed.sessionTimeout > 0) ? parsed.sessionTimeout : 4,
+          sessionTimeout: (parsed.sessionTimeout && !isNaN(parsed.sessionTimeout) && parsed.sessionTimeout > 0) ? parsed.sessionTimeout : 30,
           maxLoginAttempts: (parsed.maxLoginAttempts && !isNaN(parsed.maxLoginAttempts) && parsed.maxLoginAttempts > 0) ? parsed.maxLoginAttempts : 5,
           lockoutDuration: (parsed.lockoutDuration && !isNaN(parsed.lockoutDuration) && parsed.lockoutDuration > 0) ? parsed.lockoutDuration : 15,
           passwordMinLength: (parsed.passwordMinLength && !isNaN(parsed.passwordMinLength) && parsed.passwordMinLength > 0) ? parsed.passwordMinLength : 8,
@@ -270,8 +270,8 @@ export function AuthProvider({ children }) {
           
           // Ensure numeric values are safe
           const safeAuthSettings = {
-            sessionTimeout: typeof settingsData.auth_settings.sessionTimeout === 'number' && !isNaN(settingsData.auth_settings.sessionTimeout) && settingsData.auth_settings.sessionTimeout > 0 
-              ? settingsData.auth_settings.sessionTimeout : 4,
+            sessionTimeout: typeof settingsData.auth_settings.sessionTimeout === 'number' && !isNaN(settingsData.auth_settings.sessionTimeout) && settingsData.auth_settings.sessionTimeout > 0
+              ? settingsData.auth_settings.sessionTimeout : 30,
             maxLoginAttempts: typeof settingsData.auth_settings.maxLoginAttempts === 'number' && !isNaN(settingsData.auth_settings.maxLoginAttempts) && settingsData.auth_settings.maxLoginAttempts > 0 
               ? settingsData.auth_settings.maxLoginAttempts : 5,
             lockoutDuration: typeof settingsData.auth_settings.lockoutDuration === 'number' && !isNaN(settingsData.auth_settings.lockoutDuration) && settingsData.auth_settings.lockoutDuration > 0 
