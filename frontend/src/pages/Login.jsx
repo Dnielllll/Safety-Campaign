@@ -375,7 +375,7 @@ export default function Login() {
           if (attemptResult.locked) {
             setError(`Account locked due to too many failed attempts. Please try again in ${attemptResult.lockoutDuration} minutes.`);
           } else {
-            setError(`Invalid email or password. ${attemptResult.attemptsRemaining} attempts remaining.`);
+            setError("Invalid email or password.");
           }
           
           setLoading(false);
@@ -397,7 +397,7 @@ export default function Login() {
         if (attemptResult.locked) {
           setError(`Account locked due to too many failed attempts. Please try again in ${attemptResult.lockoutDuration} minutes.`);
         } else {
-          setError(`Invalid email or password. ${attemptResult.attemptsRemaining} attempts remaining.`);
+          setError("Invalid email or password.");
         }
         
         setLoading(false);
