@@ -100,23 +100,11 @@ export default function Login() {
             }
           }
 
-          // Navigate based on user role (should only be public/resident)
-          const { data: userProfile } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
+          // Clear URL parameters to prevent re-processing
+          window.history.replaceState({}, document.title, window.location.pathname);
 
-          const userRole = userProfile?.role || 'public';
-
-          // Only allow public/resident users from Google Sign-In
-          if (userRole === 'public' || userRole === 'citizen') {
-            window.location.href = '/profile';
-          } else {
-            // Sign out and show error for non-public roles
-            await supabase.auth.signOut();
-            setError('Google Sign-In is only available for residents. Staff and admin accounts must use email/password login.');
-          }
+          // Always redirect to profile for Google Sign-In users (residents only)
+          window.location.href = '/profile';
         } catch (error) {
           console.error('OAuth callback error:', error);
           setError('Authentication failed. Please try again.');
