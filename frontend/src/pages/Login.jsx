@@ -237,6 +237,68 @@ export default function Login() {
     return Math.floor(100000 + Math.random() * 900000).toString();
   };
 
+  // Check if account is locked based on auth settings
+  const isAccountLocked = (email) => {
+    try {
+      const authSettings = JSON.parse(localStorage.getItem('auth_settings') || '{}');
+      const maxAttempts = authSettings.maxLoginAttempts || 5;
+      const lockoutDuration = authSettings.lockoutDuration || 15;
+      
+      const loginAttempts = JSON.parse(localStorage.getItem(`login_attempts_${email}`) || '{}');
+      const { attempts, lastAttemptTime } = loginAttempts;
+      
+      if (attempts >= maxAttempts && lastAttemptTime) {
+        const lockoutEndTime = new Date(lastAttemptTime).getTime() + (lockoutDuration * 60 * 1000);
+        const currentTime = new Date().getTime();
+        
+        if (currentTime < lockoutEndTime) {
+          const remainingMinutes = Math.ceil((lockoutEndTime - currentTime) / (60 * 1000));
+          return { locked: true, remainingMinutes };
+        } else {
+          // Lockout period expired, reset attempts
+          localStorage.removeItem(`login_attempts_${email}`);
+          return { locked: false };
+        }
+      }
+      
+      return { locked: false };
+    } catch (e) {
+      console.warn('Error checking account lock status:', e);
+      return { locked: false };
+    }
+  };
+
+  // Record failed login attempt
+  const recordFailedAttempt = (email) => {
+    try {
+      const authSettings = JSON.parse(localStorage.getItem('auth_settings') || '{}');
+      const maxAttempts = authSettings.maxLoginAttempts || 5;
+      
+      const loginAttempts = JSON.parse(localStorage.getItem(`login_attempts_${email}`) || '{}');
+      const newAttempts = (loginAttempts.attempts || 0) + 1;
+      
+      localStorage.setItem(`login_attempts_${email}`, JSON.stringify({
+        attempts: newAttempts,
+        lastAttemptTime: new Date().toISOString()
+      }));
+      
+      if (newAttempts >= maxAttempts) {
+        const lockoutDuration = authSettings.lockoutDuration || 15;
+        return { locked: true, lockoutDuration };
+      }
+      
+      return { locked: false, attemptsRemaining: maxAttempts - newAttempts };
+    } catch (e) {
+      console.warn('Error recording failed attempt:', e);
+      return { locked: false };
+    }
+  };
+
+  // Clear login attempts on successful login
+  const clearLoginAttempts = (email) => {
+    localStorage.removeItem(`login_attempts_${email}`);
+  };
+
   const handleEmailSubmit = async (e) => {
     if (e) e.preventDefault();
     console.log("=== FORM SUBMITTED ===");
@@ -247,6 +309,27 @@ export default function Login() {
     // Validate that both email and password are provided
     if (!form.email || !form.password) {
       setError("Please enter both email and password.");
+      setLoading(false);
+      return;
+    }
+    
+    // Validate password minimum length from auth settings
+    try {
+      const authSettings = JSON.parse(localStorage.getItem('auth_settings') || '{}');
+      const minLength = authSettings.passwordMinLength || 8;
+      if (form.password.length < minLength) {
+        setError(`Password must be at least ${minLength} characters long.`);
+        setLoading(false);
+        return;
+      }
+    } catch (e) {
+      console.warn('Error validating password length:', e);
+    }
+    
+    // Check if account is locked
+    const lockStatus = isAccountLocked(form.email);
+    if (lockStatus.locked) {
+      setError(`Account locked due to too many failed attempts. Please try again in ${lockStatus.remainingMinutes} minutes.`);
       setLoading(false);
       return;
     }
@@ -286,18 +369,37 @@ export default function Login() {
 
         if (authError) {
           console.log("Password validation failed:", authError);
-          setError("Invalid email or password. Please try again.");
+          
+          // Record failed login attempt
+          const attemptResult = recordFailedAttempt(form.email);
+          if (attemptResult.locked) {
+            setError(`Account locked due to too many failed attempts. Please try again in ${attemptResult.lockoutDuration} minutes.`);
+          } else {
+            setError(`Invalid email or password. ${attemptResult.attemptsRemaining} attempts remaining.`);
+          }
+          
           setLoading(false);
           return;
         }
 
         console.log("Password validated successfully");
         
+        // Clear login attempts on successful password validation
+        clearLoginAttempts(form.email);
+        
         // Sign out immediately since we just wanted to validate
         await supabase.auth.signOut();
       } catch (authErr) {
         console.log("Password validation error:", authErr);
-        setError("Invalid email or password. Please try again.");
+        
+        // Record failed login attempt for auth errors
+        const attemptResult = recordFailedAttempt(form.email);
+        if (attemptResult.locked) {
+          setError(`Account locked due to too many failed attempts. Please try again in ${attemptResult.lockoutDuration} minutes.`);
+        } else {
+          setError(`Invalid email or password. ${attemptResult.attemptsRemaining} attempts remaining.`);
+        }
+        
         setLoading(false);
         return;
       }
@@ -464,6 +566,9 @@ export default function Login() {
 
       // Clear OTP after successful login
       localStorage.removeItem(`otp_${form.email}`);
+      
+      // Clear login attempts on successful login
+      clearLoginAttempts(form.email);
       
       // Save verification timestamp for 30-minute bypass
       localStorage.setItem(`otp_verified_at_${form.email}`, Date.now().toString());
