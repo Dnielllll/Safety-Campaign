@@ -76,7 +76,7 @@ export default function PublicDashboard() {
 
       <div className="container py-8 space-y-8">
         {/* Quick access links */}
-        <section>
+        <section className="bg-white rounded-lg p-4">
           <h2 className="font-display text-lg font-semibold mb-4 text-orange-600">Quick Access</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {quickLinks.map((ql) => {
@@ -102,7 +102,7 @@ export default function PublicDashboard() {
 
         {/* Priority alerts */}
         {urgent.length > 0 && (
-          <section>
+          <section className="bg-white rounded-lg p-4">
             <h2 className="font-display text-lg font-semibold mb-3 flex items-center gap-2">
               <Siren className="h-5 w-5 text-destructive" /> Priority Alerts
             </h2>
