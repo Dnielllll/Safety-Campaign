@@ -39,7 +39,7 @@ export default function FAQ() {
       id: "account-3",
       category: "Account",
       question: "Can I use Google Sign-In?",
-      answer: "Yes, residents can use Google Sign-In for quick access. Staff, admin, and super admin accounts must use email/password login. Google Sign-In is only available for residents.",
+      answer: "Yes, residents can use Google Sign-In for quick and easy access to your account. Simply click the 'Sign in with Google' button and choose your Google account to log in instantly without needing to remember a password.",
       icon: HelpCircle
     },
     {
