@@ -69,9 +69,7 @@ export default function Login() {
       console.log("Current URL:", window.location.href);
 
       try {
-        // Wait a bit for session to be established
-        await new Promise(resolve => setTimeout(resolve, 500));
-
+        // Use Supabase's built-in OAuth session handling
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
@@ -81,18 +79,41 @@ export default function Login() {
         }
 
         if (!session) {
-          console.error("No session found");
-          setError('Authentication failed. No session established.');
-          return;
+          console.error("No session found, trying to get session from URL");
+          // Try to get session from URL parameters
+          const { data: { session: urlSession }, error: urlError } = await supabase.auth.getSessionFromUrl();
+
+          if (urlError || !urlSession) {
+            console.error("Failed to get session from URL:", urlError);
+            setError('Authentication failed. Please try again.');
+            return;
+          }
+
+          if (!urlSession) {
+            console.error("Still no session after URL processing");
+            setError('Authentication failed. No session established.');
+            return;
+          }
+
+          console.log("Session from URL found for:", urlSession.user.email);
+        } else {
+          console.log("Session found for:", session.user.email);
         }
 
-        console.log("Session found for:", session.user.email);
+        // Get the actual session (either from getSession or getSessionFromUrl)
+        const actualSession = session || (await supabase.auth.getSessionFromUrl()).data.session;
+
+        if (!actualSession) {
+          console.error("No actual session available");
+          setError('Authentication failed. Please try again.');
+          return;
+        }
 
         // Check if user exists in database
         const { data: existingUser, error: userError } = await supabase
           .from('users')
           .select('*')
-          .eq('id', session.user.id)
+          .eq('id', actualSession.user.id)
           .maybeSingle();
 
         if (userError) {
@@ -105,9 +126,9 @@ export default function Login() {
           const { error: insertError } = await supabase
             .from('users')
             .insert({
-              id: session.user.id,
-              email: session.user.email,
-              name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+              id: actualSession.user.id,
+              email: actualSession.user.email,
+              name: actualSession.user.user_metadata?.full_name || actualSession.user.email?.split('@')[0] || 'User',
               role: 'public', // Google Sign-In only for residents
               is_active: true,
             });
@@ -164,28 +185,7 @@ export default function Login() {
         setBypassTimeRemaining(0);
       }
       
-      // Clean up expired OTP verification timestamps
-      if (recentVerification && !isWithin3Minutes) {
-        localStorage.removeItem(`otp_verified_at_${form.email}`);
-      }
-    } else {
-      setShowOtpBypassNotice(false);
-      setBypassTimeRemaining(0);
-    }
-  }, [form.email]);
-
-  // Bypass timer countdown
-  React.useEffect(() => {
-    let interval;
-    if (showOtpBypassNotice && bypassTimeRemaining > 0) {
-      interval = setInterval(() => {
-        setBypassTimeRemaining((prev) => {
-          const newTime = prev - 1;
-          if (newTime === 0) {
-            setShowOtpBypassNotice(false);
-            // Clean up expired timestamp
-            if (form.email) {
-              localStorage.removeItem(`otp_verified_at_${form.email}`);
+      // Clean up expired OTP verification tp_verified_at_${form.email}`);
             }
           }
           return newTime;
@@ -476,7 +476,7 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     setError("");
-    
+
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -485,12 +485,13 @@ export default function Login() {
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-          }
+          },
+          skipBrowserRedirect: false
         }
       });
 
       if (error) throw error;
-      
+
       // The OAuth flow will redirect, so we don't need to handle navigation here
       // The redirect will handle the authentication
     } catch (err) {
