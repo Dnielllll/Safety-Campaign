@@ -428,7 +428,7 @@ export default function SystemSettings() {
       </Card>
 
       <Tabs defaultValue="general">
-        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2 mb-6 sm:mb-4">
+        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2 mb-10 sm:mb-4">
           <TabsTrigger value="general" className="text-xs sm:text-sm py-2.5 sm:py-1.5">General</TabsTrigger>
           {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security" className="text-xs sm:text-sm py-2.5 sm:py-1.5">Security</TabsTrigger>}
           {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth" className="text-xs sm:text-sm py-2.5 sm:py-1.5">Authentication</TabsTrigger>}
