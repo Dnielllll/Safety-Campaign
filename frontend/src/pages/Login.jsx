@@ -65,56 +65,86 @@ export default function Login() {
 
     // Handle OAuth callback from Google Sign-In
     const handleOAuthCallback = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        try {
-          // Check if user exists in database
-          const { data: existingUser } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
+      console.log("=== OAuth Callback Started ===");
+      console.log("Current URL:", window.location.href);
 
-          if (!existingUser) {
-            // Create user profile from Google OAuth data - ONLY for residents (public role)
-            const { error: insertError } = await supabase
-              .from('users')
-              .insert({
-                id: session.user.id,
-                email: session.user.email,
-                name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
-                role: 'public', // Google Sign-In only for residents
-                is_active: true,
-              });
+      try {
+        // Wait a bit for session to be established
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-            if (insertError) {
-              console.error('Error creating user profile:', insertError);
-            }
-          } else {
-            // Check if existing user has restricted role (staff, admin, super_admin)
-            if (existingUser.role === 'staff' || existingUser.role === 'admin' || existingUser.role === 'super_admin') {
-              // Sign out restricted users from Google Sign-In
-              await supabase.auth.signOut();
-              setError('Google Sign-In is only available for residents. Staff and admin accounts must use email/password login.');
-              return;
-            }
-          }
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-          // Clear URL parameters to prevent re-processing
-          window.history.replaceState({}, document.title, window.location.pathname);
-
-          // Always redirect to profile for Google Sign-In users (residents only)
-          window.location.href = '/profile';
-        } catch (error) {
-          console.error('OAuth callback error:', error);
+        if (sessionError) {
+          console.error("Session error:", sessionError);
           setError('Authentication failed. Please try again.');
+          return;
         }
+
+        if (!session) {
+          console.error("No session found");
+          setError('Authentication failed. No session established.');
+          return;
+        }
+
+        console.log("Session found for:", session.user.email);
+
+        // Check if user exists in database
+        const { data: existingUser, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (userError) {
+          console.error("User lookup error:", userError);
+        }
+
+        if (!existingUser) {
+          console.log("Creating new user profile");
+          // Create user profile from Google OAuth data - ONLY for residents (public role)
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert({
+              id: session.user.id,
+              email: session.user.email,
+              name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+              role: 'public', // Google Sign-In only for residents
+              is_active: true,
+            });
+
+          if (insertError) {
+            console.error('Error creating user profile:', insertError);
+          } else {
+            console.log("User profile created successfully");
+          }
+        } else {
+          console.log("Existing user found:", existingUser.email, "Role:", existingUser.role);
+          // Check if existing user has restricted role (staff, admin, super_admin)
+          if (existingUser.role === 'staff' || existingUser.role === 'admin' || existingUser.role === 'super_admin') {
+            // Sign out restricted users from Google Sign-In
+            await supabase.auth.signOut();
+            setError('Google Sign-In is only available for residents. Staff and admin accounts must use email/password login.');
+            return;
+          }
+        }
+
+        // Clear URL parameters to prevent re-processing
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        console.log("Redirecting to /profile...");
+        // Always redirect to profile for Google Sign-In users (residents only)
+        window.location.href = '/profile';
+      } catch (error) {
+        console.error('OAuth callback error:', error);
+        setError('Authentication failed. Please try again.');
       }
     };
 
     // Check for OAuth callback on mount
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('access_token') || urlParams.has('code')) {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    if (urlParams.has('access_token') || urlParams.has('code') || hashParams.has('access_token') || hashParams.has('code')) {
+      console.log("OAuth callback detected in URL");
       handleOAuthCallback();
     }
   }, []);
