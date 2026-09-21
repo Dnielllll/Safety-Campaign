@@ -108,10 +108,10 @@ export default function Login() {
             .single();
 
           const userRole = userProfile?.role || 'public';
-          
+
           // Only allow public/resident users from Google Sign-In
           if (userRole === 'public' || userRole === 'citizen') {
-            window.location.href = '/';
+            window.location.href = '/profile';
           } else {
             // Sign out and show error for non-public roles
             await supabase.auth.signOut();
