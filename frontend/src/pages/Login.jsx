@@ -438,7 +438,7 @@ export default function Login() {
       } else if (user.role === "staff") {
         dest = "/staff";
       } else if (user.role === "public" || user.role === "citizen") {
-        dest = "/";
+        dest = "/profile";
       } else {
         setError("Invalid user role. Please contact administrator.");
         return;
