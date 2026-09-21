@@ -67,7 +67,7 @@ export default function FAQ() {
       id: "technical-2",
       category: "Technical",
       question: "Is my personal information secure?",
-      answer: "Yes, your personal information is stored securely using Supabase's secure database. Your data is encrypted and only accessible by authorized barangay staff. We never share your information with third parties.",
+      answer: "Yes, your personal information is stored securely with encryption and is only accessible by authorized barangay personnel. We never share your information with third parties and follow strict data protection practices to keep your information safe.",
       icon: CheckCircle
     },
     {
