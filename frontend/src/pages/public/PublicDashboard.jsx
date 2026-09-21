@@ -25,17 +25,22 @@ export default function PublicDashboard() {
   const [campaigns, setCampaigns] = useState([]);
 
   useEffect(() => {
-    supabaseHelpers.getCampaigns({ status: "published" })
-      .then(({ data }) => {
-        // Deduplicate campaigns by ID to prevent duplicates
-        const uniqueCampaigns = Array.isArray(data) 
-          ? data.filter((campaign, index, self) =>
-              index === self.findIndex((c) => c.id === campaign.id)
-            )
-          : [];
-        setCampaigns(uniqueCampaigns);
-      })
-      .catch(() => setCampaigns(mockCampaigns));
+    // Always use mock data for consistent Priority Alerts display
+    // This ensures localhost matches Vercel deployment
+    setCampaigns(mockCampaigns);
+    
+    // Uncomment below to use real Supabase data when ready
+    // supabaseHelpers.getCampaigns({ status: "published" })
+    //   .then(({ data }) => {
+    //     // Deduplicate campaigns by ID to prevent duplicates
+    //     const uniqueCampaigns = Array.isArray(data) 
+    //       ? data.filter((campaign, index, self) =>
+    //           index === self.findIndex((c) => c.id === campaign.id)
+    //         )
+    //       : [];
+    //     setCampaigns(uniqueCampaigns);
+    //   })
+    //   .catch(() => setCampaigns(mockCampaigns));
   }, []);
 
   const list = campaigns.length ? campaigns : mockCampaigns;
