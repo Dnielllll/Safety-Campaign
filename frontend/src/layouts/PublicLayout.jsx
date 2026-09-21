@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate, Navigate } from "react-router-dom";
-import { Bell, MessageSquare, Siren, User, Home, Megaphone, Volume2, ClipboardList, LogOut, Menu, X, Building2, AlertTriangle } from "lucide-react";
+import { Bell, MessageSquare, Siren, User, Home, Megaphone, Volume2, ClipboardList, LogOut, Menu, X, Building2, AlertTriangle, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth.jsx";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ const navItems = [
   { to: "/surveys", label: "Surveys", icon: ClipboardList },
   { to: "/emergency", label: "Emergency Info", icon: Siren },
   { to: "/about", label: "About Barangay", icon: Building2 },
+  { to: "/guides", label: "Guides", icon: BookOpen },
 ];
 
 export default function PublicLayout() {
@@ -61,8 +62,8 @@ export default function PublicLayout() {
             {/* Desktop navigation */}
             <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
               {navItems.map((item) => {
-                // Hide feedback and surveys from anonymous users
-                if (item.to === "/feedback" || item.to === "/surveys") return null;
+                // Hide feedback, surveys, and notifications from anonymous users
+                if (item.to === "/feedback" || item.to === "/surveys" || item.to === "/notifications") return null;
 
                 const Icon = item.icon;
                 const active = pathname === item.to;
@@ -104,7 +105,8 @@ export default function PublicLayout() {
           {mobileOpen && (
             <nav className="md:hidden border-t border-border bg-white px-4 pb-4 pt-2 flex flex-col gap-1">
               {navItems.map((item) => {
-                if (item.to === "/feedback" || item.to === "/surveys") return null;
+                // Hide feedback, surveys, and notifications from anonymous users
+                if (item.to === "/feedback" || item.to === "/surveys" || item.to === "/notifications") return null;
 
                 const Icon = item.icon;
                 const active = pathname === item.to;
@@ -141,15 +143,51 @@ export default function PublicLayout() {
           <Outlet />
         </main>
 
-        <footer className="border-t border-border py-8 mt-16 bg-white">
-          <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="Barangay 178 Seal" className="h-8 w-8 rounded-full object-contain" />
-              <p>© {new Date().getFullYear()} Barangay 178, Camarin, North Caloocan City.</p>
+        <footer className="border-t border-border py-8 mt-16 bg-primary text-primary-foreground">
+          <div className="container">
+            <div className="grid md:grid-cols-3 gap-12">
+                {/* Brand & Copyright */}
+                <div>
+                  <div className="flex items-center gap-2 mb-6">
+                    <img src="/logo.png" alt="Barangay 178 Seal" className="h-10 w-10 rounded-full object-contain" />
+                    <p className="font-display font-bold text-lg">Barangay 178</p>
+                  </div>
+                  <p className="text-sm opacity-90 mb-4">
+                    © {new Date().getFullYear()} Barangay 178. All rights reserved.
+                  </p>
+                  <p className="text-sm opacity-75">
+                    Public Safety & Transparency Portal for Barangay 178 residents.
+                  </p>
+                </div>
+
+                {/* Contact Information */}
+                <div>
+                  <h4 className="font-semibold mb-4">Contact Us</h4>
+                  <div className="space-y-2 text-sm opacity-90">
+                    <p>Camarin Road, Barangay 178,<br />Caloocan, 1400 Metro Manila</p>
+                    <p>Phone: <a href="tel:0921-463-6835" className="hover:underline">0921-463-6835</a> / <a href="tel:0928-497-1332" className="hover:underline">0928-497-1332</a></p>
+                    <p>Email: <a href="mailto:brgy178caloocan@gmail.com" className="hover:underline">brgy178caloocan@gmail.com</a></p>
+                  </div>
+                </div>
+
+                {/* Legal & Privacy */}
+                <div>
+                  <h4 className="font-semibold mb-4">Legal & Privacy</h4>
+                  <div className="space-y-2 text-sm">
+                    <a href="/terms-of-service" className="block opacity-90 hover:opacity-100 hover:underline transition-opacity">
+                      Terms of Service
+                    </a>
+                    <a href="/privacy-policy" className="block opacity-90 hover:opacity-100 hover:underline transition-opacity">
+                      Privacy Policy
+                    </a>
+                    <a href="/cookie-policy" className="block opacity-90 hover:opacity-100 hover:underline transition-opacity">
+                      Cookie Policy
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
-            <p>Safety Campaign Management System · AI Voice by Built-in Text-to-Speech</p>
-          </div>
-        </footer>
+          </footer>
         <AIChatbot />
       </div>
     );

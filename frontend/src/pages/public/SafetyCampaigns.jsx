@@ -413,25 +413,23 @@ export default function SafetyCampaigns() {
                     }
                   </CardDescription>
                 </CardHeader>
-                <CardFooter className="justify-between mt-auto">
-                  <Button variant="ghost" size="sm" onClick={() => { stopVoiceOnClick(); setSelected(c); }}>
+                <CardFooter className="justify-center gap-3 mt-auto">
+                  <Button variant="default" size="sm" onClick={() => { stopVoiceOnClick(); setSelected(c); }}>
                     {t.readMore} <ArrowRight className="h-3 w-3 ml-1" />
                   </Button>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleListen(c)}>
-                      {playing === c.id ? (
-                        <>
-                          <Square className="h-4 w-4 mr-1" />
-                          {t.stop}
-                        </>
-                      ) : (
-                        <>
-                          <Volume2 className="h-4 w-4 mr-1" />
-                          {t.listen}
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                  <Button variant="outline" size="sm" onClick={() => handleListen(c)}>
+                    {playing === c.id ? (
+                      <>
+                        <Square className="h-4 w-4 mr-1" />
+                        {t.stop}
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="h-4 w-4 mr-1" />
+                        {t.listen}
+                      </>
+                    )}
+                  </Button>
                 </CardFooter>
               </Card>
             );

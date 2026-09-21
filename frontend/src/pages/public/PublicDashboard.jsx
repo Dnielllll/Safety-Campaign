@@ -114,7 +114,7 @@ export default function PublicDashboard() {
         )}
 
         {/* Latest campaigns */}
-        <section>
+        <section className="bg-white rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-display text-lg font-semibold flex items-center gap-2">
               <Megaphone className="h-5 w-5 text-primary" /> Latest Campaigns
@@ -169,10 +169,8 @@ function CampaignCard({ campaign }) {
         <CardTitle className="text-base">{campaign.title}</CardTitle>
         <CardDescription>{campaign.objectives}</CardDescription>
       </CardHeader>
-      <CardFooter className="justify-between">
-        <Button variant="ghost" size="sm" asChild>
-          <Link to={`/campaigns/${campaign.id}`}>Read more</Link>
-        </Button>
+      <CardFooter className="justify-between gap-3">
+        <Link to={`/campaigns/${campaign.id}`} className="text-sm text-primary font-medium hover:underline">Read more</Link>
         <Button variant="outline" size="sm" onClick={handleListen}>
           <Volume2 className="h-4 w-4 mr-1" /> {playing ? "Playing…" : "Listen"}
         </Button>

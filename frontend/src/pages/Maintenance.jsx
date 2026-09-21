@@ -3,12 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { AlertTriangle, Clock, Mail, Phone, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 
 export default function Maintenance() {
   const navigate = useNavigate();
-  const { maintenanceMode } = useAuth();
   const [isChecking, setIsChecking] = useState(false);
   
   const handleCheckMaintenance = async () => {

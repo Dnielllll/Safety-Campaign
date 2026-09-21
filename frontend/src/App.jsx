@@ -22,6 +22,10 @@ import Feedback from "@/pages/public/Feedback";
 import EmergencyInfo from "@/pages/public/EmergencyInfo";
 import AboutBarangay from "@/pages/public/AboutBarangay";
 import Surveys from "@/pages/public/Surveys";
+import Guides from "@/pages/public/Guides";
+import TermsOfService from "@/pages/public/TermsOfService";
+import PrivacyPolicy from "@/pages/public/PrivacyPolicy";
+import CookiePolicy from "@/pages/public/CookiePolicy";
 import Profile from "@/pages/public/Profile";
 import AdminProfile from "@/pages/admin/Profile";
 
@@ -86,6 +90,10 @@ export default function App() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/emergency" element={<EmergencyInfo />} />
         <Route path="/about" element={<AboutBarangay />} />
+        <Route path="/guides" element={<Guides />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/cookie-policy" element={<CookiePolicy />} />
         <Route
           path="/profile"
           element={
