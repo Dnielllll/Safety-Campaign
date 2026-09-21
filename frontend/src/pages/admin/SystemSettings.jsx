@@ -428,16 +428,16 @@ export default function SystemSettings() {
       </Card>
 
       <Tabs defaultValue="general">
-        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2 mb-12 sm:mb-4">
-          <TabsTrigger value="general" className="text-xs sm:text-sm py-2 sm:py-1.5">General</TabsTrigger>
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security" className="text-xs sm:text-sm py-2 sm:py-1.5">Security</TabsTrigger>}
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth" className="text-xs sm:text-sm py-2 sm:py-1.5">Authentication</TabsTrigger>}
-          <TabsTrigger value="notifications" className="text-xs sm:text-sm py-2 sm:py-1.5">Notifications</TabsTrigger>
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="features" className="text-xs sm:text-sm py-2 sm:py-1.5">Features</TabsTrigger>}
+        <TabsList className="w-full flex sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2 mb-4 overflow-x-auto sm:overflow-visible">
+          <TabsTrigger value="general" className="text-xs sm:text-sm py-1.5 sm:py-1.5 whitespace-nowrap">General</TabsTrigger>
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security" className="text-xs sm:text-sm py-1.5 sm:py-1.5 whitespace-nowrap">Security</TabsTrigger>}
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth" className="text-xs sm:text-sm py-1.5 sm:py-1.5 whitespace-nowrap">Authentication</TabsTrigger>}
+          <TabsTrigger value="notifications" className="text-xs sm:text-sm py-1.5 sm:py-1.5 whitespace-nowrap">Notifications</TabsTrigger>
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="features" className="text-xs sm:text-sm py-1.5 sm:py-1.5 whitespace-nowrap">Features</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="general">
-          <Card className="mt-4">
+          <Card className="mt-2">
             <CardHeader className="pb-6 pt-6">
               <CardTitle className="text-base sm:text-lg mb-2">General System Settings</CardTitle>
               <CardDescription className="text-sm sm:text-base">Configure basic system information and behavior</CardDescription>
@@ -595,7 +595,7 @@ export default function SystemSettings() {
         {(user?.role === 'super_admin' || user?.role === 'superadmin') && (
           <>
             <TabsContent value="security">
-          <Card className="mt-4">
+          <Card className="mt-2">
             <CardHeader className="pt-6">
               <CardTitle className="text-base flex items-center gap-2">
                 <Shield className="h-4 w-4 text-primary" /> Security Policies
@@ -691,7 +691,7 @@ export default function SystemSettings() {
         </TabsContent>
 
         <TabsContent value="auth">
-          <Card className="mt-4">
+          <Card className="mt-2">
             <CardHeader className="pt-6">
               <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                 <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> Authentication Policies
@@ -816,7 +816,7 @@ export default function SystemSettings() {
         )}
 
         <TabsContent value="notifications">
-          <Card className="mt-4">
+          <Card className="mt-2">
             <CardHeader className="pt-6">
               <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                 <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> System Notifications
@@ -930,7 +930,7 @@ export default function SystemSettings() {
 
         {(user?.role === 'super_admin' || user?.role === 'superadmin') && (
         <TabsContent value="features">
-          <Card className="mt-4">
+          <Card className="mt-2">
             <CardHeader className="pt-6">
               <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                 <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> System Features
