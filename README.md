@@ -320,7 +320,7 @@ frontend/
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: 2026-09-18  
+**Version**: 1.0.1  
+**Last Updated**: 2026-09-21  
 **Maintained By**: Barangay 178 IT Team  
 **License**: Proprietary - Barangay 178 Use Only
