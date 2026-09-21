@@ -428,69 +428,75 @@ export default function SystemSettings() {
       </Card>
 
       <Tabs defaultValue="general">
-        <TabsList className="w-full grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2">
-          <TabsTrigger value="general" className="text-sm py-2.5 px-3">General</TabsTrigger>
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security" className="text-sm py-2.5 px-3">Security</TabsTrigger>}
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth" className="text-sm py-2.5 px-3">Authentication</TabsTrigger>}
-          <TabsTrigger value="notifications" className="text-sm py-2.5 px-3">Notifications</TabsTrigger>
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="features" className="text-sm py-2.5 px-3">Features</TabsTrigger>}
+        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-2">
+          <TabsTrigger value="general" className="text-xs sm:text-sm py-2 sm:py-1.5">General</TabsTrigger>
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security" className="text-xs sm:text-sm py-2 sm:py-1.5">Security</TabsTrigger>}
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth" className="text-xs sm:text-sm py-2 sm:py-1.5">Authentication</TabsTrigger>}
+          <TabsTrigger value="notifications" className="text-xs sm:text-sm py-2 sm:py-1.5">Notifications</TabsTrigger>
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="features" className="text-xs sm:text-sm py-2 sm:py-1.5">Features</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="general">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">General System Settings</CardTitle>
-              <CardDescription>Configure basic system information and behavior</CardDescription>
+              <CardTitle className="text-base sm:text-lg">General System Settings</CardTitle>
+              <CardDescription className="text-sm sm:text-base">Configure basic system information and behavior</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Application Name</Label>
+            <CardContent className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="space-y-2 sm:space-y-3">
+                  <Label className="text-sm sm:text-base">Application Name</Label>
                   <Input
+                    className="text-base sm:text-sm"
                     value={generalSettings.appName}
                     onChange={(e) => setGeneralSettings({ ...generalSettings, appName: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Application Version</Label>
+                <div className="space-y-2 sm:space-y-3">
+                  <Label className="text-sm sm:text-base">Application Version</Label>
                   <Input
+                    className="text-base sm:text-sm"
                     value={generalSettings.appVersion}
                     onChange={(e) => setGeneralSettings({ ...generalSettings, appVersion: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Barangay Name</Label>
+                <div className="space-y-2 sm:space-y-3">
+                  <Label className="text-sm sm:text-base">Barangay Name</Label>
                   <Input
+                    className="text-base sm:text-sm"
                     value={generalSettings.barangayName}
                     onChange={(e) => setGeneralSettings({ ...generalSettings, barangayName: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>City / Municipality</Label>
+                <div className="space-y-2 sm:space-y-3">
+                  <Label className="text-sm sm:text-base">City / Municipality</Label>
                   <Input
+                    className="text-base sm:text-sm"
                     value={generalSettings.city}
                     onChange={(e) => setGeneralSettings({ ...generalSettings, city: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>District</Label>
+                <div className="space-y-2 sm:space-y-3">
+                  <Label className="text-sm sm:text-base">District</Label>
                   <Input
+                    className="text-base sm:text-sm"
                     value={generalSettings.district}
                     onChange={(e) => setGeneralSettings({ ...generalSettings, district: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Contact Number</Label>
+                <div className="space-y-2 sm:space-y-3">
+                  <Label className="text-sm sm:text-base">Contact Number</Label>
                   <Input
+                    className="text-base sm:text-sm"
                     placeholder="(02) 8XXX-XXXX"
                     value={generalSettings.contactNumber}
                     onChange={(e) => setGeneralSettings({ ...generalSettings, contactNumber: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Timezone</Label>
+                <div className="space-y-2 sm:space-y-3">
+                  <Label className="text-sm sm:text-base">Timezone</Label>
                   <Select value={generalSettings.timezone} onValueChange={(v) => setGeneralSettings({ ...generalSettings, timezone: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="text-base sm:text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Asia/Manila">Asia/Manila (PST)</SelectItem>
                       <SelectItem value="UTC">UTC</SelectItem>
@@ -498,10 +504,10 @@ export default function SystemSettings() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Language</Label>
+                <div className="space-y-2 sm:space-y-3">
+                  <Label className="text-sm sm:text-base">Language</Label>
                   <Select value={generalSettings.language} onValueChange={(v) => setGeneralSettings({ ...generalSettings, language: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="text-base sm:text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="en">English</SelectItem>
                       <SelectItem value="fil">Filipino</SelectItem>
@@ -510,16 +516,16 @@ export default function SystemSettings() {
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4">
+              <div className="space-y-4 sm:space-y-6 pt-4 sm:pt-6">
                 {(user?.role === 'super_admin' || user?.role === 'superadmin') && (
                   <>
-                    <div className={`flex items-center justify-between p-3 border rounded-lg ${generalSettings.maintenanceMode ? 'border-orange-500 bg-orange-50' : ''}`}>
-                      <div>
-                        <p className="font-medium flex items-center gap-2">
+                    <div className={`flex items-center justify-between p-3 sm:p-4 border rounded-lg ${generalSettings.maintenanceMode ? 'border-orange-500 bg-orange-50' : ''}`}>
+                      <div className="flex-1 mr-4">
+                        <p className="font-medium text-sm sm:text-base flex items-center gap-2">
                           Maintenance Mode
                           {generalSettings.maintenanceMode && <Badge variant="destructive" className="text-xs">ACTIVE</Badge>}
                         </p>
-                        <p className="text-sm text-muted-foreground">Disable application for maintenance (blocks all except super_admin)</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Disable application for maintenance (blocks all except super_admin)</p>
                       </div>
                       <Switch
                         checked={generalSettings.maintenanceMode}
@@ -577,8 +583,8 @@ export default function SystemSettings() {
                 )}
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col sm:flex-row gap-2">
-              <Button onClick={() => handleSave('General')} disabled={saving} className="w-full sm:w-auto">
+            <CardFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
+              <Button onClick={() => handleSave('General')} disabled={saving} className="w-full sm:w-auto text-sm sm:text-base py-2.5 sm:py-2">
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Saving...' : 'Save General Settings'}
               </Button>
