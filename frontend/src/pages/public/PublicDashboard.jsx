@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Siren, Megaphone, Volume2, ArrowRight, Bell, MessageSquare, ClipboardList, ShieldAlert, Building2 } from "lucide-react";
+import { Siren, Megaphone, Volume2, ArrowRight, Bell, MessageSquare, ClipboardList, ShieldAlert, Building2, HelpCircle } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,8 @@ const quickLinks = [
   { to: "/campaigns", label: "Safety Campaigns", icon: Megaphone, color: "bg-orange-200 text-orange-600" },
   { to: "/voice-announcements", label: "AI Voice Announcements", icon: Volume2, color: "bg-orange-200 text-orange-600", requirePublic: true },
   { to: "/emergency", label: "Emergency Info", icon: ShieldAlert, color: "bg-orange-200 text-orange-600" },
-  { to: "/notifications", label: "Notifications", icon: Bell, color: "bg-orange-200 text-orange-600" },
+  { to: "/guides", label: "Guides", icon: HelpCircle, color: "bg-orange-200 text-orange-600" },
+  { to: "/faq", label: "FAQ", icon: HelpCircle, color: "bg-orange-200 text-orange-600" },
   { to: "/feedback", label: "Submit Feedback", icon: MessageSquare, color: "bg-orange-200 text-orange-600" },
   { to: "/surveys", label: "Surveys", icon: ClipboardList, color: "bg-orange-200 text-orange-600" },
   { to: "/about", label: "About Barangay", icon: Building2, color: "bg-orange-200 text-orange-600" },
@@ -82,7 +83,7 @@ export default function PublicDashboard() {
               if (!user && (ql.to === "/feedback" || ql.to === "/surveys")) return null;
               if (user && ql.requirePublic) return null; // Hide voice announcements for logged-in residents
               const Icon = ql.icon;
-              const isQuickAccessCard = ["/campaigns", "/voice-announcements", "/emergency", "/notifications", "/about"].includes(ql.to);
+              const isQuickAccessCard = ["/campaigns", "/voice-announcements", "/emergency", "/guides", "/faq", "/about"].includes(ql.to);
               return (
                 <Link
                   key={ql.to}

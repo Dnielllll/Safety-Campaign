@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate, Navigate } from "react-router-dom";
-import { Bell, MessageSquare, Siren, User, Home, Megaphone, Volume2, ClipboardList, LogOut, Menu, X, Building2, AlertTriangle, BookOpen } from "lucide-react";
+import { Bell, MessageSquare, Siren, User, Home, Megaphone, Volume2, ClipboardList, LogOut, Menu, X, Building2, AlertTriangle, BookOpen, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth.jsx";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ const navItems = [
   { to: "/emergency", label: "Emergency Info", icon: Siren },
   { to: "/about", label: "About Barangay", icon: Building2 },
   { to: "/guides", label: "Guides", icon: BookOpen },
+  { to: "/faq", label: "FAQ", icon: HelpCircle },
 ];
 
 export default function PublicLayout() {
@@ -233,7 +234,7 @@ export default function PublicLayout() {
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  {t(item.label)}
+                  {item.label}
                 </Link>
               );
             })}
@@ -321,7 +322,7 @@ export default function PublicLayout() {
                       )}
                     >
                       <Icon className="h-4 w-4" />
-                      {t(item.label)}
+                      {item.label}
                     </Link>
                   );
                 })}
