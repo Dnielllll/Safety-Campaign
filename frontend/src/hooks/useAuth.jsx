@@ -56,6 +56,19 @@ export function AuthProvider({ children }) {
 
       if (createErr) {
         console.error("Failed to auto-create user profile:", createErr);
+        // Check if it's a duplicate email error (user already exists)
+        if (createErr.code === '23505' && createErr.message.includes('users_email_key')) {
+          console.log("User already exists, trying to fetch by email");
+          // Try to fetch existing user by email
+          const { data: existingUser } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', authUser.email)
+            .maybeSingle();
+          if (existingUser) {
+            return normaliseRole(existingUser);
+          }
+        }
         // Return fallback from auth metadata so login still works
         return normaliseRole(fallbackProfile);
       }
@@ -203,6 +216,16 @@ export function AuthProvider({ children }) {
         localStorage.setItem('user', JSON.stringify(profile));
         // Dispatch event for MaintenanceGuard
         window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: profile } }));
+
+        // Check if this is a Google Sign-In and redirect to profile
+        const isGoogleSignIn = session.user.app_metadata?.provider === 'google' ||
+                            session.user.user_metadata?.provider === 'google' ||
+                            session.user.user_metadata?.iss?.includes('accounts.google.com');
+
+        if (isGoogleSignIn && window.location.pathname === '/login') {
+          console.log("Google Sign-In detected, redirecting to profile");
+          window.location.href = '/profile';
+        }
       } else if (event === "SIGNED_OUT") {
         setUser(null);
         localStorage.removeItem('user');
