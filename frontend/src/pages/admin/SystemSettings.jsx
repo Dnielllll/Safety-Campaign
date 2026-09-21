@@ -428,12 +428,12 @@ export default function SystemSettings() {
       </Card>
 
       <Tabs defaultValue="general">
-        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-          <TabsTrigger value="general">General</TabsTrigger>
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security">Security</TabsTrigger>}
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth">Authentication</TabsTrigger>}
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="features">Features</TabsTrigger>}
+        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-2">
+          <TabsTrigger value="general" className="text-sm py-2 sm:py-1.5">General</TabsTrigger>
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security" className="text-sm py-2 sm:py-1.5">Security</TabsTrigger>}
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth" className="text-sm py-2 sm:py-1.5">Authentication</TabsTrigger>}
+          <TabsTrigger value="notifications" className="text-sm py-2 sm:py-1.5">Notifications</TabsTrigger>
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="features" className="text-sm py-2 sm:py-1.5">Features</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="general">
@@ -687,49 +687,53 @@ export default function SystemSettings() {
         <TabsContent value="auth">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Lock className="h-4 w-4 text-primary" /> Authentication Policies
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> Authentication Policies
               </CardTitle>
-              <CardDescription>Configure user authentication and password requirements</CardDescription>
+              <CardDescription className="text-sm sm:text-base">Configure user authentication and password requirements</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Session Timeout (minutes)</Label>
+                  <Label className="text-sm sm:text-base">Session Timeout (minutes)</Label>
                   <Input
                     type="number"
                     min="1"
                     max="1440"
+                    className="text-base sm:text-sm"
                     value={authSettings.sessionTimeout}
                     onChange={(e) => {
                       const value = parseInt(e.target.value);
                       setAuthSettings({ ...authSettings, sessionTimeout: isNaN(value) || value < 1 ? 4 : value });
                     }}
                   />
-                  <p className="text-xs text-muted-foreground">Auto-logout after inactivity (1-1440 minutes)</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Auto-logout after inactivity (1-1440 minutes)</p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Max Login Attempts</Label>
+                  <Label className="text-sm sm:text-base">Max Login Attempts</Label>
                   <Input
                     type="number"
+                    className="text-base sm:text-sm"
                     value={authSettings.maxLoginAttempts}
                     onChange={(e) => setAuthSettings({ ...authSettings, maxLoginAttempts: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
                   />
-                  <p className="text-xs text-muted-foreground">Before account lockout</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Before account lockout</p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Lockout Duration (minutes)</Label>
+                  <Label className="text-sm sm:text-base">Lockout Duration (minutes)</Label>
                   <Input
                     type="number"
+                    className="text-base sm:text-sm"
                     value={authSettings.lockoutDuration}
                     onChange={(e) => setAuthSettings({ ...authSettings, lockoutDuration: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
                   />
-                  <p className="text-xs text-muted-foreground">Account lockout duration</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Account lockout duration</p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Minimum Password Length</Label>
+                  <Label className="text-sm sm:text-base">Minimum Password Length</Label>
                   <Input
                     type="number"
+                    className="text-base sm:text-sm"
                     value={authSettings.passwordMinLength}
                     onChange={(e) => setAuthSettings({ ...authSettings, passwordMinLength: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
                   />
@@ -737,10 +741,10 @@ export default function SystemSettings() {
               </div>
 
               <div className="space-y-4 pt-4">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Require Uppercase Letters</p>
-                    <p className="text-sm text-muted-foreground">Passwords must contain uppercase letters</p>
+                <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                  <div className="flex-1 mr-4">
+                    <p className="font-medium text-sm sm:text-base">Require Uppercase Letters</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Passwords must contain uppercase letters</p>
                   </div>
                   <Switch
                     checked={authSettings.passwordRequireUppercase}
@@ -748,10 +752,10 @@ export default function SystemSettings() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Require Numbers</p>
-                    <p className="text-sm text-muted-foreground">Passwords must contain numbers</p>
+                <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                  <div className="flex-1 mr-4">
+                    <p className="font-medium text-sm sm:text-base">Require Numbers</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Passwords must contain numbers</p>
                   </div>
                   <Switch
                     checked={authSettings.passwordRequireNumbers}
@@ -759,10 +763,10 @@ export default function SystemSettings() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Require Special Characters</p>
-                    <p className="text-sm text-muted-foreground">Passwords must contain special characters</p>
+                <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                  <div className="flex-1 mr-4">
+                    <p className="font-medium text-sm sm:text-base">Require Special Characters</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Passwords must contain special characters</p>
                   </div>
                   <Switch
                     checked={authSettings.passwordRequireSpecialChars}
@@ -770,10 +774,10 @@ export default function SystemSettings() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Two-Factor Authentication</p>
-                    <p className="text-sm text-muted-foreground">Enable 2FA for all admin accounts</p>
+                <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                  <div className="flex-1 mr-4">
+                    <p className="font-medium text-sm sm:text-base">Two-Factor Authentication</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Enable 2FA for all admin accounts</p>
                   </div>
                   <Switch
                     checked={authSettings.twoFactorEnabled}
@@ -782,14 +786,15 @@ export default function SystemSettings() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>IP Whitelist (optional)</Label>
+                  <Label className="text-sm sm:text-base">IP Whitelist (optional)</Label>
                   <Textarea
                     placeholder="Enter allowed IP addresses, one per line"
+                    className="text-base sm:text-sm"
                     value={authSettings.ipWhitelist}
                     onChange={(e) => setAuthSettings({ ...authSettings, ipWhitelist: e.target.value })}
                     rows={3}
                   />
-                  <p className="text-xs text-muted-foreground">Leave empty to allow all IP addresses</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Leave empty to allow all IP addresses</p>
                 </div>
               </div>
             </CardContent>
@@ -807,17 +812,17 @@ export default function SystemSettings() {
         <TabsContent value="notifications">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Bell className="h-4 w-4 text-primary" /> System Notifications
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> System Notifications
               </CardTitle>
-              <CardDescription>Configure system-wide notification channels and alerts</CardDescription>
+              <CardDescription className="text-sm sm:text-base">Configure system-wide notification channels and alerts</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">SMS Notifications</p>
-                    <p className="text-sm text-muted-foreground">Enable SMS gateway for alerts</p>
+                <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                  <div className="flex-1 mr-4">
+                    <p className="font-medium text-sm sm:text-base">SMS Notifications</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Enable SMS gateway for alerts</p>
                   </div>
                   <Switch
                     checked={notificationSettings.smsEnabled}
@@ -825,10 +830,10 @@ export default function SystemSettings() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Email Notifications</p>
-                    <p className="text-sm text-muted-foreground">Enable email notifications</p>
+                <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                  <div className="flex-1 mr-4">
+                    <p className="font-medium text-sm sm:text-base">Email Notifications</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Enable email notifications</p>
                   </div>
                   <Switch
                     checked={notificationSettings.emailEnabled}
@@ -836,10 +841,10 @@ export default function SystemSettings() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Facebook Integration</p>
-                    <p className="text-sm text-muted-foreground">Enable Facebook page posting</p>
+                <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                  <div className="flex-1 mr-4">
+                    <p className="font-medium text-sm sm:text-base">Facebook Integration</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Enable Facebook page posting</p>
                   </div>
                   <Switch
                     checked={notificationSettings.facebookEnabled}
@@ -847,10 +852,10 @@ export default function SystemSettings() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Push Notifications</p>
-                    <p className="text-sm text-muted-foreground">Enable mobile push notifications</p>
+                <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                  <div className="flex-1 mr-4">
+                    <p className="font-medium text-sm sm:text-base">Push Notifications</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Enable mobile push notifications</p>
                   </div>
                   <Switch
                     checked={notificationSettings.pushEnabled}
@@ -860,12 +865,12 @@ export default function SystemSettings() {
               </div>
 
               <div className="pt-4 border-t">
-                <p className="font-medium mb-3">Alert Types</p>
+                <p className="font-medium text-sm sm:text-base mb-3">Alert Types</p>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">System Alerts</p>
-                      <p className="text-sm text-muted-foreground">General system notifications</p>
+                  <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                    <div className="flex-1 mr-4">
+                      <p className="font-medium text-sm sm:text-base">System Alerts</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">General system notifications</p>
                     </div>
                     <Switch
                       checked={notificationSettings.systemAlertsEnabled}
@@ -873,10 +878,10 @@ export default function SystemSettings() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Emergency Alerts</p>
-                      <p className="text-sm text-muted-foreground">Critical emergency notifications</p>
+                  <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                    <div className="flex-1 mr-4">
+                      <p className="font-medium text-sm sm:text-base">Emergency Alerts</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Critical emergency notifications</p>
                     </div>
                     <Switch
                       checked={notificationSettings.emergencyAlertsEnabled}
@@ -884,9 +889,9 @@ export default function SystemSettings() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Maintenance Alerts</p>
+                  <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                    <div className="flex-1 mr-4">
+                      <p className="font-medium text-sm sm:text-base">Maintenance Alerts</p>
                       <p className="text-sm text-muted-foreground">System maintenance notifications</p>
                     </div>
                     <Switch
@@ -895,10 +900,10 @@ export default function SystemSettings() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Security Alerts</p>
-                      <p className="text-sm text-muted-foreground">Security incident notifications</p>
+                  <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                    <div className="flex-1 mr-4">
+                      <p className="font-medium text-sm sm:text-base">Security Alerts</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Security incident notifications</p>
                     </div>
                     <Switch
                       checked={notificationSettings.securityAlertsEnabled}
@@ -909,7 +914,7 @@ export default function SystemSettings() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col sm:flex-row gap-2">
-              <Button onClick={() => handleSave('Notifications')} disabled={saving} className="w-full sm:w-auto">
+              <Button onClick={() => handleSave('Notifications')} disabled={saving} className="w-full sm:w-auto text-sm sm:text-base">
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Saving...' : 'Save Notification Settings'}
               </Button>
@@ -921,17 +926,17 @@ export default function SystemSettings() {
         <TabsContent value="features">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Zap className="h-4 w-4 text-primary" /> System Features
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> System Features
               </CardTitle>
-              <CardDescription>Enable or disable system-wide features and functionality</CardDescription>
+              <CardDescription className="text-sm sm:text-base">Enable or disable system-wide features and functionality</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">AI Assistant</p>
-                    <p className="text-sm text-muted-foreground">Enable AI-powered content assistance</p>
+                <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                  <div className="flex-1 mr-4">
+                    <p className="font-medium text-sm sm:text-base">AI Assistant</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Enable AI-powered content assistance</p>
                   </div>
                   <Switch
                     checked={featureSettings.aiAssistantEnabled}
@@ -939,10 +944,10 @@ export default function SystemSettings() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Voice Announcements</p>
-                    <p className="text-sm text-muted-foreground">Enable text-to-speech voice announcements</p>
+                <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                  <div className="flex-1 mr-4">
+                    <p className="font-medium text-sm sm:text-base">Voice Announcements</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Enable text-to-speech voice announcements</p>
                   </div>
                   <Switch
                     checked={featureSettings.voiceAnnouncementsEnabled}
@@ -951,12 +956,12 @@ export default function SystemSettings() {
                 </div>
 
                 {featureSettings.voiceAnnouncementsEnabled && (
-                  <div className="space-y-4 pl-4 pt-2">
+                  <div className="space-y-4 pl-0 sm:pl-4 pt-2">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Default Voice</Label>
+                        <Label className="text-sm sm:text-base">Default Voice</Label>
                         <Select value={aiSettings.defaultVoice} onValueChange={(v) => setAiSettings({ ...aiSettings, defaultVoice: v })}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="text-base sm:text-sm"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="fil-PH-Wavenet-A">Filipino — Wavenet A (Female)</SelectItem>
                             <SelectItem value="fil-PH-Wavenet-D">Filipino — Wavenet D (Male)</SelectItem>
@@ -965,9 +970,9 @@ export default function SystemSettings() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>Speaking Rate</Label>
+                        <Label className="text-sm sm:text-base">Speaking Rate</Label>
                         <Select value={aiSettings.speakingRate} onValueChange={(v) => setAiSettings({ ...aiSettings, speakingRate: v })}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="text-base sm:text-sm"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="0.75">Slow (0.75x)</SelectItem>
                             <SelectItem value="1.0">Normal (1.0x)</SelectItem>
@@ -976,10 +981,10 @@ export default function SystemSettings() {
                         </Select>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Auto-generate Voice</p>
-                        <p className="text-sm text-muted-foreground">Automatically generate voice for campaigns</p>
+                    <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
+                      <div className="flex-1 mr-4">
+                        <p className="font-medium text-sm sm:text-base">Auto-generate Voice</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Automatically generate voice for campaigns</p>
                       </div>
                       <Switch
                         checked={aiSettings.autoGenerateVoice}
@@ -987,14 +992,15 @@ export default function SystemSettings() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="flex items-center gap-2"><KeyRound className="h-3.5 w-3.5" /> Google Cloud Service Account Key</Label>
+                      <Label className="flex items-center gap-2 text-sm sm:text-base"><KeyRound className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Google Cloud Service Account Key</Label>
                       <Input
                         type="password"
                         placeholder="•••••••••••••••••••••••"
+                        className="text-base sm:text-sm"
                         value={aiSettings.serviceAccountKey}
                         onChange={(e) => setAiSettings({ ...aiSettings, serviceAccountKey: e.target.value })}
                       />
-                      <p className="text-xs text-muted-foreground">Stored securely on the server; never exposed to the frontend.</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Stored securely on the server; never exposed to the frontend.</p>
                     </div>
                   </div>
                 )}
