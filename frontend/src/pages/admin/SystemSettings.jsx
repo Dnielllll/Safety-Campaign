@@ -428,12 +428,12 @@ export default function SystemSettings() {
       </Card>
 
       <Tabs defaultValue="general">
-        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-2 p-2">
-          <TabsTrigger value="general" className="text-sm py-3 sm:py-1.5 px-3 sm:px-2">General</TabsTrigger>
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security" className="text-sm py-3 sm:py-1.5 px-3 sm:px-2">Security</TabsTrigger>}
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth" className="text-sm py-3 sm:py-1.5 px-3 sm:px-2">Authentication</TabsTrigger>}
-          <TabsTrigger value="notifications" className="text-sm py-3 sm:py-1.5 px-3 sm:px-2">Notifications</TabsTrigger>
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="features" className="text-sm py-3 sm:py-1.5 px-3 sm:px-2">Features</TabsTrigger>}
+        <TabsList className="w-full grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2">
+          <TabsTrigger value="general" className="text-sm py-2.5 px-3">General</TabsTrigger>
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security" className="text-sm py-2.5 px-3">Security</TabsTrigger>}
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth" className="text-sm py-2.5 px-3">Authentication</TabsTrigger>}
+          <TabsTrigger value="notifications" className="text-sm py-2.5 px-3">Notifications</TabsTrigger>
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="features" className="text-sm py-2.5 px-3">Features</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="general">
