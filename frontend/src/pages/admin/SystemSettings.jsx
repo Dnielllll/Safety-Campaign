@@ -428,23 +428,23 @@ export default function SystemSettings() {
       </Card>
 
       <Tabs defaultValue="general">
-        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-2">
-          <TabsTrigger value="general" className="text-xs sm:text-sm py-2 sm:py-1.5">General</TabsTrigger>
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security" className="text-xs sm:text-sm py-2 sm:py-1.5">Security</TabsTrigger>}
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth" className="text-xs sm:text-sm py-2 sm:py-1.5">Authentication</TabsTrigger>}
-          <TabsTrigger value="notifications" className="text-xs sm:text-sm py-2 sm:py-1.5">Notifications</TabsTrigger>
-          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="features" className="text-xs sm:text-sm py-2 sm:py-1.5">Features</TabsTrigger>}
+        <TabsList className="w-full grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+          <TabsTrigger value="general" className="w-full text-sm py-4">General</TabsTrigger>
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security" className="w-full text-sm py-4">Security</TabsTrigger>}
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth" className="w-full text-sm py-4">Authentication</TabsTrigger>}
+          <TabsTrigger value="notifications" className="w-full text-sm py-4">Notifications</TabsTrigger>
+          {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="features" className="w-full text-sm py-4">Features</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="general">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base sm:text-lg">General System Settings</CardTitle>
+            <CardHeader className="pb-6">
+              <CardTitle className="text-base sm:text-lg mb-2">General System Settings</CardTitle>
               <CardDescription className="text-sm sm:text-base">Configure basic system information and behavior</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 sm:space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                <div className="space-y-2 sm:space-y-3">
+            <CardContent className="space-y-6 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-6">
+                <div className="space-y-3 sm:space-y-3">
                   <Label className="text-sm sm:text-base">Application Name</Label>
                   <Input
                     className="text-base sm:text-sm"
@@ -452,7 +452,7 @@ export default function SystemSettings() {
                     onChange={(e) => setGeneralSettings({ ...generalSettings, appName: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-3 sm:space-y-3">
                   <Label className="text-sm sm:text-base">Application Version</Label>
                   <Input
                     className="text-base sm:text-sm"
@@ -460,7 +460,7 @@ export default function SystemSettings() {
                     onChange={(e) => setGeneralSettings({ ...generalSettings, appVersion: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-3 sm:space-y-3">
                   <Label className="text-sm sm:text-base">Barangay Name</Label>
                   <Input
                     className="text-base sm:text-sm"
@@ -468,7 +468,7 @@ export default function SystemSettings() {
                     onChange={(e) => setGeneralSettings({ ...generalSettings, barangayName: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-3 sm:space-y-3">
                   <Label className="text-sm sm:text-base">City / Municipality</Label>
                   <Input
                     className="text-base sm:text-sm"
@@ -476,7 +476,7 @@ export default function SystemSettings() {
                     onChange={(e) => setGeneralSettings({ ...generalSettings, city: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-3 sm:space-y-3">
                   <Label className="text-sm sm:text-base">District</Label>
                   <Input
                     className="text-base sm:text-sm"
@@ -484,7 +484,7 @@ export default function SystemSettings() {
                     onChange={(e) => setGeneralSettings({ ...generalSettings, district: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-3 sm:space-y-3">
                   <Label className="text-sm sm:text-base">Contact Number</Label>
                   <Input
                     className="text-base sm:text-sm"
@@ -493,7 +493,7 @@ export default function SystemSettings() {
                     onChange={(e) => setGeneralSettings({ ...generalSettings, contactNumber: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-3 sm:space-y-3">
                   <Label className="text-sm sm:text-base">Timezone</Label>
                   <Select value={generalSettings.timezone} onValueChange={(v) => setGeneralSettings({ ...generalSettings, timezone: v })}>
                     <SelectTrigger className="text-base sm:text-sm"><SelectValue /></SelectTrigger>
@@ -504,7 +504,7 @@ export default function SystemSettings() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-3 sm:space-y-3">
                   <Label className="text-sm sm:text-base">Language</Label>
                   <Select value={generalSettings.language} onValueChange={(v) => setGeneralSettings({ ...generalSettings, language: v })}>
                     <SelectTrigger className="text-base sm:text-sm"><SelectValue /></SelectTrigger>
