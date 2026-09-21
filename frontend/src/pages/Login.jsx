@@ -185,7 +185,28 @@ export default function Login() {
         setBypassTimeRemaining(0);
       }
       
-      // Clean up expired OTP verification tp_verified_at_${form.email}`);
+      // Clean up expired OTP verification timestamps
+      if (recentVerification && !isWithin3Minutes) {
+        localStorage.removeItem(`otp_verified_at_${form.email}`);
+      }
+    } else {
+      setShowOtpBypassNotice(false);
+      setBypassTimeRemaining(0);
+    }
+  }, [form.email]);
+
+  // Bypass timer countdown
+  React.useEffect(() => {
+    let interval;
+    if (showOtpBypassNotice && bypassTimeRemaining > 0) {
+      interval = setInterval(() => {
+        setBypassTimeRemaining((prev) => {
+          const newTime = prev - 1;
+          if (newTime === 0) {
+            setShowOtpBypassNotice(false);
+            // Clean up expired timestamp
+            if (form.email) {
+              localStorage.removeItem(`otp_verified_at_${form.email}`);
             }
           }
           return newTime;
