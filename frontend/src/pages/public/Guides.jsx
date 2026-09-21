@@ -135,13 +135,13 @@ export default function Guides() {
           <div>
             <h4 className="font-semibold mb-2">Feedback Types</h4>
             <p className="text-sm text-muted-foreground">
-              You can submit general feedback, campaign-specific feedback, suggestions, or report issues. Choose the appropriate category to help barangay staff understand your feedback better.
+              You can submit general feedback, campaign-specific feedback, suggestions, or report issues. Choose the appropriate category to help the barangay understand your feedback better.
             </p>
           </div>
           <div>
             <h4 className="font-semibold mb-2">Privacy</h4>
             <p className="text-sm text-muted-foreground">
-              Your feedback is submitted securely and reviewed by barangay staff. You can choose to submit anonymously or include your name for follow-up.
+              Your feedback is submitted securely and reviewed by the barangay team. You can choose to submit anonymously or include your name for follow-up.
             </p>
           </div>
         </div>
