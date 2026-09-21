@@ -428,7 +428,7 @@ export default function SystemSettings() {
       </Card>
 
       <Tabs defaultValue="general">
-        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2 mb-4">
+        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2 mb-6 sm:mb-4">
           <TabsTrigger value="general" className="text-xs sm:text-sm py-2.5 sm:py-1.5">General</TabsTrigger>
           {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="security" className="text-xs sm:text-sm py-2.5 sm:py-1.5">Security</TabsTrigger>}
           {(user?.role === 'super_admin' || user?.role === 'superadmin') && <TabsTrigger value="auth" className="text-xs sm:text-sm py-2.5 sm:py-1.5">Authentication</TabsTrigger>}
@@ -437,8 +437,8 @@ export default function SystemSettings() {
         </TabsList>
 
         <TabsContent value="general">
-          <Card>
-            <CardHeader className="pb-6">
+          <Card className="mt-2">
+            <CardHeader className="pb-6 pt-6">
               <CardTitle className="text-base sm:text-lg mb-2">General System Settings</CardTitle>
               <CardDescription className="text-sm sm:text-base">Configure basic system information and behavior</CardDescription>
             </CardHeader>
@@ -595,8 +595,8 @@ export default function SystemSettings() {
         {(user?.role === 'super_admin' || user?.role === 'superadmin') && (
           <>
             <TabsContent value="security">
-          <Card>
-            <CardHeader>
+          <Card className="mt-2">
+            <CardHeader className="pt-6">
               <CardTitle className="text-base flex items-center gap-2">
                 <Shield className="h-4 w-4 text-primary" /> Security Policies
               </CardTitle>
@@ -691,8 +691,8 @@ export default function SystemSettings() {
         </TabsContent>
 
         <TabsContent value="auth">
-          <Card>
-            <CardHeader>
+          <Card className="mt-2">
+            <CardHeader className="pt-6">
               <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                 <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> Authentication Policies
               </CardTitle>
@@ -816,8 +816,8 @@ export default function SystemSettings() {
         )}
 
         <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
+          <Card className="mt-2">
+            <CardHeader className="pt-6">
               <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                 <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> System Notifications
               </CardTitle>
@@ -930,8 +930,8 @@ export default function SystemSettings() {
 
         {(user?.role === 'super_admin' || user?.role === 'superadmin') && (
         <TabsContent value="features">
-          <Card>
-            <CardHeader>
+          <Card className="mt-2">
+            <CardHeader className="pt-6">
               <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                 <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> System Features
               </CardTitle>
