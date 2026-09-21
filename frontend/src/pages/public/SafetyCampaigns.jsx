@@ -12,6 +12,12 @@ import { generateAIResponse } from "@/lib/ai.js";
 const categories = ["All", "Fire Safety", "Disaster Preparedness", "Health", "Anti-Drug", "Road Safety", "Environment", "Crime Prevention"];
 const priorities = ["All", "critical", "high", "medium", "low"];
 const priorityVariant = { critical: "destructive", high: "warning", medium: "secondary", low: "outline" };
+const priorityColor = {
+  critical: "bg-red-500 text-white hover:bg-red-600",
+  high: "bg-orange-500 text-white hover:bg-orange-600",
+  medium: "bg-blue-500 text-white hover:bg-blue-600",
+  low: "bg-green-500 text-white hover:bg-green-600"
+};
 
 // Translation dictionary for campaign content
 const translations = {
@@ -259,7 +265,7 @@ export default function SafetyCampaigns() {
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
               <div className="flex flex-wrap gap-2">
-                <Badge variant={priorityVariant[selected.priority] || "secondary"}>{selected.priority} priority</Badge>
+                <Badge className={priorityColor[selected.priority] || "bg-gray-500 text-white"}>{selected.priority} priority</Badge>
                 <Badge variant="outline">{selected.category?.replace("_", " ")}</Badge>
               </div>
               {/* Language Toggle */}
@@ -387,7 +393,7 @@ export default function SafetyCampaigns() {
             const t = translations[language];
 
             return (
-              <Card key={c.id} className="hover:shadow-md transition-shadow flex flex-col">
+              <Card key={c.id} className="hover:shadow-md transition-shadow flex flex-col bg-white">
                 {hasContent && (
                   <div className="h-40 overflow-hidden bg-muted">
                     {firstVideo ? (
@@ -398,25 +404,18 @@ export default function SafetyCampaigns() {
                   </div>
                 )}
                 <CardHeader>
-                  <div className="flex items-center justify-between mb-1">
-                    <Badge variant={priorityVariant[c.priority] || "secondary"}>{c.priority || "general"}</Badge>
-                    <span className="text-xs text-muted-foreground capitalize">
-                      {(c.category || c.campaign_type || "community").replace(/_/g, " ")}
-                    </span>
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge className={priorityColor[c.priority] || "bg-gray-500 text-white"}>{c.priority || "general"}</Badge>
                   </div>
                   <CardTitle className="text-base">{c.title}</CardTitle>
-                  <CardDescription className="line-clamp-2">
-                    {(c.objectives || c.description || "View this campaign for more details.")
-                      .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
-                      .replace(/[•✅📍📞📅🏆🚫🚗🧹🏥]/g, '')
-                      .replace(/^\s*\n*/,'').trim()
-                    }
-                  </CardDescription>
                 </CardHeader>
-                <CardFooter className="justify-center gap-3 mt-auto">
-                  <Button variant="default" size="sm" onClick={() => { stopVoiceOnClick(); setSelected(c); }}>
-                    {t.readMore} <ArrowRight className="h-3 w-3 ml-1" />
-                  </Button>
+                <CardFooter className="justify-between mt-auto">
+                  <button
+                    onClick={() => { stopVoiceOnClick(); setSelected(c); }}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    {t.readMore}
+                  </button>
                   <Button variant="outline" size="sm" onClick={() => handleListen(c)}>
                     {playing === c.id ? (
                       <>
