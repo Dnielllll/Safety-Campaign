@@ -217,14 +217,14 @@ export function AuthProvider({ children }) {
         // Dispatch event for MaintenanceGuard
         window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { user: profile } }));
 
-        // Check if this is a Google Sign-In and redirect to profile
+        // Check if this is a Google Sign-In and redirect to resident dashboard
         const isGoogleSignIn = session.user.app_metadata?.provider === 'google' ||
                             session.user.user_metadata?.provider === 'google' ||
                             session.user.user_metadata?.iss?.includes('accounts.google.com');
 
         if (isGoogleSignIn && window.location.pathname === '/login') {
-          console.log("Google Sign-In detected, redirecting to profile");
-          window.location.href = '/profile';
+          console.log("Google Sign-In detected, redirecting to resident dashboard");
+          window.location.href = '/';
         }
       } else if (event === "SIGNED_OUT") {
         setUser(null);

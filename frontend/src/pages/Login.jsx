@@ -152,9 +152,9 @@ export default function Login() {
         // Clear URL parameters to prevent re-processing
         window.history.replaceState({}, document.title, window.location.pathname);
 
-        console.log("Redirecting to /profile...");
-        // Always redirect to profile for Google Sign-In users (residents only)
-        window.location.href = '/profile';
+        console.log("Redirecting to resident dashboard...");
+        // Always redirect to resident dashboard for Google Sign-In users (residents only)
+        window.location.href = '/';
       } catch (error) {
         console.error('OAuth callback error:', error);
         setError('Authentication failed. Please try again.');
@@ -477,7 +477,7 @@ export default function Login() {
       } else if (user.role === "staff") {
         dest = "/staff";
       } else if (user.role === "public" || user.role === "citizen") {
-        dest = "/profile";
+        dest = "/"; // Resident dashboard homepage
       } else {
         setError("Invalid user role. Please contact administrator.");
         return;
