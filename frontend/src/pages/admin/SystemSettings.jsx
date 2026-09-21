@@ -438,13 +438,13 @@ export default function SystemSettings() {
 
         <TabsContent value="general">
           <Card className="mt-2">
-            <CardHeader className="pb-6 pt-6">
-              <CardTitle className="text-base sm:text-lg mb-2">General System Settings</CardTitle>
+            <CardHeader className="pb-4 pt-4">
+              <CardTitle className="text-base sm:text-lg mb-1">General System Settings</CardTitle>
               <CardDescription className="text-sm sm:text-base">Configure basic system information and behavior</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 sm:space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                <div className="space-y-2 sm:space-y-3">
+            <CardContent className="space-y-3 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+                <div className="space-y-1.5 sm:space-y-3">
                   <Label className="text-sm sm:text-base">Application Name</Label>
                   <Input
                     className="text-base sm:text-sm"
@@ -452,7 +452,7 @@ export default function SystemSettings() {
                     onChange={(e) => setGeneralSettings({ ...generalSettings, appName: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-1.5 sm:space-y-3">
                   <Label className="text-sm sm:text-base">Application Version</Label>
                   <Input
                     className="text-base sm:text-sm"
@@ -460,7 +460,7 @@ export default function SystemSettings() {
                     onChange={(e) => setGeneralSettings({ ...generalSettings, appVersion: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-1.5 sm:space-y-3">
                   <Label className="text-sm sm:text-base">Barangay Name</Label>
                   <Input
                     className="text-base sm:text-sm"
@@ -468,7 +468,7 @@ export default function SystemSettings() {
                     onChange={(e) => setGeneralSettings({ ...generalSettings, barangayName: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-1.5 sm:space-y-3">
                   <Label className="text-sm sm:text-base">City / Municipality</Label>
                   <Input
                     className="text-base sm:text-sm"
@@ -476,7 +476,7 @@ export default function SystemSettings() {
                     onChange={(e) => setGeneralSettings({ ...generalSettings, city: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-1.5 sm:space-y-3">
                   <Label className="text-sm sm:text-base">District</Label>
                   <Input
                     className="text-base sm:text-sm"
@@ -484,7 +484,7 @@ export default function SystemSettings() {
                     onChange={(e) => setGeneralSettings({ ...generalSettings, district: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-1.5 sm:space-y-3">
                   <Label className="text-sm sm:text-base">Contact Number</Label>
                   <Input
                     className="text-base sm:text-sm"
@@ -493,7 +493,7 @@ export default function SystemSettings() {
                     onChange={(e) => setGeneralSettings({ ...generalSettings, contactNumber: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-1.5 sm:space-y-3">
                   <Label className="text-sm sm:text-base">Timezone</Label>
                   <Select value={generalSettings.timezone} onValueChange={(v) => setGeneralSettings({ ...generalSettings, timezone: v })}>
                     <SelectTrigger className="text-base sm:text-sm"><SelectValue /></SelectTrigger>
@@ -504,7 +504,7 @@ export default function SystemSettings() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-1.5 sm:space-y-3">
                   <Label className="text-sm sm:text-base">Language</Label>
                   <Select value={generalSettings.language} onValueChange={(v) => setGeneralSettings({ ...generalSettings, language: v })}>
                     <SelectTrigger className="text-base sm:text-sm"><SelectValue /></SelectTrigger>
@@ -516,7 +516,7 @@ export default function SystemSettings() {
                 </div>
               </div>
 
-              <div className="space-y-4 sm:space-y-6 pt-4 sm:pt-6">
+              <div className="space-y-3 sm:space-y-6 pt-3 sm:pt-6">
                 {(user?.role === 'super_admin' || user?.role === 'superadmin') && (
                   <>
                     <div className={`flex items-center justify-between p-3 sm:p-4 border rounded-lg ${generalSettings.maintenanceMode ? 'border-orange-500 bg-orange-50' : ''}`}>
@@ -596,7 +596,7 @@ export default function SystemSettings() {
           <>
             <TabsContent value="security">
           <Card className="mt-2">
-            <CardHeader className="pt-6">
+            <CardHeader className="pt-4">
               <CardTitle className="text-base flex items-center gap-2">
                 <Shield className="h-4 w-4 text-primary" /> Security Policies
               </CardTitle>
@@ -692,7 +692,7 @@ export default function SystemSettings() {
 
         <TabsContent value="auth">
           <Card className="mt-2">
-            <CardHeader className="pt-6">
+            <CardHeader className="pt-4">
               <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                 <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> Authentication Policies
               </CardTitle>
@@ -817,7 +817,7 @@ export default function SystemSettings() {
 
         <TabsContent value="notifications">
           <Card className="mt-2">
-            <CardHeader className="pt-6">
+            <CardHeader className="pt-4">
               <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                 <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> System Notifications
               </CardTitle>
@@ -931,7 +931,7 @@ export default function SystemSettings() {
         {(user?.role === 'super_admin' || user?.role === 'superadmin') && (
         <TabsContent value="features">
           <Card className="mt-2">
-            <CardHeader className="pt-6">
+            <CardHeader className="pt-4">
               <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                 <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> System Features
               </CardTitle>
