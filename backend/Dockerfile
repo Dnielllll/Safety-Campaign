@@ -1,18 +1,19 @@
-# Laravel Dockerfile for Render (Simple PHP-FPM)
-FROM php:8.3-fpm-alpine
+# Laravel Dockerfile for Render
+FROM php:8.3-apache
 
 # Install system dependencies
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     git \
     curl \
     libpng-dev \
+    libonig-dev \
     libxml2-dev \
     zip \
     unzip \
-    oniguruma-dev \
-    postgresql-dev \
-    icu-dev \
-    libzip-dev
+    libpq-dev \
+    libicu-dev \
+    libzip-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-configure pgsql --with-pgsql=/usr/local/pgsql \
@@ -21,6 +22,10 @@ RUN docker-php-ext-configure pgsql --with-pgsql=/usr/local/pgsql \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
+
+# Set working directory
 WORKDIR /var/www/html
 
 # Copy Laravel files
@@ -30,17 +35,20 @@ COPY . .
 RUN composer install --optimize-autoloader --no-dev --no-interaction
 
 # Configure environment
-RUN cp .env.example .env \
-    && php artisan key:generate
+RUN cp .env.example .env
 
-# Permissions
+# Set permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
+    && chmod -R 755 /var/www/html/bootstrap/cache \
+    && chmod -R 755 /var/www/html/public
 
-EXPOSE 9000
+# Expose port 80 for Apache
+EXPOSE 80
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD php-fpm -t || exit 1
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost/ || exit 1
 
-CMD ["php-fpm"]
+# Start Apache in foreground
+CMD ["apache2-foreground"]

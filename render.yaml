@@ -1,2 +1,46 @@
-# Render deployment configuration
-# This is a reference configuration - use Render web UI for deployment
+# Render deployment configuration for Laravel Backend
+services:
+  - type: web
+    name: barangay178-backend
+    env: docker
+    plan: free
+    region: oregon
+    
+    # Docker configuration
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    
+    # Environment variables (will be set in Render dashboard)
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        value: https://barangay178-backend.onrender.com
+      
+      # Database (Supabase) - IMPORTANT: Set DB_PASSWORD in Render dashboard manually
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        value: zuuwqrxmkeryzbcrlrai.supabase.co
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        value: postgres
+      - key: DB_USERNAME
+        value: postgres
+      - key: DB_PASSWORD
+        sync: false # SET THIS MANUALLY in Render dashboard with: superteamdaniel12345
+      - key: DB_SSLMODE
+        value: require
+      
+      # Frontend URL (for CORS)
+      - key: FRONTEND_URL
+        value: https://barangay178-safety-campaign.vercel.app
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: barangay178-safety-campaign.vercel.app
+      
+      # APP_KEY (generate: php artisan key:generate)
+      - key: APP_KEY
+        sync: false # SET THIS MANUALLY in Render dashboard (run: php artisan key:generate locally)
