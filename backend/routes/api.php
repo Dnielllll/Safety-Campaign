@@ -30,6 +30,18 @@ Route::get('/health', function () {
 
 Route::get('/campaigns/test', [CampaignController::class, 'test']);
 
+// Simple test route without controller
+Route::get('/simple-test', function () {
+    return response()->json([
+        'message' => 'Simple test works',
+        'data' => ['item1', 'item2', 'item3']
+    ]);
+});
+
+// Make campaigns route public temporarily for testing
+Route::get('/campaigns', [CampaignController::class, 'index']);
+Route::get('/campaigns/approved', [CampaignController::class, 'getApprovedCampaigns']);
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
