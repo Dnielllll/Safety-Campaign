@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Search, Loader2, User, Calendar, Eye, Plus, AlertTriangle, X, Send } from "lucide-react";
+import { Search, Loader2, User, Calendar, Eye, Plus, AlertTriangle } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
@@ -13,21 +13,11 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth.jsx";
 
 const statusVariant = {
-  draft: "outline",
-  pending_approval: "warning",
-  submitted: "warning",
   published: "success",
-  rejected: "destructive",
-  needs_revision: "destructive",
 };
 
 const statusLabel = {
-  draft: "Draft",
-  pending_approval: "Pending Review",
-  submitted: "Pending Review",
   published: "Published",
-  rejected: "Rejected",
-  needs_revision: "Needs Revision",
 };
 
 const categoryOptions = {
@@ -39,8 +29,6 @@ const categoryOptions = {
   general: "General",
   other: "Other (specify below)"
 };
-
-const canEditStatus = (status) => status === "draft" || status === "needs_revision";
 
 export default function AllCampaigns() {
   const navigate = useNavigate();
@@ -62,10 +50,11 @@ export default function AllCampaigns() {
   const fetchAllCampaigns = async () => {
     setLoading(true);
     try {
-      // First, try fetching campaigns without relationships
+      // Only fetch published campaigns to avoid showing rejected/needs revision campaigns
       const { data: campaigns, error } = await supabase
         .from("campaigns")
         .select("*, creator:users!campaigns_created_by_fkey(name, email)")
+        .eq("status", "published")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -73,7 +62,7 @@ export default function AllCampaigns() {
         throw error;
       }
 
-      console.log("Fetched campaigns:", campaigns);
+      console.log("Fetched published campaigns:", campaigns);
 
       // Get current user
       const { user } = await supabaseHelpers.getAuthUser();
@@ -239,9 +228,9 @@ export default function AllCampaigns() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-display text-xl sm:text-2xl font-bold">All Campaigns</h1>
+          <h1 className="font-display text-xl sm:text-2xl font-bold">Published Campaigns</h1>
           <p className="text-muted-foreground text-xs sm:text-sm">
-            View all campaigns from all staff members to avoid creating duplicates.
+            View published campaigns from all staff members to avoid creating duplicates.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
@@ -262,6 +251,9 @@ export default function AllCampaigns() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create New Campaign</DialogTitle>
+                <DialogDescription>
+                  Create a new campaign draft or submit for approval.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -379,25 +371,6 @@ export default function AllCampaigns() {
                       {viewCampaign.description || "No description provided"}
                     </div>
                   </div>
-                  {viewCampaign.isCreatedByUser && canEditStatus(viewCampaign.status) && (
-                    <div className="flex justify-end">
-                      <Button 
-                        onClick={() => {
-                          setViewOpen(false);
-                          navigate('/staff/campaigns');
-                        }}
-                      >
-                        Edit This Campaign
-                      </Button>
-                    </div>
-                  )}
-                  {viewCampaign.isCreatedByUser && !canEditStatus(viewCampaign.status) && (
-                    <div className="flex justify-end">
-                      <div className="text-sm text-muted-foreground text-center py-2">
-                        Campaign is {statusLabel[viewCampaign.status]} and cannot be edited
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
               <DialogFooter>
@@ -425,19 +398,18 @@ export default function AllCampaigns() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
-          <p className="font-medium">No campaigns found.</p>
-          <p className="text-sm mt-1">Try a different search term or check back later.</p>
+          <p className="font-medium">No published campaigns found.</p>
+          <p className="text-sm mt-1">Published campaigns will appear here once approved by admins.</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-3 gap-4">
           {filtered.map((c) => {
-            const status = c.status || "draft";
             return (
               <Card key={c.id} className={c.isCreatedByUser ? "border-primary/30" : ""}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between mb-2">
-                    <Badge variant={statusVariant[status] || "outline"} className="text-xs">
-                      {statusLabel[status] || status}
+                    <Badge variant="success" className="text-xs">
+                      Published
                     </Badge>
                     {c.isCreatedByUser && (
                       <Badge variant="outline" className="text-xs">Your Campaign</Badge>
