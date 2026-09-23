@@ -6,7 +6,7 @@ import axios from 'axios';
 // /api/contents/*      → content-service    (Laravel)
 // /api/workflow/*      → workflow-service   (Laravel)
 // /api/notifications/* → notification-service (Node.js)
-const GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080';
+const GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || 'https://barangay178-backend.onrender.com';
 const API_URL = `${GATEWAY_URL}/api`;
 
 export const api = axios.create({
