@@ -7,8 +7,8 @@ services:
     region: oregon
     
     # Docker configuration
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     
     # Health check
     healthCheckPath: /
@@ -34,7 +34,7 @@ services:
       - key: DB_USERNAME
         value: postgres
       - key: DB_PASSWORD
-        sync: false # SET THIS MANUALLY in Render dashboard with: superteamdaniel12345
+        value: superteamdaniel12345
       - key: DB_SSLMODE
         value: require
       
@@ -46,7 +46,7 @@ services:
       
       # APP_KEY (generate: php artisan key:generate)
       - key: APP_KEY
-        sync: false # SET THIS MANUALLY in Render dashboard (run: php artisan key:generate locally)
+        value: base64:6vlhnwZG2q6KBSXBSdD02PrxpAV8FNMyqNcnPJGAfn0=
       
       # Additional configuration
       - key: CACHE_DRIVER
@@ -55,3 +55,13 @@ services:
         value: file
       - key: QUEUE_CONNECTION
         value: sync
+      - key: APP_LOCALE
+        value: en
+      - key: APP_FALLBACK_LOCALE
+        value: en
+      - key: LOG_CHANNEL
+        value: stack
+      - key: LOG_STACK
+        value: single
+      - key: LOG_LEVEL
+        value: debug
