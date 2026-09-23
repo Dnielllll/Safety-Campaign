@@ -59,5 +59,74 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 
 ## Deployment Notes
 
-- Render deployment: https://barangay178-backend.onrender.com
-- Last updated: Added campaign approval API endpoints to fix server errors
+### Production Deployment
+- **Render Service**: https://barangay178-backend.onrender.com
+- **API Base URL**: https://barangay178-backend.onrender.com/api
+- **Environment**: Production
+- **PHP Version**: 8.3
+- **Web Server**: Apache
+
+### API Endpoints
+
+#### Authentication
+- `POST /api/login` - User login
+- `POST /api/register` - User registration
+- `GET /api/me` - Get current user (protected)
+- `POST /api/logout` - User logout (protected)
+
+#### Campaigns
+- `GET /api/campaigns` - List all campaigns (protected)
+- `POST /api/campaigns` - Create campaign (protected)
+- `GET /api/campaigns/{id}` - Get specific campaign (protected)
+- `PUT /api/campaigns/{id}` - Update campaign (protected)
+- `DELETE /api/campaigns/{id}` - Delete campaign (protected)
+- `GET /api/campaigns/approved` - Get approved campaigns (protected)
+- `GET /api/campaigns/resident-phone-numbers` - Get resident phone numbers (protected)
+- `POST /api/campaigns/{id}/approve` - Approve campaign (protected)
+- `POST /api/campaigns/{id}/reject` - Reject campaign (protected)
+- `POST /api/campaigns/{id}/request-revision` - Request campaign revision (protected)
+- `POST /api/campaigns/distribute-sms` - Distribute campaign via SMS (public)
+
+#### Content
+- `GET /api/contents` - List all content (protected)
+- `POST /api/contents` - Create content (protected)
+- `GET /api/contents/{id}` - Get specific content (protected)
+- `PUT /api/contents/{id}` - Update content (protected)
+- `DELETE /api/contents/{id}` - Delete content (protected)
+- `GET /api/campaigns/{campaignId}/contents` - Get campaign content (protected)
+
+#### AI Services
+- `POST /api/ai/text-to-speech` - Convert text to speech (protected)
+- `POST /api/ai/generate-text` - Generate AI text (protected)
+- `POST /api/ai/rewrite` - Rewrite text with AI (protected)
+
+#### Workflow
+- `GET /api/workflow/metrics` - Get workflow metrics (public)
+- `POST /api/workflow/escalation-check` - Run escalation check (public)
+
+#### Health
+- `GET /api/health` - Health check endpoint (public)
+
+### Recent Updates
+- Added campaign approval API endpoints (approve, reject, request-revision)
+- Enhanced logging for campaign operations
+- Fixed RLS policy issues for admin campaign updates
+- Added workflow metrics and escalation check endpoints
+- Integrated Supabase REST API for data operations
+
+### Environment Configuration
+The backend uses environment variables for configuration:
+- Database: Supabase PostgreSQL
+- Authentication: Laravel Sanctum + Supabase Auth
+- File Storage: Local filesystem
+- Cache: File-based cache
+- Queue: Database queue
+- Session: Cookie-based sessions
+
+### Deployment Process
+1. Code is pushed to GitHub main branch
+2. Render automatically detects the push
+3. Build process runs: `composer install --optimize-autoloader --no-dev`
+4. Docker image is built and deployed
+5. Environment variables are injected from Render dashboard
+6. Apache server starts with the application
