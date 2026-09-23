@@ -4,7 +4,7 @@ const nodemailer = require('nodemailer');
 const router = express.Router();
 
 /**
- * Creates a reusable Gmail transporter.
+ * Creates a reusable Gmail transporter with enhanced deliverability settings.
  */
 function createTransporter() {
     const user = process.env.SMTP_USER;
@@ -19,13 +19,19 @@ function createTransporter() {
     return nodemailer.createTransport({
         service: 'gmail',
         auth: { user, pass },
-        // Add additional options for better reliability
+        // Enhanced deliverability settings
         pool: true,
-        maxConnections: 5,
-        maxMessages: 100,
+        maxConnections: 3, // Reduced to prevent rate limiting
+        maxMessages: 50,   // Reduced to prevent rate limiting
+        rateDelta: 1000,    // Rate limiting: 1 second between emails
+        rateLimit: 5,       // Max 5 emails per second
         // Add debug mode in development
         logger: process.env.NODE_ENV === 'development',
         debug: process.env.NODE_ENV === 'development',
+        // TLS configuration for better security
+        tls: {
+            rejectUnauthorized: true
+        }
     });
 }
 
@@ -63,7 +69,16 @@ router.post('/send-otp', async (req, res) => {
                         © ${new Date().getFullYear()} Barangay 178 Administration · Camarin, North Caloocan City
                     </p>
                 </div>
-            `
+            `,
+            // Enhanced headers for deliverability
+            headers: {
+                'X-Priority': '1', // High priority
+                'X-MSMail-Priority': 'High',
+                'Importance': 'high',
+                'X-Mailer': 'Barangay 178 System',
+                'X-Auto-Response-Suppress': 'All',
+                'Precedence': 'bulk',
+            }
         });
 
         console.log(`[mail] OTP email sent to ${email}`);
@@ -133,7 +148,7 @@ router.post('/send-welcome', async (req, res) => {
 
                             <!-- Call to Action -->
                             <div style="text-align: center; margin: 32px 0;">
-                                <a href="http://localhost:5173/login" style="display: inline-block; background-color: #ea580c; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px;">
+                                <a href="https://barangay178-safety-campaign.vercel.app/login" style="display: inline-block; background-color: #ea580c; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px;">
                                     Log In to Your Account
                                 </a>
                             </div>
@@ -161,7 +176,16 @@ router.post('/send-welcome', async (req, res) => {
                     </div>
                 </body>
                 </html>
-            `
+            `,
+            // Enhanced headers for deliverability
+            headers: {
+                'X-Priority': '1', // High priority
+                'X-MSMail-Priority': 'High',
+                'Importance': 'high',
+                'X-Mailer': 'Barangay 178 System',
+                'X-Auto-Response-Suppress': 'All',
+                'Precedence': 'bulk',
+            }
         });
 
         console.log(`[mail] Welcome email sent to ${email}`);
@@ -212,8 +236,10 @@ router.post('/send-campaign', async (req, res) => {
         const replyToEmail = reply_to || smtpUser;
         const emailSubject = subject || `📢 Barangay 178 Campaign: ${campaign_title}`;
 
-        // Gmail-optimized HTML template with proper structure
-        const htmlBody = `
+        // Gmail-optimized HTML template with proper structure and personalization
+        const generatePersonalizedBody = (recipientName = '') => {
+            const greeting = recipientName ? `Dear ${recipientName},` : 'Dear Resident,';
+            return `
             <!DOCTYPE html>
             <html>
             <head>
@@ -238,7 +264,7 @@ router.post('/send-campaign', async (req, res) => {
                     <!-- Main Content -->
                     <div style="padding: 24px;">
                         <p style="color: #374151; font-size: 15px; line-height: 1.7; margin: 0 0 16px;">
-                            Dear Resident,
+                            ${greeting}
                         </p>
                         <p style="color: #374151; font-size: 15px; line-height: 1.7; margin: 0 0 16px;">
                             We are pleased to inform you about an important safety campaign in our community:
@@ -258,7 +284,7 @@ router.post('/send-campaign', async (req, res) => {
                         
                         <!-- Call to Action -->
                         <div style="text-align: center; margin: 32px 0;">
-                            <a href="http://localhost:5173" style="display: inline-block; background-color: #ea580c; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px;">
+                            <a href="https://barangay178-safety-campaign.vercel.app/" style="display: inline-block; background-color: #ea580c; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px;">
                                 View Campaign Details
                             </a>
                         </div>
@@ -280,37 +306,48 @@ router.post('/send-campaign', async (req, res) => {
                             Camarin, North Caloocan City
                         </p>
                         <p style="color: #9ca3af; font-size: 11px; margin: 8px 0 0;">
-                            <a href="http://localhost:5173/unsubscribe" style="color: #9ca3af; text-decoration: underline;">Unsubscribe from future emails</a>
+                            <a href="https://barangay178-safety-campaign.vercel.app/unsubscribe" style="color: #9ca3af; text-decoration: underline;">Unsubscribe from future emails</a>
                         </p>
                     </div>
                 </div>
             </body>
             </html>
         `;
+        };
 
-        // Send emails with personalization and Gmail optimization
-        const results = await Promise.allSettled(
-            emails.map((recipient) => {
-                const emailAddress = typeof recipient === 'string' ? recipient : recipient.email;
-                const recipientName = typeof recipient === 'object' ? recipient.name : '';
-                
-                console.log(`[mail] Sending email to: ${emailAddress}`);
-                
-                return transporter.sendMail({
-                    from: `"${senderName}" <${senderEmail}>`,
-                    to: emailAddress,
-                    replyTo: replyToEmail,
-                    subject: emailSubject,
-                    html: htmlBody,
-                    // Gmail optimization headers
-                    headers: {
-                        'X-Priority': '3',
-                        'X-Mailer': 'Barangay 178 Campaign System',
-                        'X-Auto-Response-Suppress': 'All',
-                        'List-Unsubscribe': `<http://localhost:5173/unsubscribe>, <mailto:${replyToEmail}?subject=unsubscribe>`,
-                    },
-                    // Text version for fallback with proper formatting
-                    text: `
+        // Send emails with personalization and Gmail optimization with rate limiting
+        const results = [];
+        const batchSize = 5; // Send in batches to avoid rate limiting
+        const delay = 2000; // 2 second delay between batches
+        
+        for (let i = 0; i < emails.length; i += batchSize) {
+            const batch = emails.slice(i, i + batchSize);
+            const batchResults = await Promise.allSettled(
+                batch.map((recipient) => {
+                    const emailAddress = typeof recipient === 'string' ? recipient : recipient.email;
+                    const recipientName = typeof recipient === 'object' ? recipient.name : '';
+                    
+                    console.log(`[mail] Sending email to: ${emailAddress}`);
+                    
+                    return transporter.sendMail({
+                        from: `"${senderName}" <${senderEmail}>`,
+                        to: emailAddress,
+                        replyTo: replyToEmail,
+                        subject: emailSubject,
+                        html: generatePersonalizedBody(recipientName),
+                        // Enhanced deliverability headers
+                        headers: {
+                            'X-Priority': '1', // High priority
+                            'X-MSMail-Priority': 'High',
+                            'Importance': 'high',
+                            'X-Mailer': 'Barangay 178 Campaign System',
+                            'X-Auto-Response-Suppress': 'All',
+                            'Precedence': 'bulk',
+                            'List-Unsubscribe': `<https://barangay178-safety-campaign.vercel.app/unsubscribe>, <mailto:${replyToEmail}?subject=unsubscribe>`,
+                            'X-Campaign-Id': campaign_title.replace(/\s+/g, '-').toLowerCase(),
+                        },
+                        // Text version for fallback with proper formatting
+                        text: `
 Barangay 178 Safety Campaign
 
 ${campaign_title}
@@ -320,13 +357,18 @@ ${message || 'Please visit our portal for more details about this campaign.'}
 ---
 © ${new Date().getFullYear()} Barangay 178 Administration
 Camarin, North Caloocan City
-                    `.trim(),
-                });
-            })
-        ).catch(error => {
-            console.error('[mail] Error in Promise.allSettled:', error);
-            throw error;
-        });
+                        `.trim(),
+                    });
+                })
+            );
+            
+            results.push(...batchResults);
+            
+            // Add delay between batches to avoid rate limiting
+            if (i + batchSize < emails.length) {
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
 
         const sent    = results.filter(r => r.status === 'fulfilled').length;
         const failed  = results.filter(r => r.status === 'rejected').length;
