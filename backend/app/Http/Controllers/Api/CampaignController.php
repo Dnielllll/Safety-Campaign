@@ -38,49 +38,14 @@ class CampaignController extends Controller
 
     public function index(Request $request)
     {
-        try {
-            Log::info('Fetching campaigns', [
-                'supabase_url' => $this->supabaseUrl,
-                'supabase_key_set' => !empty($this->supabaseKey),
-                'supabase_key_length' => strlen($this->supabaseKey),
-            ]);
-
-            // Return mock data for now since Supabase HTTP calls are failing
-            Log::warning('Using mock data due to Supabase connection issues');
-            
-            $mockCampaigns = [
-                [
-                    'id' => '1',
-                    'title' => 'Sample Campaign 1',
-                    'description' => 'This is a sample campaign',
-                    'status' => 'published',
-                    'campaign_type' => 'safety',
-                    'created_at' => now()->toISOString(),
-                    'updated_at' => now()->toISOString(),
-                ],
-                [
-                    'id' => '2', 
-                    'title' => 'Sample Campaign 2',
-                    'description' => 'Another sample campaign',
-                    'status' => 'draft',
-                    'campaign_type' => 'health',
-                    'created_at' => now()->toISOString(),
-                    'updated_at' => now()->toISOString(),
-                ]
-            ];
-
-            // Filter by status if requested
-            if ($request->has('status')) {
-                $mockCampaigns = array_filter($mockCampaigns, function($campaign) use ($request) {
-                    return $campaign['status'] === $request->status;
-                });
-            }
-
-            return response()->json(array_values($mockCampaigns));
-        } catch (\Exception $e) {
-            Log::error('Failed to fetch campaigns', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            return response()->json(['message' => 'Server Error', 'error' => $e->getMessage()], 500);
-        }
+        // Absolute basic return for debugging
+        return response()->json([
+            'message' => 'Campaigns index working',
+            'campaigns' => [
+                ['id' => 1, 'title' => 'Test Campaign 1', 'status' => 'published'],
+                ['id' => 2, 'title' => 'Test Campaign 2', 'status' => 'draft']
+            ]
+        ]);
     }
 
     public function store(Request $request)
