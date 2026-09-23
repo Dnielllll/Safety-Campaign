@@ -44,6 +44,12 @@ services:
       - key: SANCTUM_STATEFUL_DOMAINS
         value: barangay178-safety-campaign.vercel.app
       
+      # Supabase configuration
+      - key: SUPABASE_URL
+        value: https://zuuwqrxmkeryzbcrlrai.supabase.co
+      - key: SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1dXdxcnhta2VyeXpiY3JscmFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MDcxMzAsImV4cCI6MjEwMDI4MzEzMH0.CR289UHP5bxEavCMW1Z0h19Jrf6mm5YFC7NQ8RWkkm0
+      
       # APP_KEY (generate: php artisan key:generate)
       - key: APP_KEY
         value: base64:6vlhnwZG2q6KBSXBSdD02PrxpAV8FNMyqNcnPJGAfn0=

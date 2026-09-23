@@ -87,6 +87,8 @@ echo "AWS_USE_PATH_STYLE_ENDPOINT=false" >> .env\n\
 echo "VITE_APP_NAME=\"Barangay 178 SSMS\"" >> .env\n\
 echo "FRONTEND_URL=${FRONTEND_URL}" >> .env\n\
 echo "SANCTUM_STATEFUL_DOMAINS=${SANCTUM_STATEFUL_DOMAINS}" >> .env\n\
+echo "SUPABASE_URL=${SUPABASE_URL}" >> .env\n\
+echo "SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" >> .env\n\
 echo "SEMAPHORE_API_KEY=" >> .env\n\
 echo "GOOGLE_CLOUD_API_KEY=" >> .env\n\
 \n\
