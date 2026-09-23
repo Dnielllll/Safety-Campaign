@@ -94,6 +94,11 @@ SEMAPHORE_API_KEY=\n\
 GOOGLE_CLOUD_API_KEY=\n\
 EOF\n\
 \n\
+# Debug: Log .env file contents\n\
+echo "=== .env file contents ===" >&2\n\
+cat .env >&2\n\
+echo "=== End .env file contents ===" >&2\n\
+\n\
 # Start Apache\n\
 apache2-foreground' > /start.sh && chmod +x /start.sh
 
