@@ -43,8 +43,8 @@ class CampaignController extends Controller
 
             return response()->json($response->json());
         } catch (\Exception $e) {
-            Log::error('Failed to fetch campaigns', ['error' => $e->getMessage()]);
-            return response()->json(['message' => 'Server Error'], 500);
+            Log::error('Failed to fetch campaigns', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Server Error', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -94,8 +94,8 @@ class CampaignController extends Controller
 
             return response()->json($response->json()[0], 201);
         } catch (\Exception $e) {
-            Log::error('Failed to create campaign', ['error' => $e->getMessage()]);
-            return response()->json(['message' => 'Server Error'], 500);
+            Log::error('Failed to create campaign', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Server Error', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -118,8 +118,8 @@ class CampaignController extends Controller
 
             return response()->json($campaigns[0]);
         } catch (\Exception $e) {
-            Log::error('Failed to fetch campaign', ['error' => $e->getMessage()]);
-            return response()->json(['message' => 'Server Error'], 500);
+            Log::error('Failed to fetch campaign', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Server Error', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -159,8 +159,8 @@ class CampaignController extends Controller
 
             return response()->json($campaigns[0]);
         } catch (\Exception $e) {
-            Log::error('Failed to update campaign', ['error' => $e->getMessage()]);
-            return response()->json(['message' => 'Server Error'], 500);
+            Log::error('Failed to update campaign', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Server Error', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -178,8 +178,8 @@ class CampaignController extends Controller
 
             return response()->json(['message' => 'Campaign deleted successfully']);
         } catch (\Exception $e) {
-            Log::error('Failed to delete campaign', ['error' => $e->getMessage()]);
-            return response()->json(['message' => 'Server Error'], 500);
+            Log::error('Failed to delete campaign', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Server Error', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -230,8 +230,8 @@ class CampaignController extends Controller
 
             return response()->json($response->json());
         } catch (\Exception $e) {
-            Log::error('Failed to fetch approved campaigns', ['error' => $e->getMessage()]);
-            return response()->json(['message' => 'Server Error'], 500);
+            Log::error('Failed to fetch approved campaigns', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Server Error', 'error' => $e->getMessage()], 500);
         }
     }
 
@@ -259,8 +259,8 @@ class CampaignController extends Controller
                 'total' => count($phoneNumbers),
             ]);
         } catch (\Exception $e) {
-            Log::error('Failed to fetch resident phone numbers', ['error' => $e->getMessage()]);
-            return response()->json(['message' => 'Server Error'], 500);
+            Log::error('Failed to fetch resident phone numbers', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Server Error', 'error' => $e->getMessage()], 500);
         }
     }
 }
