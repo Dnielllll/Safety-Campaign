@@ -21,7 +21,9 @@ class Campaign extends Model
         'priority',
         'budget',
         'location',
-        'expected_reach'
+        'expected_reach',
+        'campaign_type',
+        'admin_notes'
     ])]
 
     protected function casts(): array

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Search, Calendar, Archive, Trash2, Wand2, Loader2, RefreshCw, CheckSquare, MessageSquare, AlertTriangle, User, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Calendar, Archive, Trash2, Wand2, Loader2, RefreshCw, CheckSquare, MessageSquare, AlertTriangle, User, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import { generateAIResponse } from "@/lib/ai.js";
 import { supabase, supabaseHelpers } from "@/lib/supabase.js";
 import { logAuditEvent } from "@/lib/auditLogger.js";
 import { useAuth } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
 
 const statusVariant = {
   draft: "outline",
@@ -44,6 +45,7 @@ export default function CampaignManagement() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // New status filter
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editingStatus, setEditingStatus] = useState("");
@@ -54,6 +56,8 @@ export default function CampaignManagement() {
   const [actionLoading, setActionLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [showDebug, setShowDebug] = useState(false);
+  const [customCategory, setCustomCategory] = useState("");
 
   useEffect(() => {
     fetchCampaigns();
@@ -65,7 +69,7 @@ export default function CampaignManagement() {
       // First try with users join
       let { data, error } = await supabase
         .from("campaigns")
-        .select("*, users(name, email)")
+        .select("*, creator:users!campaigns_created_by_fkey(name, email, role)")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -75,41 +79,52 @@ export default function CampaignManagement() {
           .from("campaigns")
           .select("*")
           .order("created_at", { ascending: false });
-        
+
         data = fallback.data;
         error = fallback.error;
       }
 
       if (error) throw error;
-      
+
       console.log("Fetched campaigns:", data);
       console.log("Total campaigns:", data?.length || 0);
-      
+
+      // Debug: Log campaigns that might have bypassed approval
+      const suspiciousCampaigns = data?.filter(c =>
+        c.status === "published" && c.creator?.role === "staff"
+      );
+      if (suspiciousCampaigns?.length > 0) {
+        console.warn("Found staff-created campaigns that are published (might have bypassed approval):", suspiciousCampaigns);
+      }
+
       if (data) {
         // If users join didn't work, fetch user names separately
         if (data.length > 0 && !data[0].users) {
           const userIds = [...new Set(data.map(c => c.created_by).filter(Boolean))];
           const { data: users } = await supabase
             .from("users")
-            .select("id, name, email")
+            .select("id, name, email, role")
             .in("id", userIds);
-          
+
           const userMap = {};
           users?.forEach(u => {
-            userMap[u.id] = u.name || u.email || "Unknown";
+            userMap[u.id] = { name: u.name || u.email || "Unknown", role: u.role };
           });
-          
+
           setCampaigns(data.map(c => ({
             ...c,
             category: c.campaign_type || "community",
-            creatorName: userMap[c.created_by] || c.created_by || "Unknown",
+            creatorName: userMap[c.created_by]?.name || c.created_by || "Unknown",
+            creatorRole: userMap[c.created_by]?.role || "unknown",
             createdAt: c.created_at ? new Date(c.created_at).toLocaleDateString() : "N/A",
+            creator: userMap[c.created_by], // Add creator object for consistency
           })));
         } else {
           setCampaigns(data.map(c => ({
             ...c,
             category: c.campaign_type || "community",
-            creatorName: c.users?.name || c.users?.email || c.created_by || "Unknown",
+            creatorName: c.creator?.name || c.creator?.email || c.created_by || "Unknown",
+            creatorRole: c.creator?.role || "unknown",
             createdAt: c.created_at ? new Date(c.created_at).toLocaleDateString() : "N/A",
           })));
         }
@@ -130,13 +145,22 @@ export default function CampaignManagement() {
   const filtered = campaigns.filter((c) => {
     const titleMatch = (c.title || "").toLowerCase().includes(query.toLowerCase());
     const creatorMatch = (c.creatorName || "").toLowerCase().includes(query.toLowerCase());
-    return titleMatch || creatorMatch;
+    const statusMatch = statusFilter === "all" || 
+                        statusFilter === "awaiting_review" ? (c.status === "submitted" || c.status === "pending_approval") :
+                        c.status === statusFilter;
+    return (titleMatch || creatorMatch) && statusMatch;
   });
 
-  // Reset to page 1 when search query changes
+  // Count campaigns by status for filter labels
+  const statusCounts = campaigns.reduce((acc, c) => {
+    acc[c.status] = (acc[c.status] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Reset to page 1 when search query or status filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [query]);
+  }, [query, statusFilter]);
 
   // Pagination logic
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -189,25 +213,31 @@ export default function CampaignManagement() {
     setEditingId(campaign.id);
     setEditingStatus(campaign.status || "draft");
     setRevisionComment("");
+    const category = campaign.category || campaign.campaign_type || "community";
     setForm({
       title: campaign.title || "",
       objectives: campaign.description || "",
       audience: "",
-      category: campaign.category || campaign.campaign_type || "community",
+      category: Object.keys(categoryOptions).includes(category) ? category : "other",
       priority: campaign.priority || "medium",
       status: campaign.status || "draft",
     });
+    setCustomCategory(Object.keys(categoryOptions).includes(category) ? "" : category);
     setOpen(true);
   };
 
   const saveCampaign = async () => {
+    if (form.category === "other" && !customCategory.trim()) {
+      alert("Please enter a custom category");
+      return;
+    }
     setSaving(true);
     try {
       const { user: authUser } = await supabaseHelpers.getAuthUser();
       const payload = {
         title: form.title,
         description: form.objectives,
-        campaign_type: form.category,
+        campaign_type: form.category === "other" ? customCategory : form.category,
         priority: form.priority,
         status: form.status,
       };
@@ -349,6 +379,13 @@ export default function CampaignManagement() {
         <div>
           <h1 className="font-display text-xl sm:text-2xl font-bold">Campaign Management</h1>
           <p className="text-muted-foreground text-xs sm:text-sm">Review, edit, approve, and manage public safety campaigns.</p>
+          <div className="flex items-center gap-2 mt-2">
+            <Link to="/admin/approvals" className="text-xs text-primary hover:underline flex items-center gap-1">
+              <CheckSquare className="h-3 w-3" />
+              Go to Campaign Approval for submitted campaigns
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="w-full sm:w-auto">
@@ -401,7 +438,10 @@ export default function CampaignManagement() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Category</Label>
-                    <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })} disabled={isSubmittedForReview}>
+                    <Select value={form.category} onValueChange={(v) => {
+                      setForm({ ...form, category: v });
+                      if (v !== "other") setCustomCategory("");
+                    }} disabled={isSubmittedForReview}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="emergency">Emergency</SelectItem>
@@ -409,8 +449,17 @@ export default function CampaignManagement() {
                         <SelectItem value="safety">Safety</SelectItem>
                         <SelectItem value="environment">Environment</SelectItem>
                         <SelectItem value="community">Community</SelectItem>
+                        <SelectItem value="other">Other (specify below)</SelectItem>
                       </SelectContent>
                     </Select>
+                    {form.category === "other" && !isSubmittedForReview && (
+                      <Input
+                        value={customCategory}
+                        onChange={(e) => setCustomCategory(e.target.value)}
+                        placeholder="Enter custom category"
+                        className="mt-2"
+                      />
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>Priority</Label>
@@ -431,10 +480,12 @@ export default function CampaignManagement() {
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="published">Published</SelectItem>
                           <SelectItem value="archived">Archived</SelectItem>
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Note: To publish campaigns, use the <strong>Campaign Approval</strong> page to review and approve staff-submitted campaigns.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -495,19 +546,40 @@ export default function CampaignManagement() {
         </div>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search campaigns..."
-          className="pl-9"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search campaigns..."
+            className="pl-9"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Label className="text-sm whitespace-nowrap">Filter by Status:</Label>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Campaigns ({campaigns.length})</SelectItem>
+              <SelectItem value="awaiting_review">🔴 Awaiting Review ({(statusCounts.submitted || 0) + (statusCounts.pending_approval || 0)})</SelectItem>
+              <SelectItem value="submitted">🔴 Submitted ({statusCounts.submitted || 0})</SelectItem>
+              <SelectItem value="pending_approval">🟠 Pending Approval ({statusCounts.pending_approval || 0})</SelectItem>
+              <SelectItem value="needs_revision">🟡 Needs Revision ({statusCounts.needs_revision || 0})</SelectItem>
+              <SelectItem value="published">🟢 Published ({statusCounts.published || 0})</SelectItem>
+              <SelectItem value="draft">⚪ Draft ({statusCounts.draft || 0})</SelectItem>
+              <SelectItem value="rejected">❌ Rejected ({statusCounts.rejected || 0})</SelectItem>
+              <SelectItem value="archived">📦 Archived ({statusCounts.archived || 0})</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Debug info - remove in production */}
       <div className="text-xs text-muted-foreground mb-2">
-        Total campaigns fetched: {campaigns.length} | Filtered: {filtered.length} | Page: {currentPage}/{totalPages}
+        Total campaigns: {campaigns.length} | Filtered: {filtered.length} | Status filter: {statusFilter} | Page: {currentPage}/{totalPages}
       </div>
 
       {loading ? (
@@ -531,18 +603,28 @@ export default function CampaignManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedCampaigns.map((c) => (
-                    <TableRow key={c.id} className={c.status === "submitted" || c.status === "pending_approval" ? "bg-amber-50/50" : ""}>
+                  {paginatedCampaigns.map((c) => {
+                    const isStaffPublished = c.status === "published" && c.creatorRole === "staff";
+                    const isAwaitingReview = c.status === "submitted" || c.status === "pending_approval";
+
+                    return (
+                    <TableRow key={c.id} className={isAwaitingReview ? "bg-amber-50/50" : isStaffPublished ? "bg-red-50/30" : ""}>
                       <TableCell className="font-medium">
                         {c.title || "Untitled Campaign"}
-                        {(c.status === "submitted" || c.status === "pending_approval") && (
+                        {isAwaitingReview && (
                           <span className="block text-xs text-amber-600 mt-1">⚠️ Awaiting review</span>
+                        )}
+                        {isStaffPublished && (
+                          <span className="block text-xs text-red-600 mt-1">⚠️ Staff published (bypassed approval)</span>
                         )}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
                         <div className="flex items-center gap-1">
                           <User className="h-3 w-3 text-muted-foreground" />
                           <span className="text-sm">{c.creatorName}</span>
+                          {c.creatorRole === "staff" && (
+                            <Badge variant="outline" className="text-xs">Staff</Badge>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="whitespace-nowrap capitalize">
@@ -563,7 +645,7 @@ export default function CampaignManagement() {
                         <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="sm" onClick={() => openEditCampaign(c)}>
                             <Calendar className="h-4 w-4 mr-1" />
-                            {c.status === "submitted" || c.status === "pending_approval" ? "Review" : "Edit"}
+                            {isAwaitingReview ? "Review" : "Edit"}
                           </Button>
                           <Button variant="ghost" size="icon" onClick={() => archive(c.id)} title="Archive">
                             <Archive className="h-4 w-4" />
@@ -574,7 +656,8 @@ export default function CampaignManagement() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                   {filtered.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">

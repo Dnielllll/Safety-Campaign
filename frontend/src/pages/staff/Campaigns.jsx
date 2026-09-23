@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from "react";
-import { Plus, Save, Search, Loader2, AlertTriangle, MessageSquare, User, Calendar, Volume2, Play, AlertCircle, Eye, X } from "lucide-react";
+import { Plus, Save, Search, Loader2, AlertTriangle, MessageSquare, User, Calendar, Volume2, Play, AlertCircle, Eye, X, Send } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { AIAPI } from "@/lib/api.js";
 import { useAutoSave } from "@/hooks/useAutoSave.js";
 import AutoSaveIndicator from "@/components/AutoSaveIndicator.jsx";
 import { useAuth } from "@/hooks/useAuth.jsx";
+import { useNavigate } from "react-router-dom";
 
 const statusVariant = {
   draft: "outline",
@@ -38,8 +39,19 @@ const statusLabel = {
   cancelled: "Cancelled",
 };
 
+const categoryOptions = {
+  emergency: "Emergency",
+  health: "Health",
+  fire_safety: "Fire Safety",
+  disaster_prep: "Disaster Prep",
+  crime_prevention: "Crime Prevention",
+  general: "General",
+  other: "Other (specify below)"
+};
+
 export default function StaffCampaigns() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState([]);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -58,6 +70,7 @@ export default function StaffCampaigns() {
   const [voiceError, setVoiceError] = useState(null);
   const [viewCampaign, setViewCampaign] = useState(null);
   const [viewOpen, setViewOpen] = useState(false);
+  const [customCategory, setCustomCategory] = useState("");
 
   useEffect(() => {
     fetchCampaigns();
@@ -81,7 +94,7 @@ export default function StaffCampaigns() {
         // Fetch ONLY user's own campaigns for this page
         const { data, error } = await supabase
           .from("campaigns")
-          .select("*, users!campaigns_created_by_fkey(name, email)")
+          .select("*, creator:users!campaigns_created_by_fkey(name, email)")
           .eq("created_by", user.id)
           .order("created_at", { ascending: false });
 
@@ -92,7 +105,7 @@ export default function StaffCampaigns() {
         // Add creator information to each campaign
         const campaignsWithCreators = (data || []).map(campaign => ({
           ...campaign,
-          creatorName: campaign.users?.name || campaign.users?.email || "Unknown",
+          creatorName: campaign.creator?.name || campaign.creator?.email || "Unknown",
           isCreatedByUser: campaign.created_by === user.id
         }));
 
@@ -110,19 +123,22 @@ export default function StaffCampaigns() {
   );
 
   const handleEdit = (campaign) => {
+    const category = campaign.campaign_type || "general";
     setForm({
       id: campaign.id,
       title: campaign.title,
       objectives: campaign.description || "",
-      category: campaign.campaign_type || "general",
+      category: Object.keys(categoryOptions).includes(category) ? category : "other",
       currentStatus: campaign.status,
       adminNotes: campaign.admin_notes || "",
     });
+    setCustomCategory(Object.keys(categoryOptions).includes(category) ? "" : category);
     setOpen(true);
   };
 
   const handleNew = () => {
     setForm({ title: "", objectives: "", category: "general" });
+    setCustomCategory("");
     setOpen(true);
   };
 
@@ -132,14 +148,21 @@ export default function StaffCampaigns() {
   };
 
   const saveDraft = async () => {
-    if (!form.title.trim()) return;
+    if (!form.title.trim()) {
+      alert("Please enter a campaign title");
+      return;
+    }
+    if (form.category === "other" && !customCategory.trim()) {
+      alert("Please enter a custom category");
+      return;
+    }
     setLoading(true);
     try {
       if (form.id) {
         const { data } = await supabaseHelpers.updateCampaign(form.id, {
           title: form.title,
           description: form.objectives,
-          campaign_type: form.category,
+          campaign_type: form.category === "other" ? customCategory : form.category,
           status: "draft",
         });
         if (data) {
@@ -149,7 +172,7 @@ export default function StaffCampaigns() {
         const { data } = await supabaseHelpers.createCampaign({
           title: form.title,
           description: form.objectives,
-          campaign_type: form.category,
+          campaign_type: form.category === "other" ? customCategory : form.category,
           status: "draft",
           created_by: user?.id,
         });
@@ -159,9 +182,121 @@ export default function StaffCampaigns() {
       }
     } catch (error) {
       console.error("Failed to save draft:", error);
+      alert("Failed to save draft. Please try again.");
     } finally {
       setForm({ title: "", objectives: "", category: "general" });
       clearFormSave(); // Clear auto-save data after successful submission
+      setOpen(false);
+      setLoading(false);
+    }
+  };
+
+  const submitForApproval = async () => {
+    if (!form.title.trim()) {
+      alert("Please enter a campaign title");
+      return;
+    }
+    if (form.category === "other" && !customCategory.trim()) {
+      alert("Please enter a custom category");
+      return;
+    }
+    setLoading(true);
+    try {
+      let campaignData;
+
+      console.log("Staff Campaigns - Submitting for approval:", { form, userId: user?.id });
+
+      if (form.id) {
+        // Update existing campaign and submit for approval
+        const { data, error } = await supabaseHelpers.updateCampaign(form.id, {
+          title: form.title,
+          description: form.objectives,
+          campaign_type: form.category === "other" ? customCategory : form.category,
+          status: "submitted",
+        });
+
+        if (error) {
+          console.error("Staff Campaigns - Error updating campaign:", error);
+          alert(`Failed to update campaign: ${error.message || JSON.stringify(error)}`);
+          throw error;
+        }
+
+        campaignData = data;
+        console.log("Staff Campaigns - Updated campaign for approval:", data);
+        if (data) {
+          setCampaigns((prev) => prev.map((c) => (c.id === form.id ? data : c)));
+        }
+      } else {
+        // Create new campaign and submit for approval
+        const { data, error } = await supabaseHelpers.createCampaign({
+          title: form.title,
+          description: form.objectives,
+          campaign_type: form.category === "other" ? customCategory : form.category,
+          status: "submitted",
+          created_by: user?.id,
+        });
+
+        if (error) {
+          console.error("Staff Campaigns - Error creating campaign:", error);
+          alert(`Failed to create campaign: ${error.message || JSON.stringify(error)}`);
+          throw error;
+        }
+
+        campaignData = data;
+        console.log("Staff Campaigns - Created campaign for approval:", data);
+        if (data) {
+          setCampaigns((prev) => [data, ...prev]);
+        }
+      }
+
+      // Create notification for admin when staff submits campaign for approval
+      if (campaignData) {
+        try {
+          const { data: admins, error: adminError } = await supabase
+            .from("users")
+            .select("id")
+            .in("role", ["admin", "super_admin"]);
+
+          if (adminError) {
+            console.error("Staff Campaigns - Error fetching admins:", adminError);
+          } else {
+            console.log("Staff Campaigns - Found admins for notification:", admins?.length || 0);
+
+            if (admins && admins.length > 0) {
+              const notifications = admins.map(admin => ({
+                user_id: admin.id,
+                campaign_id: campaignData.id,
+                title: `New Campaign Submitted for Approval: ${campaignData.title}`,
+                message: `A campaign "${campaignData.title}" has been submitted by ${user?.name || user?.email || 'Staff'} and is awaiting your approval in Campaign Approval.`,
+                type: "campaign",
+                status: "unread"
+              }));
+
+              const { error: notifError } = await supabase
+                .from("notifications")
+                .insert(notifications);
+
+              if (notifError) {
+                console.error("Error creating admin notification:", notifError);
+              } else {
+                console.log("Staff Campaigns - Admin notifications created successfully");
+              }
+            }
+          }
+        } catch (notifError) {
+          console.error("Error creating admin notification:", notifError);
+        }
+
+        alert("Campaign submitted for approval! Admins will review it in Campaign Approval.");
+        // Navigate to Submission page to see the submitted campaign
+        navigate('/staff/submission');
+      }
+    } catch (error) {
+      console.error("Failed to submit for approval:", error);
+      alert(`Failed to submit campaign for approval: ${error.message || JSON.stringify(error)}`);
+    } finally {
+      setForm({ title: "", objectives: "", category: "general" });
+      clearFormSave();
       setOpen(false);
       setLoading(false);
     }
@@ -259,7 +394,10 @@ export default function StaffCampaigns() {
           </p>
         </div>
         <Dialog open={open} onOpenChange={(val) => {
-          if (!val) setForm({ title: "", objectives: "", category: "general" });
+          if (!val) {
+            setForm({ title: "", objectives: "", category: "general" });
+            setCustomCategory("");
+          }
           setOpen(val);
         }}>
           <DialogTrigger asChild>
@@ -297,7 +435,10 @@ export default function StaffCampaigns() {
               </div>
               <div className="space-y-2">
                 <Label>Category</Label>
-                <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                <Select value={form.category} onValueChange={(v) => {
+                  setForm({ ...form, category: v });
+                  if (v !== "other") setCustomCategory("");
+                }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="emergency">Emergency</SelectItem>
@@ -306,8 +447,17 @@ export default function StaffCampaigns() {
                     <SelectItem value="disaster_prep">Disaster Prep</SelectItem>
                     <SelectItem value="crime_prevention">Crime Prevention</SelectItem>
                     <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="other">Other (specify below)</SelectItem>
                   </SelectContent>
                 </Select>
+                {form.category === "other" && (
+                  <Input
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    placeholder="Enter custom category (e.g., Environmental, Community Service, etc.)"
+                    className="mt-2"
+                  />
+                )}
               </div>
 
               <div className="space-y-2">
@@ -352,9 +502,13 @@ export default function StaffCampaigns() {
                 clearFormSave();
                 setOpen(false);
               }}>Cancel</Button>
-              <Button onClick={saveDraft} disabled={loading || !form.title.trim()}>
+              <Button onClick={saveDraft} disabled={loading || !form.title.trim()} variant="outline">
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
                 {loading ? "Saving..." : "Save Draft"}
+              </Button>
+              <Button onClick={submitForApproval} disabled={loading || !form.title.trim()}>
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
+                {loading ? "Submitting..." : "Submit for Approval"}
               </Button>
             </DialogFooter>
           </DialogContent>

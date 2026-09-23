@@ -85,15 +85,11 @@ export function AuthProvider({ children }) {
     // On mount: check existing Supabase session
     const initSession = async () => {
       try {
-        // If offline, skip session check — let public pages load from cache
-        if (!navigator.onLine) {
-          console.log("AuthProvider: offline — skipping session init");
-          setUser(null);
-          // Still load local settings
-          const localMaintenance = localStorage.getItem('maintenance_mode') === 'true';
-          setMaintenanceMode(localMaintenance);
-          setLoading(false);
-          return;
+        // Check offline status but allow session attempts even if offline initially
+        const isOffline = !navigator.onLine;
+        if (isOffline) {
+          console.log("AuthProvider: potentially offline — will attempt session anyway");
+          // Don't skip session init, but mark as potentially offline
         }
 
         const { session } = await supabaseHelpers.getSession();
@@ -193,11 +189,13 @@ export function AuthProvider({ children }) {
           // Fallback to localStorage if everything fails
           const localMaintenance = localStorage.getItem('maintenance_mode') === 'true';
           setMaintenanceMode(localMaintenance);
+          // Don't trigger offline mode on settings errors
         }
       } catch (err) {
         console.error("AuthProvider: session init failed:", err);
         setError(err);
         setUser(null);
+        // Don't trigger offline mode on session errors
       } finally {
         setLoading(false);
       }

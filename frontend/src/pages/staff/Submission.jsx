@@ -3,7 +3,7 @@ import { Send, Clock, CheckCircle2, XCircle, MessageSquare, Loader2, AlertTriang
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { supabaseHelpers } from "@/lib/supabase.js";
+import { supabaseHelpers, supabase } from "@/lib/supabase.js";
 
 const statusMeta = {
   draft: { label: "Not Submitted", variant: "outline", icon: Clock },
@@ -30,8 +30,10 @@ export default function CampaignSubmission() {
       const { user } = await supabaseHelpers.getAuthUser();
       if (user) {
         const { data } = await supabaseHelpers.getCampaigns({ created_by: user.id });
+        console.log("Submission - Fetched campaigns for user:", data);
         // Show all campaigns except published ones — staff needs to track status
         const relevant = (data || []).filter(c => c.status !== "published");
+        console.log("Submission - Relevant campaigns (excluding published):", relevant);
         setCampaigns(relevant);
       }
     } catch (err) {
@@ -49,16 +51,67 @@ export default function CampaignSubmission() {
       if (currentStatus === "needs_revision") {
         updateData.admin_notes = null;
       }
+
+      console.log("Submission - Submitting campaign for approval:", { id, currentStatus, updateData });
+
       const { data, error } = await supabaseHelpers.updateCampaign(id, updateData);
+      console.log("Submission - Campaign update result:", { data, error });
+
+      if (error) {
+        console.error("Submission - Error updating campaign:", error);
+        alert(`Failed to submit campaign: ${error.message}`);
+        throw error;
+      }
+
       if (data) {
         setCampaigns((prev) => prev.map((c) => c.id === id ? { ...c, status: "submitted", admin_notes: null } : c));
-      } else if (error) {
-        console.error("Submit error:", error);
-        // Optimistic update anyway
-        setCampaigns((prev) => prev.map((c) => c.id === id ? { ...c, status: "submitted", admin_notes: null } : c));
+        console.log("Submission - Campaign status updated successfully");
+        // Refresh campaigns to ensure we have the latest data
+        await fetchCampaigns();
+
+        // Create notification for admin when staff submits campaign for approval
+        try {
+          const { user } = await supabaseHelpers.getAuthUser();
+          const campaign = campaigns.find(c => c.id === id);
+
+          console.log("Submission - Creating admin notification for campaign:", campaign);
+
+          const { data: admins } = await supabase
+            .from("users")
+            .select("id")
+            .in("role", ["admin", "super_admin"]);
+
+          console.log("Submission - Found admins for notification:", admins?.length || 0);
+
+          if (admins && admins.length > 0 && campaign) {
+            const notifications = admins.map(admin => ({
+              user_id: admin.id,
+              campaign_id: id,
+              title: `New Campaign Submitted for Approval: ${campaign.title}`,
+              message: `A campaign "${campaign.title}" has been submitted by ${user?.name || user?.email || 'Staff'} and is awaiting your approval in Campaign Approval.`,
+              type: "campaign",
+              status: "unread"
+            }));
+
+            const { error: notifError } = await supabase
+              .from("notifications")
+              .insert(notifications);
+
+            if (notifError) {
+              console.error("Submission - Error creating admin notification:", notifError);
+            } else {
+              console.log("Submission - Admin notifications created successfully");
+            }
+          }
+        } catch (notifError) {
+          console.error("Submission - Error creating admin notification:", notifError);
+        }
+
+        alert("Campaign submitted for approval! Admins will review it in Campaign Approval.");
       }
     } catch (err) {
-      console.error("Failed to submit:", err);
+      console.error("Submission - Failed to submit:", err);
+      alert("Failed to submit campaign. Please try again.");
     } finally {
       setLoading(false);
     }

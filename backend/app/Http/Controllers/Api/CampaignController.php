@@ -29,13 +29,15 @@ class CampaignController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
-            'target_audience' => 'required|string',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after:start_date',
+            'target_audience' => 'nullable|string',
             'priority' => 'sometimes|in:low,medium,high',
             'budget' => 'nullable|numeric',
             'location' => 'nullable|string',
             'expected_reach' => 'nullable|integer',
+            'campaign_type' => 'nullable|string',
+            'admin_notes' => 'nullable|string',
         ]);
 
         $campaign = Campaign::create([
@@ -44,12 +46,14 @@ class CampaignController extends Controller
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'target_audience' => $request->target_audience,
-            'status' => 'draft',
+            'status' => $request->status ?? 'draft',
             'created_by' => $request->user()->id,
             'priority' => $request->priority ?? 'medium',
             'budget' => $request->budget,
             'location' => $request->location,
             'expected_reach' => $request->expected_reach,
+            'campaign_type' => $request->campaign_type,
+            'admin_notes' => $request->admin_notes,
         ]);
 
         return response()->json($campaign->load('creator'), 201);
@@ -68,14 +72,16 @@ class CampaignController extends Controller
         $request->validate([
             'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
-            'start_date' => 'sometimes|date',
-            'end_date' => 'sometimes|date|after:start_date',
-            'target_audience' => 'sometimes|string',
-            'status' => 'sometimes|in:draft,active,completed,cancelled',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after:start_date',
+            'target_audience' => 'nullable|string',
+            'status' => 'sometimes|in:draft,submitted,pending_approval,needs_revision,approved,published,rejected,archived',
             'priority' => 'sometimes|in:low,medium,high',
             'budget' => 'nullable|numeric',
             'location' => 'nullable|string',
             'expected_reach' => 'nullable|integer',
+            'campaign_type' => 'nullable|string',
+            'admin_notes' => 'nullable|string',
         ]);
 
         $campaign->update($request->all());
@@ -125,8 +131,7 @@ class CampaignController extends Controller
      */
     public function getApprovedCampaigns()
     {
-        $campaigns = Campaign::where('status', 'approved')
-            ->orWhere('status', 'published')
+        $campaigns = Campaign::whereIn('status', ['approved', 'published', 'active'])
             ->orderBy('created_at', 'desc')
             ->get();
 

@@ -43,19 +43,24 @@ export default function OfflineIndicator() {
     };
   }, []);
 
-  // Additional check for failed network requests
+  // Additional check for failed network requests - only trigger on specific fetch errors
   useEffect(() => {
-    const handleNetworkError = () => {
-      console.log('🔴 Network error detected, setting offline');
-      setIsOnline(false);
-      document.body.style.paddingTop = `${BANNER_HEIGHT}px`;
+    const handleNetworkError = (event) => {
+      // Only trigger offline mode on actual network failures, not all errors
+      if (event.type === 'unhandledrejection' && event.reason) {
+        const errorMessage = event.reason.message || '';
+        // Only set offline on specific network-related errors
+        if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('ECONNREFUSED')) {
+          console.log('🔴 Network error detected, setting offline');
+          setIsOnline(false);
+          document.body.style.paddingTop = `${BANNER_HEIGHT}px`;
+        }
+      }
     };
 
-    window.addEventListener('error', handleNetworkError);
     window.addEventListener('unhandledrejection', handleNetworkError);
 
     return () => {
-      window.removeEventListener('error', handleNetworkError);
       window.removeEventListener('unhandledrejection', handleNetworkError);
     };
   }, []);

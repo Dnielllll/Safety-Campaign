@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS public.campaigns (
   voice_enabled BOOLEAN DEFAULT false,
   voice_text TEXT,
   voice_language TEXT DEFAULT 'en-US',
+  admin_notes TEXT,
   CONSTRAINT valid_status CHECK (status IN ('draft', 'pending_approval', 'submitted', 'needs_revision', 'approved', 'published', 'rejected', 'archived'))
 );
 

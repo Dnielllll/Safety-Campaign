@@ -22,26 +22,61 @@ export default function CampaignApproval() {
   const fetchPending = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First, fetch campaigns without the join to see if there are any
+      const { data: campaignsData, error: campaignsError } = await supabase
         .from("campaigns")
-        .select("id, title, description, campaign_type, status, created_at, created_by, admin_notes, users(name, email)")
-        .eq("status", "submitted")
+        .select("id, title, description, campaign_type, status, created_at, created_by, admin_notes")
+        .in("status", ["submitted", "pending_approval"])
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      console.log("Campaign Approval - Fetching submitted campaigns:", { campaignsData, campaignsError });
+      console.log("Campaign Approval - Number of campaigns found:", campaignsData?.length || 0);
 
-      if (data && data.length > 0) {
-        setPending(data.map(c => ({
-          id: c.id,
-          title: c.title || "Untitled Campaign",
-          description: c.description || "",
-          submittedBy: c.users?.name || c.users?.email || "Staff Member",
-          category: c.campaign_type || "general",
-          status: c.status,
-          created_at: c.created_at,
-          previousNotes: c.admin_notes || "",
-        })));
+      if (campaignsError) {
+        console.error("Campaign Approval - Error fetching campaigns:", campaignsError);
+        alert(`Error fetching campaigns: ${campaignsError.message}`);
+        throw campaignsError;
+      }
+
+      if (campaignsData && campaignsData.length > 0) {
+        console.log("Found pending campaigns:", campaignsData.length);
+        
+        // Fetch creator information for each campaign
+        const campaignsWithCreators = await Promise.all(
+          campaignsData.map(async (c) => {
+            let submittedBy = "Staff Member";
+            if (c.created_by) {
+              try {
+                const { data: creatorData } = await supabase
+                  .from("users")
+                  .select("name, email")
+                  .eq("id", c.created_by)
+                  .single();
+                
+                if (creatorData) {
+                  submittedBy = creatorData.name || creatorData.email || "Staff Member";
+                }
+              } catch (creatorError) {
+                console.error("Error fetching creator:", creatorError);
+              }
+            }
+            
+            return {
+              id: c.id,
+              title: c.title || "Untitled Campaign",
+              description: c.description || "",
+              submittedBy: submittedBy,
+              category: c.campaign_type || "general",
+              status: c.status,
+              created_at: c.created_at,
+              previousNotes: c.admin_notes || "",
+            };
+          })
+        );
+        
+        setPending(campaignsWithCreators);
       } else {
+        console.log("No pending campaigns found");
         setPending([]);
       }
     } catch (err) {
@@ -59,16 +94,26 @@ export default function CampaignApproval() {
       decision === "revision" ? "needs_revision" :
       "rejected";
 
+    console.log("Campaign Approval - Deciding campaign:", { id, decision, newStatus });
+
     try {
       const updateData = { status: newStatus };
       if (revisionComment) updateData.admin_notes = revisionComment;
+
+      console.log("Campaign Approval - Updating campaign:", { id, updateData });
 
       const { error } = await supabase
         .from("campaigns")
         .update(updateData)
         .eq("id", id);
 
-      if (error) console.error("Error updating campaign:", error);
+      if (error) {
+        console.error("Error updating campaign:", error);
+        alert(`Failed to update campaign: ${error.message}`);
+        throw error;
+      }
+
+      console.log("Campaign Approval - Campaign updated successfully");
 
       // Create notification for approved campaigns
       if (decision === "approved") {
@@ -83,7 +128,7 @@ export default function CampaignApproval() {
 
             if (users && users.length > 0) {
               const notifications = users.map(user => ({
-                recipient_id: user.id,
+                user_id: user.id,
                 campaign_id: id,
                 title: `New Campaign Published: ${campaign.title}`,
                 message: `A new safety campaign "${campaign.title}" by ${campaign.submittedBy} has been published and is now available for viewing.`,

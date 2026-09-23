@@ -199,12 +199,16 @@ export const supabaseHelpers = {
   },
 
   async createCampaign(campaignData) {
+    console.log("supabaseHelpers - Creating campaign:", campaignData);
     const { data, error } = await supabase.from('campaigns').insert(campaignData).select().single();
+    console.log("supabaseHelpers - Campaign creation result:", { data, error });
     return { data, error };
   },
 
   async updateCampaign(id, campaignData) {
+    console.log("supabaseHelpers - Updating campaign:", { id, campaignData });
     const { data, error } = await supabase.from('campaigns').update(campaignData).eq('id', id).select().single();
+    console.log("supabaseHelpers - Campaign update result:", { data, error });
     return { data, error };
   },
 

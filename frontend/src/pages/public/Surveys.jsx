@@ -21,15 +21,53 @@ export default function Surveys() {
 
   const list = surveys.length ? surveys : mockSurveys;
 
+  const calculateScore = (responseData) => {
+    if (!responseData || typeof responseData !== 'object') return 0;
+    
+    let totalScore = 0;
+    let maxScore = 0;
+    
+    Object.entries(responseData).forEach(([key, answer]) => {
+      const questionIndex = parseInt(key);
+      const question = selected.questions[questionIndex];
+      
+      if (!question) return;
+      
+      // If answer is a number (rating), add it to total
+      if (typeof answer === 'number') {
+        totalScore += answer;
+        maxScore += 5; // Assuming max rating is 5
+      } 
+      // If answer is a positive response (like "Yes"), give full points
+      else if (typeof answer === 'string') {
+        const positiveResponses = ['Yes', 'Always', 'Very aware', 'Regularly'];
+        if (positiveResponses.some(response => answer.toLowerCase().includes(response.toLowerCase()))) {
+          totalScore += 2;
+          maxScore += 2;
+        } else {
+          maxScore += 2;
+        }
+      }
+    });
+    
+    // Normalize to 5-point scale
+    if (maxScore > 0) {
+      return Math.round((totalScore / maxScore) * 5);
+    }
+    return 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const { user } = await supabaseHelpers.getAuthUser();
+      const score = calculateScore(answers);
       const { error } = await supabaseHelpers.submitSurveyResponse({
         survey_id: selected.id,
         user_id: user?.id,
-        response_data: answers
+        response_data: answers,
+        score: score
       });
       if (error) throw error;
       setSubmitted(true);
