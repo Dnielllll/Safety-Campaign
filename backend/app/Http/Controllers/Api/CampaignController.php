@@ -17,6 +17,23 @@ class CampaignController extends Controller
     {
         $this->supabaseUrl = env('SUPABASE_URL', 'https://zuuwqrxmkeryzbcrlrai.supabase.co');
         $this->supabaseKey = env('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1dXdxcnhta2VyeXpiY3JscmFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MDcxMzAsImV4cCI6MjEwMDI4MzEzMH0.CR289UHP5bxEavCMW1Z0h19Jrf6mm5YFC7NQ8RWkkm0');
+
+        Log::info('CampaignController initialized', [
+            'supabase_url' => $this->supabaseUrl,
+            'supabase_key_length' => strlen($this->supabaseKey),
+            'supabase_key_prefix' => substr($this->supabaseKey, 0, 20) . '...'
+        ]);
+    }
+
+    public function test()
+    {
+        return response()->json([
+            'status' => 'ok',
+            'message' => 'Campaign controller is working',
+            'supabase_url' => $this->supabaseUrl,
+            'supabase_key_set' => !empty($this->supabaseKey),
+            'timestamp' => now()
+        ]);
     }
 
     public function index(Request $request)

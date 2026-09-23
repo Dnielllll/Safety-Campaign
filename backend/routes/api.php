@@ -28,6 +28,8 @@ Route::get('/health', function () {
     ]);
 });
 
+Route::get('/campaigns/test', [CampaignController::class, 'test']);
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
