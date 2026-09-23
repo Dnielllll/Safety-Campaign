@@ -45,7 +45,7 @@ export default function CampaignManagement() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all"); // New status filter
+  const [statusFilter, setStatusFilter] = useState("overall"); // New status filter
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editingStatus, setEditingStatus] = useState("");
@@ -145,7 +145,7 @@ export default function CampaignManagement() {
   const filtered = campaigns.filter((c) => {
     const titleMatch = (c.title || "").toLowerCase().includes(query.toLowerCase());
     const creatorMatch = (c.creatorName || "").toLowerCase().includes(query.toLowerCase());
-    const statusMatch = statusFilter === "all" || 
+    const statusMatch = statusFilter === "overall" ? true : // Show all campaigns for overall
                         statusFilter === "awaiting_review" ? (c.status === "submitted" || c.status === "pending_approval") :
                         c.status === statusFilter;
     return (titleMatch || creatorMatch) && statusMatch;
@@ -563,7 +563,7 @@ export default function CampaignManagement() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Campaigns ({campaigns.length})</SelectItem>
+              <SelectItem value="overall">Overall Campaign ({campaigns.length})</SelectItem>
               <SelectItem value="awaiting_review">🔴 Awaiting Review ({(statusCounts.submitted || 0) + (statusCounts.pending_approval || 0)})</SelectItem>
               <SelectItem value="submitted">🔴 Submitted ({statusCounts.submitted || 0})</SelectItem>
               <SelectItem value="pending_approval">🟠 Pending Approval ({statusCounts.pending_approval || 0})</SelectItem>
@@ -577,10 +577,7 @@ export default function CampaignManagement() {
         </div>
       </div>
 
-      {/* Debug info - remove in production */}
-      <div className="text-xs text-muted-foreground mb-2">
-        Total campaigns: {campaigns.length} | Filtered: {filtered.length} | Status filter: {statusFilter} | Page: {currentPage}/{totalPages}
-      </div>
+
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -658,7 +655,7 @@ export default function CampaignManagement() {
                     </TableRow>
                     );
                   })}
-                  {filtered.length === 0 && (
+                  {paginatedCampaigns.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                         No campaigns found.

@@ -288,4 +288,141 @@ class CampaignController extends Controller
             return response()->json(['message' => 'Server Error', 'error' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Approve a campaign
+     */
+    public function approve(Request $request, $id)
+    {
+        try {
+            Log::info('Approving campaign', ['campaign_id' => $id]);
+
+            $updateData = [
+                'status' => 'published',
+                'approved_at' => now()->toISOString(),
+            ];
+
+            if ($request->has('admin_notes')) {
+                $updateData['admin_notes'] = $request->admin_notes;
+            }
+
+            $response = Http::withoutVerifying()->withHeaders([
+                'apikey' => $this->supabaseKey,
+                'Authorization' => "Bearer {$this->supabaseKey}",
+                'Content-Type' => 'application/json',
+                'Prefer' => 'return=representation',
+            ])->patch("{$this->supabaseUrl}/rest/v1/campaigns?id=eq.{$id}", $updateData);
+
+            Log::info('Supabase approve response', [
+                'status' => $response->status(),
+                'successful' => $response->successful(),
+                'body' => $response->body(),
+            ]);
+
+            if (!$response->successful()) {
+                throw new \Exception("Supabase API error: {$response->status()} - {$response->body()}");
+            }
+
+            $campaigns = $response->json();
+            if (empty($campaigns)) {
+                return response()->json(['message' => 'Campaign not found'], 404);
+            }
+
+            return response()->json($campaigns[0]);
+        } catch (\Exception $e) {
+            Log::error('Failed to approve campaign', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Server Error', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Reject a campaign
+     */
+    public function reject(Request $request, $id)
+    {
+        try {
+            Log::info('Rejecting campaign', ['campaign_id' => $id]);
+
+            $updateData = [
+                'status' => 'rejected',
+            ];
+
+            if ($request->has('admin_notes')) {
+                $updateData['admin_notes'] = $request->admin_notes;
+            }
+
+            $response = Http::withoutVerifying()->withHeaders([
+                'apikey' => $this->supabaseKey,
+                'Authorization' => "Bearer {$this->supabaseKey}",
+                'Content-Type' => 'application/json',
+                'Prefer' => 'return=representation',
+            ])->patch("{$this->supabaseUrl}/rest/v1/campaigns?id=eq.{$id}", $updateData);
+
+            Log::info('Supabase reject response', [
+                'status' => $response->status(),
+                'successful' => $response->successful(),
+                'body' => $response->body(),
+            ]);
+
+            if (!$response->successful()) {
+                throw new \Exception("Supabase API error: {$response->status()} - {$response->body()}");
+            }
+
+            $campaigns = $response->json();
+            if (empty($campaigns)) {
+                return response()->json(['message' => 'Campaign not found'], 404);
+            }
+
+            return response()->json($campaigns[0]);
+        } catch (\Exception $e) {
+            Log::error('Failed to reject campaign', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Server Error', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Request revision for a campaign
+     */
+    public function requestRevision(Request $request, $id)
+    {
+        try {
+            Log::info('Requesting revision for campaign', ['campaign_id' => $id]);
+
+            $request->validate([
+                'admin_notes' => 'required|string',
+            ]);
+
+            $updateData = [
+                'status' => 'needs_revision',
+                'admin_notes' => $request->admin_notes,
+            ];
+
+            $response = Http::withoutVerifying()->withHeaders([
+                'apikey' => $this->supabaseKey,
+                'Authorization' => "Bearer {$this->supabaseKey}",
+                'Content-Type' => 'application/json',
+                'Prefer' => 'return=representation',
+            ])->patch("{$this->supabaseUrl}/rest/v1/campaigns?id=eq.{$id}", $updateData);
+
+            Log::info('Supabase revision response', [
+                'status' => $response->status(),
+                'successful' => $response->successful(),
+                'body' => $response->body(),
+            ]);
+
+            if (!$response->successful()) {
+                throw new \Exception("Supabase API error: {$response->status()} - {$response->body()}");
+            }
+
+            $campaigns = $response->json();
+            if (empty($campaigns)) {
+                return response()->json(['message' => 'Campaign not found'], 404);
+            }
+
+            return response()->json($campaigns[0]);
+        } catch (\Exception $e) {
+            Log::error('Failed to request revision', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Server Error', 'error' => $e->getMessage()], 500);
+        }
+    }
 }

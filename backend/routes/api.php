@@ -41,6 +41,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('campaigns', CampaignController::class);
     Route::get('/campaigns/approved', [CampaignController::class, 'getApprovedCampaigns']);
     Route::get('/campaigns/resident-phone-numbers', [CampaignController::class, 'getResidentPhoneNumbers']);
+    Route::post('/campaigns/{id}/approve', [CampaignController::class, 'approve']);
+    Route::post('/campaigns/{id}/reject', [CampaignController::class, 'reject']);
+    Route::post('/campaigns/{id}/request-revision', [CampaignController::class, 'requestRevision']);
 
     // Content routes
     Route::apiResource('contents', ContentController::class);

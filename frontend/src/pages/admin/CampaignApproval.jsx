@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useAuth } from "@/hooks/useAuth.jsx";
 
 export default function CampaignApproval() {
   const [pending, setPending] = useState([]);
@@ -14,6 +15,8 @@ export default function CampaignApproval() {
   const [activeRevisionId, setActiveRevisionId] = useState(null);
   const [activeRejectId, setActiveRejectId] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const { user } = useAuth();
+  const API_BASE = import.meta.env.VITE_API_URL || "https://barangay178-backend.onrender.com/api";
 
   useEffect(() => {
     fetchPending();
@@ -89,31 +92,44 @@ export default function CampaignApproval() {
 
   const decide = async (id, decision, revisionComment = "") => {
     setActionLoading(true);
-    const newStatus =
-      decision === "approved" ? "published" :
-      decision === "revision" ? "needs_revision" :
-      "rejected";
 
-    console.log("Campaign Approval - Deciding campaign:", { id, decision, newStatus });
+    console.log("Campaign Approval - Deciding campaign:", { id, decision });
 
     try {
-      const updateData = { status: newStatus };
-      if (revisionComment) updateData.admin_notes = revisionComment;
+      let endpoint = "";
+      let body = {};
 
-      console.log("Campaign Approval - Updating campaign:", { id, updateData });
-
-      const { error } = await supabase
-        .from("campaigns")
-        .update(updateData)
-        .eq("id", id);
-
-      if (error) {
-        console.error("Error updating campaign:", error);
-        alert(`Failed to update campaign: ${error.message}`);
-        throw error;
+      if (decision === "approved") {
+        endpoint = `${API_BASE}/campaigns/${id}/approve`;
+        body = { admin_notes: revisionComment };
+      } else if (decision === "revision") {
+        endpoint = `${API_BASE}/campaigns/${id}/request-revision`;
+        body = { admin_notes: revisionComment };
+      } else if (decision === "rejected") {
+        endpoint = `${API_BASE}/campaigns/${id}/reject`;
+        body = { admin_notes: revisionComment };
       }
 
-      console.log("Campaign Approval - Campaign updated successfully");
+      console.log("Campaign Approval - Calling API:", { endpoint, body });
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user?.token || ""}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Error updating campaign:", data);
+        alert(`Failed to update campaign: ${data.message || data.error || "Unknown error"}`);
+        throw new Error(data.message || data.error);
+      }
+
+      console.log("Campaign Approval - Campaign updated successfully", data);
 
       // Create notification for approved campaigns
       if (decision === "approved") {

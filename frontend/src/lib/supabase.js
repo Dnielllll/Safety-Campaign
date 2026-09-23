@@ -190,6 +190,24 @@ export const supabaseHelpers = {
     if (filters.status) query = query.eq('status', filters.status);
     if (filters.created_by) query = query.eq('created_by', filters.created_by);
     const { data, error } = await query;
+    
+    // Deduplicate campaigns by title to avoid duplicates in dropdowns
+    // Keep the most recent version (first one since ordered by created_at DESC)
+    if (data && data.length > 0) {
+      const uniqueCampaigns = [];
+      const seenTitles = new Set();
+      
+      for (const campaign of data) {
+        const title = campaign.title?.toLowerCase().trim();
+        if (title && !seenTitles.has(title)) {
+          seenTitles.add(title);
+          uniqueCampaigns.push(campaign);
+        }
+      }
+      
+      return { data: uniqueCampaigns, error };
+    }
+    
     return { data, error };
   },
 
