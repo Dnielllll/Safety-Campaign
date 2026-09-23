@@ -22,6 +22,12 @@ class CampaignController extends Controller
     public function index(Request $request)
     {
         try {
+            Log::info('Fetching campaigns', [
+                'supabase_url' => $this->supabaseUrl,
+                'supabase_key_set' => !empty($this->supabaseKey),
+                'supabase_key_length' => strlen($this->supabaseKey),
+            ]);
+
             $endpoint = "{$this->supabaseUrl}/rest/v1/campaigns?select=*";
             
             if ($request->has('status')) {
@@ -32,13 +38,21 @@ class CampaignController extends Controller
                 $endpoint .= "&created_by=eq.{$request->created_by}";
             }
 
+            Log::info('Making request to Supabase', ['endpoint' => $endpoint]);
+
             $response = Http::withoutVerifying()->withHeaders([
                 'apikey' => $this->supabaseKey,
                 'Authorization' => "Bearer {$this->supabaseKey}",
             ])->get($endpoint);
 
+            Log::info('Supabase response', [
+                'status' => $response->status(),
+                'successful' => $response->successful(),
+                'body' => $response->body(),
+            ]);
+
             if (!$response->successful()) {
-                throw new \Exception("Supabase API error: {$response->status()}");
+                throw new \Exception("Supabase API error: {$response->status()} - {$response->body()}");
             }
 
             return response()->json($response->json());
@@ -219,13 +233,24 @@ class CampaignController extends Controller
     public function getApprovedCampaigns()
     {
         try {
+            Log::info('Fetching approved campaigns', [
+                'supabase_url' => $this->supabaseUrl,
+                'supabase_key_set' => !empty($this->supabaseKey),
+            ]);
+
             $response = Http::withoutVerifying()->withHeaders([
                 'apikey' => $this->supabaseKey,
                 'Authorization' => "Bearer {$this->supabaseKey}",
             ])->get("{$this->supabaseUrl}/rest/v1/campaigns?status=in.(approved,published,active)&select=*&order=created_at.desc");
 
+            Log::info('Supabase response for approved campaigns', [
+                'status' => $response->status(),
+                'successful' => $response->successful(),
+                'body' => $response->body(),
+            ]);
+
             if (!$response->successful()) {
-                throw new \Exception("Supabase API error: {$response->status()}");
+                throw new \Exception("Supabase API error: {$response->status()} - {$response->body()}");
             }
 
             return response()->json($response->json());
