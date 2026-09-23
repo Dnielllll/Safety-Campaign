@@ -37,6 +37,17 @@ RUN composer install --optimize-autoloader --no-dev --no-interaction
 # Configure environment
 RUN cp .env.example .env
 
+# Generate application key
+RUN php artisan key:generate
+
+# Run database migrations (optional - might fail if DB not ready)
+# RUN php artisan migrate --force
+
+# Cache configuration for production
+RUN php artisan config:cache
+RUN php artisan route:cache
+RUN php artisan view:cache
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \

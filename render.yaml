@@ -10,6 +10,9 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     
+    # Health check
+    healthCheckPath: /
+    
     # Environment variables (will be set in Render dashboard)
     envVars:
       - key: APP_ENV
@@ -44,3 +47,11 @@ services:
       # APP_KEY (generate: php artisan key:generate)
       - key: APP_KEY
         sync: false # SET THIS MANUALLY in Render dashboard (run: php artisan key:generate locally)
+      
+      # Additional configuration
+      - key: CACHE_DRIVER
+        value: file
+      - key: SESSION_DRIVER
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
