@@ -1,10 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { HelpCircle, ChevronDown, AlertCircle, Info, CheckCircle, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTheme } from "@/components/ThemeProvider.jsx";
 
 export default function FAQ() {
+  const { resetTheme } = useTheme();
   const [openFaq, setOpenFaq] = useState(null);
+
+  // Force light mode for public pages
+  useEffect(() => {
+    resetTheme();
+  }, [resetTheme]);
 
   const faqs = [
     {

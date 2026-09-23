@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { supabaseHelpers } from "@/lib/supabase.js";
 import { supabase } from "@/lib/supabase";
 import { generateAIResponse } from "@/lib/ai.js";
+import { useTheme } from "@/components/ThemeProvider.jsx";
 
 const categories = ["All", "Fire Safety", "Disaster Preparedness", "Health", "Anti-Drug", "Road Safety", "Environment", "Crime Prevention"];
 const priorities = ["All", "critical", "high", "medium", "low"];
@@ -87,6 +88,7 @@ const translations = {
 
 export default function SafetyCampaigns() {
   const { id } = useParams();
+  const { resetTheme } = useTheme();
   const [campaigns, setCampaigns] = useState([]);
   const [campaignContent, setCampaignContent] = useState({});
   const [search, setSearch] = useState("");
@@ -98,6 +100,11 @@ export default function SafetyCampaigns() {
 
   const [loading, setLoading] = useState(true);
   const [useMock, setUseMock] = useState(false);
+
+  // Force light mode for public pages
+  useEffect(() => {
+    resetTheme();
+  }, [resetTheme]);
 
   // Stop voice announcement when component unmounts or page changes
   useEffect(() => {

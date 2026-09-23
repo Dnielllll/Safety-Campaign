@@ -5,13 +5,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { supabase, supabaseHelpers } from "@/lib/supabase.js";
+import { useTheme } from "@/components/ThemeProvider.jsx";
 
 export default function Surveys() {
+  const { resetTheme } = useTheme();
   const [surveys, setSurveys] = useState([]);
   const [selected, setSelected] = useState(null);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Force light mode for public pages
+  useEffect(() => {
+    resetTheme();
+  }, [resetTheme]);
 
   useEffect(() => {
     supabase.from('surveys').select('*').eq('status', 'published').order('created_at', { ascending: false })

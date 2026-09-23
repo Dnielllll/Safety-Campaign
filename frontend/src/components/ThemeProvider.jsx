@@ -36,6 +36,10 @@ export function ThemeProvider({
       localStorage.setItem(storageKey, theme);
       setTheme(theme);
     },
+    resetTheme: () => {
+      localStorage.removeItem(storageKey);
+      setTheme("light");
+    },
   };
 
   return (

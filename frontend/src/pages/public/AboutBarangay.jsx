@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { MapPin, Users, Building2, Phone } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useTheme } from "@/components/ThemeProvider.jsx";
 
 const officials = [
   { name: "Hon. Editha Besmonte Labasbas", position: "Punong Barangay (Captain)", role: "captain" },
@@ -15,6 +16,13 @@ const officials = [
 ];
 
 export default function AboutBarangay() {
+  const { resetTheme } = useTheme();
+
+  // Force light mode for public pages
+  useEffect(() => {
+    resetTheme();
+  }, [resetTheme]);
+
   return (
     <div className="container py-8 space-y-8">
       <div>

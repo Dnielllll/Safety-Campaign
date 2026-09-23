@@ -655,11 +655,23 @@ export function AuthProvider({ children }) {
     }
 
     // Force light mode on logout so public view is always light
-    localStorage.setItem("vite-ui-theme", "light");
+    localStorage.removeItem("vite-ui-theme"); // Remove theme preference entirely
+    localStorage.setItem("vite-ui-theme", "light"); // Set explicitly to light
     
     const root = window.document.documentElement;
     root.classList.remove("dark");
     root.classList.add("light");
+    
+    // Also reset any other theme-related storage
+    if (localStorage.getItem("theme")) {
+      localStorage.removeItem("theme");
+    }
+    
+    // Force a DOM update to ensure theme is applied immediately
+    requestAnimationFrame(() => {
+      root.classList.remove("dark");
+      root.classList.add("light");
+    });
     
     setUser(null);
     localStorage.removeItem('user');

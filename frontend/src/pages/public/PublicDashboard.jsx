@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabaseHelpers } from "@/lib/supabase.js";
 import { useAuth } from "@/hooks/useAuth.jsx";
+import { useTheme } from "@/components/ThemeProvider.jsx";
 
 const priorityVariant = { critical: "destructive", high: "warning", medium: "secondary", low: "outline" };
 
@@ -22,9 +23,13 @@ const quickLinks = [
 
 export default function PublicDashboard() {
   const { user } = useAuth();
+  const { resetTheme } = useTheme();
   const [campaigns, setCampaigns] = useState([]);
 
   useEffect(() => {
+    // Force light mode for public dashboard
+    resetTheme();
+    
     // Always use mock data for consistent Priority Alerts display
     // This ensures localhost matches Vercel deployment
     setCampaigns(mockCampaigns);
@@ -41,7 +46,7 @@ export default function PublicDashboard() {
     //     setCampaigns(uniqueCampaigns);
     //   })
     //   .catch(() => setCampaigns(mockCampaigns));
-  }, []);
+  }, [resetTheme]);
 
   const list = campaigns.length ? campaigns : mockCampaigns;
   const urgent = list.filter((c) => c.priority === "critical" || c.priority === "high");

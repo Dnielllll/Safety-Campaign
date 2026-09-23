@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase.js";
 import { EmergencyAPI } from "@/lib/api.js";
+import { useTheme } from "@/components/ThemeProvider.jsx";
 
 const defaultHotlines = [
   { name: "Barangay 178 Hall", number: "0921-463-6835", icon: Phone, color: "text-primary" },
@@ -33,7 +34,13 @@ const safetyTips = [
 ];
 
 export default function EmergencyInfo() {
+  const { resetTheme } = useTheme();
   const [info, setInfo] = useState(null);
+
+  // Force light mode for public pages
+  useEffect(() => {
+    resetTheme();
+  }, [resetTheme]);
 
   useEffect(() => {
     EmergencyAPI.get().then((res) => setInfo(res.data)).catch(() => {});

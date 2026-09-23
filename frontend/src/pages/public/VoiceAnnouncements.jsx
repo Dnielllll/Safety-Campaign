@@ -4,12 +4,19 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabaseHelpers } from "@/lib/supabase.js";
+import { useTheme } from "@/components/ThemeProvider.jsx";
 
 export default function VoiceAnnouncements() {
+  const { resetTheme } = useTheme();
   const [campaigns, setCampaigns] = useState([]);
   const [playing, setPlaying] = useState(null);
   const [expanded, setExpanded] = useState(null);
   const [customText, setCustomText] = useState("");
+
+  // Force light mode for public pages
+  useEffect(() => {
+    resetTheme();
+  }, [resetTheme]);
 
   useEffect(() => {
     supabaseHelpers.getCampaigns({ status: "published" })

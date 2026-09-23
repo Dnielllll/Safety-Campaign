@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CheckCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import { supabaseHelpers } from "@/lib/supabase.js";
 import { notificationApi } from "@/lib/apiGateway.js";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/components/ThemeProvider.jsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,11 +68,17 @@ function LoadingOverlay() {
 export default function Register() {
   const navigate = useNavigate();
   const { validatePassword } = useAuth();
+  const { resetTheme } = useTheme();
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Force light mode on register page
+  useEffect(() => {
+    resetTheme();
+  }, [resetTheme]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -1,8 +1,16 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Shield, Lock, Eye, Database, Trash2, Mail } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTheme } from "@/components/ThemeProvider.jsx";
 
 export default function PrivacyPolicy() {
+  const { resetTheme } = useTheme();
+
+  // Force light mode for public pages
+  useEffect(() => {
+    resetTheme();
+  }, [resetTheme]);
+
   return (
     <div className="min-h-screen bg-background py-12">
       <div className="container max-w-4xl">

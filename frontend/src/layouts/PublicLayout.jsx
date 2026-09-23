@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { Bell, MessageSquare, Siren, User, Home, Megaphone, Volume2, ClipboardList, LogOut, Menu, X, Building2, AlertTriangle, BookOpen, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth.jsx";
+import { useTheme } from "@/components/ThemeProvider.jsx";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ThemeToggle.jsx";
@@ -27,10 +28,18 @@ export default function PublicLayout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, logout, maintenanceMode } = useAuth();
+  const { resetTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   
   const isMaintenance = maintenanceMode || localStorage.getItem('maintenance_mode') === 'true';
+
+  // Force light mode for public views (guest users only)
+  useEffect(() => {
+    if (!user || !user.role) {
+      resetTheme();
+    }
+  }, [user, resetTheme]);
 
   if (isMaintenance && user?.role !== 'super_admin' && pathname !== '/emergency') {
     return <Navigate to="/maintenance" replace />;

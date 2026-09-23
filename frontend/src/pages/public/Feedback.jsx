@@ -7,16 +7,23 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabaseHelpers } from "@/lib/supabase.js";
 import { Badge } from "@/components/ui/badge";
+import { useTheme } from "@/components/ThemeProvider.jsx";
 
 const feedbackTypes = ["General Comment", "Suggestion", "Complaint", "Concern", "Compliment"];
 
 export default function Feedback() {
+  const { resetTheme } = useTheme();
   const [form, setForm] = useState({ subject: "", type: "General Comment", message: "", rating: 0 });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);
   const [fetchingHistory, setFetchingHistory] = useState(true);
+
+  // Force light mode for public pages
+  useEffect(() => {
+    resetTheme();
+  }, [resetTheme]);
 
   useEffect(() => {
     fetchMyFeedback();

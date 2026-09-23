@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth.jsx";
+import { useTheme } from "@/components/ThemeProvider.jsx";
 import LoginOverlay from "@/components/LoginOverlay.jsx";
 import emailjs from '@emailjs/browser';
 import { supabase } from "@/lib/supabase.js";
 
 export default function Login() {
   const { login } = useAuth();
+  const { resetTheme } = useTheme();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "", otp: "" });
   const [error, setError] = useState("");
@@ -34,6 +36,9 @@ export default function Login() {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   React.useEffect(() => {
+    // Force light mode on login page
+    resetTheme();
+    
     const logoutMsg = localStorage.getItem("logout_message");
     if (logoutMsg) {
       setError(logoutMsg);

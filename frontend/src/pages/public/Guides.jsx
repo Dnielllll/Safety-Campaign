@@ -1,10 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BookOpen, ChevronDown, AlertTriangle, Megaphone, Bell, MessageSquare, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTheme } from "@/components/ThemeProvider.jsx";
 
 export default function Guides() {
+  const { resetTheme } = useTheme();
   const [openGuide, setOpenGuide] = useState(null);
+
+  // Force light mode for public pages
+  useEffect(() => {
+    resetTheme();
+  }, [resetTheme]);
 
   const guides = [
     {
