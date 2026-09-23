@@ -4,96 +4,183 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Campaign;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use App\Services\IProgService;
 
 class CampaignController extends Controller
 {
+    protected string $supabaseUrl;
+    protected string $supabaseKey;
+
+    public function __construct()
+    {
+        $this->supabaseUrl = env('SUPABASE_URL', 'https://zuuwqrxmkeryzbcrlrai.supabase.co');
+        $this->supabaseKey = env('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1dXdxcnhta2VyeXpiY3JscmFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MDcxMzAsImV4cCI6MjEwMDI4MzEzMH0.CR289UHP5bxEavCMW1Z0h19Jrf6mm5YFC7NQ8RWkkm0');
+    }
+
     public function index(Request $request)
     {
-        $query = Campaign::with('creator');
+        try {
+            $endpoint = "{$this->supabaseUrl}/rest/v1/campaigns?select=*";
+            
+            if ($request->has('status')) {
+                $endpoint .= "&status=eq.{$request->status}";
+            }
 
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
+            if ($request->has('created_by')) {
+                $endpoint .= "&created_by=eq.{$request->created_by}";
+            }
+
+            $response = Http::withoutVerifying()->withHeaders([
+                'apikey' => $this->supabaseKey,
+                'Authorization' => "Bearer {$this->supabaseKey}",
+            ])->get($endpoint);
+
+            if (!$response->successful()) {
+                throw new \Exception("Supabase API error: {$response->status()}");
+            }
+
+            return response()->json($response->json());
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch campaigns', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Server Error'], 500);
         }
-
-        if ($request->has('created_by')) {
-            $query->where('created_by', $request->created_by);
-        }
-
-        return response()->json($query->get());
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'target_audience' => 'nullable|string',
-            'priority' => 'sometimes|in:low,medium,high',
-            'budget' => 'nullable|numeric',
-            'location' => 'nullable|string',
-            'expected_reach' => 'nullable|integer',
-            'campaign_type' => 'nullable|string',
-            'admin_notes' => 'nullable|string',
-        ]);
+        try {
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'start_date' => 'nullable|date',
+                'end_date' => 'nullable|date|after:start_date',
+                'target_audience' => 'nullable|string',
+                'priority' => 'sometimes|in:low,medium,high',
+                'budget' => 'nullable|numeric',
+                'location' => 'nullable|string',
+                'expected_reach' => 'nullable|integer',
+                'campaign_type' => 'nullable|string',
+                'admin_notes' => 'nullable|string',
+            ]);
 
-        $campaign = Campaign::create([
-            'title' => $request->title,
-            'description' => $request->description,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'target_audience' => $request->target_audience,
-            'status' => $request->status ?? 'draft',
-            'created_by' => $request->user()->id,
-            'priority' => $request->priority ?? 'medium',
-            'budget' => $request->budget,
-            'location' => $request->location,
-            'expected_reach' => $request->expected_reach,
-            'campaign_type' => $request->campaign_type,
-            'admin_notes' => $request->admin_notes,
-        ]);
+            $campaignData = [
+                'title' => $request->title,
+                'description' => $request->description,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'target_audience' => $request->target_audience,
+                'status' => $request->status ?? 'draft',
+                'created_by' => $request->user()->id ?? 1, // Default to user ID 1 if auth not available
+                'priority' => $request->priority ?? 'medium',
+                'budget' => $request->budget,
+                'location' => $request->location,
+                'expected_reach' => $request->expected_reach,
+                'campaign_type' => $request->campaign_type,
+                'admin_notes' => $request->admin_notes,
+            ];
 
-        return response()->json($campaign->load('creator'), 201);
+            $response = Http::withoutVerifying()->withHeaders([
+                'apikey' => $this->supabaseKey,
+                'Authorization' => "Bearer {$this->supabaseKey}",
+                'Content-Type' => 'application/json',
+                'Prefer' => 'return=representation',
+            ])->post("{$this->supabaseUrl}/rest/v1/campaigns", $campaignData);
+
+            if (!$response->successful()) {
+                throw new \Exception("Supabase API error: {$response->status()}");
+            }
+
+            return response()->json($response->json()[0], 201);
+        } catch (\Exception $e) {
+            Log::error('Failed to create campaign', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Server Error'], 500);
+        }
     }
 
     public function show($id)
     {
-        $campaign = Campaign::with(['creator', 'contents'])->findOrFail($id);
-        return response()->json($campaign);
+        try {
+            $response = Http::withoutVerifying()->withHeaders([
+                'apikey' => $this->supabaseKey,
+                'Authorization' => "Bearer {$this->supabaseKey}",
+            ])->get("{$this->supabaseUrl}/rest/v1/campaigns?id=eq.{$id}&select=*");
+
+            if (!$response->successful()) {
+                throw new \Exception("Supabase API error: {$response->status()}");
+            }
+
+            $campaigns = $response->json();
+            if (empty($campaigns)) {
+                return response()->json(['message' => 'Campaign not found'], 404);
+            }
+
+            return response()->json($campaigns[0]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch campaign', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Server Error'], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
-        $campaign = Campaign::findOrFail($id);
+        try {
+            $request->validate([
+                'title' => 'sometimes|string|max:255',
+                'description' => 'nullable|string',
+                'start_date' => 'nullable|date',
+                'end_date' => 'nullable|date|after:start_date',
+                'target_audience' => 'nullable|string',
+                'status' => 'sometimes|in:draft,submitted,pending_approval,needs_revision,approved,published,rejected,archived',
+                'priority' => 'sometimes|in:low,medium,high',
+                'budget' => 'nullable|numeric',
+                'location' => 'nullable|string',
+                'expected_reach' => 'nullable|integer',
+                'campaign_type' => 'nullable|string',
+                'admin_notes' => 'nullable|string',
+            ]);
 
-        $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'target_audience' => 'nullable|string',
-            'status' => 'sometimes|in:draft,submitted,pending_approval,needs_revision,approved,published,rejected,archived',
-            'priority' => 'sometimes|in:low,medium,high',
-            'budget' => 'nullable|numeric',
-            'location' => 'nullable|string',
-            'expected_reach' => 'nullable|integer',
-            'campaign_type' => 'nullable|string',
-            'admin_notes' => 'nullable|string',
-        ]);
+            $response = Http::withoutVerifying()->withHeaders([
+                'apikey' => $this->supabaseKey,
+                'Authorization' => "Bearer {$this->supabaseKey}",
+                'Content-Type' => 'application/json',
+                'Prefer' => 'return=representation',
+            ])->patch("{$this->supabaseUrl}/rest/v1/campaigns?id=eq.{$id}", $request->all());
 
-        $campaign->update($request->all());
+            if (!$response->successful()) {
+                throw new \Exception("Supabase API error: {$response->status()}");
+            }
 
-        return response()->json($campaign->load('creator'));
+            $campaigns = $response->json();
+            if (empty($campaigns)) {
+                return response()->json(['message' => 'Campaign not found'], 404);
+            }
+
+            return response()->json($campaigns[0]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update campaign', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Server Error'], 500);
+        }
     }
 
     public function destroy($id)
     {
-        $campaign = Campaign::findOrFail($id);
-        $campaign->delete();
-        return response()->json(['message' => 'Campaign deleted successfully']);
+        try {
+            $response = Http::withoutVerifying()->withHeaders([
+                'apikey' => $this->supabaseKey,
+                'Authorization' => "Bearer {$this->supabaseKey}",
+            ])->delete("{$this->supabaseUrl}/rest/v1/campaigns?id=eq.{$id}");
+
+            if (!$response->successful()) {
+                throw new \Exception("Supabase API error: {$response->status()}");
+            }
+
+            return response()->json(['message' => 'Campaign deleted successfully']);
+        } catch (\Exception $e) {
+            Log::error('Failed to delete campaign', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Server Error'], 500);
+        }
     }
 
     /**
@@ -131,11 +218,21 @@ class CampaignController extends Controller
      */
     public function getApprovedCampaigns()
     {
-        $campaigns = Campaign::whereIn('status', ['approved', 'published', 'active'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        try {
+            $response = Http::withoutVerifying()->withHeaders([
+                'apikey' => $this->supabaseKey,
+                'Authorization' => "Bearer {$this->supabaseKey}",
+            ])->get("{$this->supabaseUrl}/rest/v1/campaigns?status=in.(approved,published,active)&select=*&order=created_at.desc");
 
-        return response()->json($campaigns);
+            if (!$response->successful()) {
+                throw new \Exception("Supabase API error: {$response->status()}");
+            }
+
+            return response()->json($response->json());
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch approved campaigns', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Server Error'], 500);
+        }
     }
 
     /**
@@ -143,17 +240,27 @@ class CampaignController extends Controller
      */
     public function getResidentPhoneNumbers()
     {
-        // Fetch phone numbers from users table (residents are users with phone numbers)
-        // Using Supabase directly since Laravel models might not be synced
-        $phoneNumbers = \DB::table('users')
-            ->whereNotNull('phone')
-            ->where('phone', '!=', '')
-            ->pluck('phone')
-            ->toArray();
+        try {
+            // Fetch phone numbers from users table via Supabase REST API
+            $response = Http::withoutVerifying()->withHeaders([
+                'apikey' => $this->supabaseKey,
+                'Authorization' => "Bearer {$this->supabaseKey}",
+            ])->get("{$this->supabaseUrl}/rest/v1/users?select=phone&phone=not.is.null&phone=neq.");
 
-        return response()->json([
-            'phone_numbers' => $phoneNumbers,
-            'total' => count($phoneNumbers),
-        ]);
+            if (!$response->successful()) {
+                throw new \Exception("Supabase API error: {$response->status()}");
+            }
+
+            $users = $response->json();
+            $phoneNumbers = array_filter(array_column($users, 'phone'));
+
+            return response()->json([
+                'phone_numbers' => array_values($phoneNumbers),
+                'total' => count($phoneNumbers),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch resident phone numbers', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Server Error'], 500);
+        }
     }
 }
