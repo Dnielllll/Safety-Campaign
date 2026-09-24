@@ -50,6 +50,14 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Render's health checker hits the root route by default
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Notification service is running. Use /sms or /mail endpoints.'
+  });
+});
+
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/sms', smsRoutes);
 app.use('/mail', mailRoutes);
