@@ -29,6 +29,7 @@
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "lucide-react": "^0.445.0",
+    "nodemailer": "^10.0.10",
     "openai": "^6.48.0",
     "papaparse": "^5.7.0",
     "react": "^18.3.1",

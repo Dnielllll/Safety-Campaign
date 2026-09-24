@@ -22,6 +22,11 @@ const GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || 'https://barangay178
 // In production it is accessed via the Nginx gateway on GATEWAY_URL.
 const NOTIFICATION_URL = import.meta.env.VITE_NOTIFICATION_URL || 'https://barangay178-notifications.onrender.com';
 
+// Vercel serverless API base URL — handles email via Gmail (no SMTP port restrictions)
+const VERCEL_API_URL = import.meta.env.VITE_VERCEL_URL
+  ? `https://${import.meta.env.VITE_VERCEL_URL}`
+  : (typeof window !== 'undefined' ? window.location.origin : '');
+
 /**
  * Get the current Sanctum bearer token from localStorage (set after login).
  */
@@ -169,7 +174,19 @@ export const notificationApi = {
   sendSMS:           (data) => notificationRequest('/sms/send',           { method: 'POST', body: JSON.stringify(data) }),
   bulkSMS:           (data) => notificationRequest('/sms/bulk',           { method: 'POST', body: JSON.stringify(data) }),
   balance:           ()     => notificationRequest('/sms/balance',        { method: 'GET' }),
-  sendOTP:           (data) => notificationRequest('/mail/send-otp',      { method: 'POST', body: JSON.stringify(data) }),
-  sendWelcome:       (data) => notificationRequest('/mail/send-welcome',  { method: 'POST', body: JSON.stringify(data) }),
-  sendCampaignEmail: (data) => notificationRequest('/mail/send-notification', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Email routes now handled by Vercel Serverless Functions (bypasses Render's SMTP block)
+  sendOTP: (data) => fetch(`${VERCEL_API_URL}/api/send-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }).then(r => r.json()),
+
+  sendWelcome: (data) => notificationRequest('/mail/send-welcome', { method: 'POST', body: JSON.stringify(data) }),
+
+  sendCampaignEmail: (data) => fetch(`${VERCEL_API_URL}/api/send-notification`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }).then(r => r.json()),
 };
