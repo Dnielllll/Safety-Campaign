@@ -13,6 +13,9 @@ const logger = require('./utils/logger');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// ─── Trust Render/Nginx proxy (required for express-rate-limit behind a load balancer)
+app.set('trust proxy', 1);
+
 // ─── Security Middleware ──────────────────────────────────────────────────────
 app.use(helmet());
 app.use(cors({

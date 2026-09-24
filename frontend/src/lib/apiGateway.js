@@ -20,7 +20,7 @@ const GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || 'https://barangay178
 
 // In dev mode the notification-service runs on port 3001 directly.
 // In production it is accessed via the Nginx gateway on GATEWAY_URL.
-const NOTIFICATION_URL = import.meta.env.VITE_NOTIFICATION_URL || 'https://barangay178-backend.onrender.com';
+const NOTIFICATION_URL = import.meta.env.VITE_NOTIFICATION_URL || 'https://barangay178-notifications.onrender.com';
 
 /**
  * Get the current Sanctum bearer token from localStorage (set after login).
