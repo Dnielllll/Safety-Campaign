@@ -16,11 +16,11 @@
  *   const result    = await apiGateway.post('/api/notifications/sms/bulk', payload);
  */
 
-const GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8080';
+const GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || 'https://barangay178-backend.onrender.com';
 
 // In dev mode the notification-service runs on port 3001 directly.
 // In production it is accessed via the Nginx gateway on GATEWAY_URL.
-const NOTIFICATION_URL = import.meta.env.VITE_NOTIFICATION_URL || 'http://localhost:3001';
+const NOTIFICATION_URL = import.meta.env.VITE_NOTIFICATION_URL || 'https://barangay178-backend.onrender.com';
 
 /**
  * Get the current Sanctum bearer token from localStorage (set after login).
