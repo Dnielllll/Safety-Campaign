@@ -176,7 +176,8 @@ export const notificationApi = {
   balance:           ()     => notificationRequest('/sms/balance',        { method: 'GET' }),
 
   // Email routes now handled by Vercel Serverless Functions (bypasses Render's SMTP block)
-  sendOTP: (data) => fetch(`${VERCEL_API_URL}/api/send-otp`, {
+  // We use relative paths here so that the browser automatically uses the current domain, preventing CORS errors.
+  sendOTP: (data) => fetch(`/api/send-otp`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -184,7 +185,7 @@ export const notificationApi = {
 
   sendWelcome: (data) => notificationRequest('/mail/send-welcome', { method: 'POST', body: JSON.stringify(data) }),
 
-  sendCampaignEmail: (data) => fetch(`${VERCEL_API_URL}/api/send-notification`, {
+  sendCampaignEmail: (data) => fetch(`/api/send-notification`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
