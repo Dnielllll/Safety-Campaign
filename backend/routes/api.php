@@ -38,7 +38,9 @@ Route::get('/simple-test', function () {
     ]);
 });
 
-// Make campaigns route public temporarily for testing
+// Public campaign routes — these MUST be registered BEFORE any resource
+// route that defines a {campaign} wildcard, otherwise "approved" gets
+// captured as a campaign ID and hits the auth middleware.
 Route::get('/campaigns', [CampaignController::class, 'index']);
 Route::get('/campaigns/approved', [CampaignController::class, 'getApprovedCampaigns']);
 
@@ -51,9 +53,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Campaign routes
-    Route::apiResource('campaigns', CampaignController::class);
-    Route::get('/campaigns/approved', [CampaignController::class, 'getApprovedCampaigns']);
+    // Campaign routes — exclude 'index' since it's public above.
+    // 'show' (GET /campaigns/{campaign}) is kept here so it requires auth.
+    Route::apiResource('campaigns', CampaignController::class)->except(['index']);
     Route::get('/campaigns/resident-phone-numbers', [CampaignController::class, 'getResidentPhoneNumbers']);
     Route::post('/campaigns/{id}/approve', [CampaignController::class, 'approve']);
     Route::post('/campaigns/{id}/reject', [CampaignController::class, 'reject']);
