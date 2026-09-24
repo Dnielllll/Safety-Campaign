@@ -6,6 +6,7 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 import RequireRole from "@/routes/RequireRole";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import MaintenanceGuard from "@/components/MaintenanceGuard.jsx";
+import CookieConsent from "@/components/CookieConsent";
 
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -74,6 +75,7 @@ export default function App() {
   return (
     <>
       <OfflineIndicator />
+      <CookieConsent />
       <MaintenanceGuard>
         <Routes>
       {/* Auth */}
