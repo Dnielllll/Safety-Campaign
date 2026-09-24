@@ -110,7 +110,7 @@ export default function StaffNotifications() {
       const { data: recipients, error: recipientsError } = await supabase
         .from("users")
         .select("id, email, phone, name")
-        .in("role", ["citizen", "public"])
+        .in("role", ["citizen", "public", "staff", "admin", "superadmin"])
         .eq("is_active", true);
 
       if (recipientsError) throw recipientsError;
