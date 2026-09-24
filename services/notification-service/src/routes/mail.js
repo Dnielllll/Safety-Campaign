@@ -197,9 +197,9 @@ router.post('/send-welcome', async (req, res) => {
     }
 });
 
-// ─── POST /mail/send-campaign ─────────────────────────────────────────────────
+// ─── POST /mail/send-notification ─────────────────────────────────────────────────
 // Sends a campaign notification email to multiple recipients with Gmail optimization.
-router.post('/send-campaign', async (req, res) => {
+router.post('/send-notification', async (req, res) => {
     try {
         const { recipients, campaign_title, campaign_description, campaign_objectives, from_name, from_email, subject, reply_to } = req.body;
         

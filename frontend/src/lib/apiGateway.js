@@ -171,5 +171,5 @@ export const notificationApi = {
   balance:           ()     => notificationRequest('/sms/balance',        { method: 'GET' }),
   sendOTP:           (data) => notificationRequest('/mail/send-otp',      { method: 'POST', body: JSON.stringify(data) }),
   sendWelcome:       (data) => notificationRequest('/mail/send-welcome',  { method: 'POST', body: JSON.stringify(data) }),
-  sendCampaignEmail: (data) => notificationRequest('/mail/send-campaign', { method: 'POST', body: JSON.stringify(data) }),
+  sendCampaignEmail: (data) => notificationRequest('/mail/send-notification', { method: 'POST', body: JSON.stringify(data) }),
 };
