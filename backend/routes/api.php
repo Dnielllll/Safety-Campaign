@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CampaignController;
 use App\Http\Controllers\Api\ContentController;
 use App\Http\Controllers\Api\WorkflowController;
 use App\Http\Controllers\Api\AIController;
+use App\Http\Controllers\Api\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,6 +53,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // User management — admin-only delete that removes the Supabase Auth account too
+    Route::get('/users', [UserController::class, 'index']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
 
     // Campaign routes — exclude 'index' since it's public above.
     // 'show' (GET /campaigns/{campaign}) is kept here so it requires auth.

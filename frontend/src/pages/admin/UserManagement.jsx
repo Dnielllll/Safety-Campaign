@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase, supabaseHelpers } from "@/lib/supabase";
+import { UsersAPI } from "@/lib/api";
 import ExportPasswordDialog from "@/components/ExportPasswordDialog";
 import { logAuditEvent } from "@/lib/auditLogger.js";
 
@@ -176,13 +177,8 @@ export default function UserManagement() {
             return;
           }
           
-          // If profile creation fails for other reasons, try to clean up the auth user
-          try {
-            await supabase.auth.admin.deleteUser(authUserId);
-            console.log('Cleaned up auth user due to profile creation failure');
-          } catch (cleanupError) {
-            console.error('Failed to clean up auth user:', cleanupError);
-          }
+          // If profile creation fails for other reasons, clean-up note (no admin client available here)
+          console.error('Profile creation failed — the auth user may need manual removal from Supabase Auth.');
           
           throw profileError;
         }
@@ -262,18 +258,14 @@ export default function UserManagement() {
         .eq('id', userId)
         .single();
       
-      console.log('Calling complete user deletion for:', userId);
+      console.log('Calling secure Laravel endpoint to delete user:', userId);
       
-      // Use the standard deletion function
-      const { error } = await supabaseHelpers.deleteUser(userId);
+      // Use the secure Laravel backend which calls the Supabase Admin API server-side.
+      // This deletes both the auth account AND the profile row.
+      await UsersAPI.remove(userId);
 
-      if (error) {
-        console.error('User deletion failed:', error);
-        throw error;
-      }
-
-      console.log('User deleted from public.users');
-      alert('User deleted successfully. Note: To fully remove their login access, they must also be deleted from the Supabase Auth dashboard.');
+      console.log('User fully deleted (auth + profile).');
+      alert('User deleted successfully.');
       
       // Log user deletion event
       try {
@@ -304,13 +296,14 @@ export default function UserManagement() {
         .select('id, email, role')
         .in('id', userIds);
       
-      // Delete each user using the standard deletion function
+      // Delete each user using the secure Laravel backend
       let failedCount = 0;
       
       for (const userId of userIds) {
-        const { error } = await supabaseHelpers.deleteUser(userId);
-        if (error) {
-          console.error('Error deleting user:', userId, error);
+        try {
+          await UsersAPI.remove(userId);
+        } catch (err) {
+          console.error('Error deleting user:', userId, err);
           failedCount++;
         }
       }
