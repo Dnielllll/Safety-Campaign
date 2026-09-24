@@ -264,21 +264,16 @@ export default function UserManagement() {
       
       console.log('Calling complete user deletion for:', userId);
       
-      // Use the new complete deletion function
-      const { error, warning } = await supabaseHelpers.deleteUserCompletely(userId);
+      // Use the standard deletion function
+      const { error } = await supabaseHelpers.deleteUser(userId);
 
       if (error) {
         console.error('User deletion failed:', error);
         throw error;
       }
 
-      if (warning) {
-        console.warn('Deletion completed with warning:', warning);
-        alert(`User deleted from database. Warning: ${warning}`);
-      } else {
-        console.log('User deleted completely (database + auth)');
-        alert('User deleted successfully');
-      }
+      console.log('User deleted from public.users');
+      alert('User deleted successfully. Note: To fully remove their login access, they must also be deleted from the Supabase Auth dashboard.');
       
       // Log user deletion event
       try {
@@ -309,11 +304,11 @@ export default function UserManagement() {
         .select('id, email, role')
         .in('id', userIds);
       
-      // Delete each user using the complete deletion function
+      // Delete each user using the standard deletion function
       let failedCount = 0;
       
       for (const userId of userIds) {
-        const { error } = await supabaseHelpers.deleteUserCompletely(userId);
+        const { error } = await supabaseHelpers.deleteUser(userId);
         if (error) {
           console.error('Error deleting user:', userId, error);
           failedCount++;

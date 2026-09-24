@@ -6,17 +6,6 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIU
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Service role client for admin operations (like deleting auth users)
-// This should be used server-side only, but included here for user management
-const supabaseServiceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || '';
-export const supabaseAdmin = supabaseServiceRoleKey 
-  ? createClient(supabaseUrl, supabaseServiceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    })
-  : null;
 
 // Auth Helpers using real Supabase Auth
 export const supabaseHelpers = {
@@ -104,85 +93,6 @@ export const supabaseHelpers = {
     return { error };
   },
 
-  // Delete user from both public.users and auth.users (requires service role)
-  async deleteUserCompletely(id) {
-    try {
-      // First, get the user's email from public.users
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('email')
-        .eq('id', id)
-        .single();
-
-      if (userError) {
-        console.error('Error fetching user data:', userError);
-        return { error: userError };
-      }
-
-      let authCleanupWarning = null;
-
-      // Delete audit trail records first (to handle foreign key constraints)
-      try {
-        const { error: auditError } = await supabase
-          .from('audit_trail')
-          .delete()
-          .eq('user_id', id);
-        
-        if (auditError) {
-          console.warn('Error deleting audit trail records:', auditError);
-          // Continue anyway - some users might not have audit records
-        } else {
-          console.log('Successfully deleted audit trail records');
-        }
-      } catch (auditError) {
-        console.warn('Audit trail cleanup failed:', auditError);
-        // Continue anyway
-      }
-
-      // Try to delete from auth.users using service role client
-      if (supabaseAdmin && userData?.email) {
-        try {
-          // Get all users to find the auth user ID
-          const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-          
-          if (!listError && users) {
-            const authUser = users.find(u => u.email === userData.email);
-            
-            if (authUser?.id) {
-              const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(authUser.id);
-              
-              if (authDeleteError) {
-                console.error('Error deleting from auth.users:', authDeleteError);
-                authCleanupWarning = 'Auth user may need manual cleanup';
-              } else {
-                console.log('Successfully deleted from auth.users');
-              }
-            } else {
-              console.log('Auth user not found for email:', userData.email);
-              authCleanupWarning = 'Auth user not found in Supabase Auth';
-            }
-          }
-        } catch (authError) {
-          console.error('Error during auth cleanup:', authError);
-          authCleanupWarning = 'Auth cleanup failed - may need manual attention';
-        }
-      } else {
-        authCleanupWarning = 'Service role key not configured - auth cleanup skipped';
-      }
-
-      // Delete from public.users
-      const { error: deleteError } = await supabase.from('users').delete().eq('id', id);
-      if (deleteError) {
-        console.error('Error deleting from public.users:', deleteError);
-        return { error: deleteError };
-      }
-
-      return { error: null, warning: authCleanupWarning };
-    } catch (error) {
-      console.error('Error in complete user deletion:', error);
-      return { error };
-    }
-  },
 
   // Campaigns
   async getCampaigns(filters = {}) {
