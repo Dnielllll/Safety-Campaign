@@ -106,11 +106,11 @@ export default function StaffNotifications() {
       const selectedCampaign = campaigns.find((c) => c.id === form.campaign);
       if (!selectedCampaign) throw new Error("Campaign not found");
 
-      // 1. Fetch all active residents as recipients (excluding staff and current user)
+      // 1. Fetch only active residents as recipients (citizens/public only — NOT staff or admins)
       const { data: recipients, error: recipientsError } = await supabase
         .from("users")
         .select("id, email, phone, name")
-        .in("role", ["citizen", "public", "staff", "admin", "superadmin"])
+        .in("role", ["citizen", "public"])
         .eq("is_active", true);
 
       if (recipientsError) throw recipientsError;
