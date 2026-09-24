@@ -33,16 +33,10 @@ export default function Distribution() {
 
   useEffect(() => {
     fetchApprovedCampaigns();
+    // Pre-fetch contact info so there's no delay when channels are selected
+    fetchPhoneNumbers();
+    fetchEmailAddresses();
   }, []);
-
-  useEffect(() => {
-    if (selected.includes("sms")) {
-      fetchPhoneNumbers();
-    }
-    if (selected.includes("email")) {
-      fetchEmailAddresses();
-    }
-  }, [selected]);
 
   const fetchPhoneNumbers = async () => {
     setLoadingPhoneNumbers(true);

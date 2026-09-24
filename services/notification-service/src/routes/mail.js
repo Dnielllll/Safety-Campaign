@@ -231,9 +231,11 @@ router.post('/send-campaign', async (req, res) => {
         }
         
         const smtpUser = process.env.SMTP_USER;
+        // Gmail ONLY allows sending FROM the authenticated account.
+        // Using a custom from_email causes authentication failures.
         const senderName = from_name || "Barangay 178 System";
-        const senderEmail = from_email || smtpUser;
-        const replyToEmail = reply_to || smtpUser;
+        const senderEmail = smtpUser; // Always use authenticated Gmail account
+        const replyToEmail = smtpUser;
         const emailSubject = subject || `📢 Barangay 178 Campaign: ${campaign_title}`;
 
         // Gmail-optimized HTML template with proper structure and personalization
@@ -315,10 +317,10 @@ router.post('/send-campaign', async (req, res) => {
         `;
         };
 
-        // Send emails with personalization and Gmail optimization with rate limiting
+        // Send emails in batches — transporter pool handles rate limiting
         const results = [];
-        const batchSize = 5; // Send in batches to avoid rate limiting
-        const delay = 2000; // 2 second delay between batches
+        const batchSize = 10; // Process 10 at a time
+        const delay = 500;    // 500ms between batches is enough with pool rate limiting
         
         for (let i = 0; i < emails.length; i += batchSize) {
             const batch = emails.slice(i, i + batchSize);
