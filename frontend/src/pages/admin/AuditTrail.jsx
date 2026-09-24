@@ -165,16 +165,16 @@ export default function AuditTrail() {
 
   const fetchAuditLogs = async () => {
     try {
+      // Fetch ALL logs — no artificial limit so counts are always accurate
       const { data, error } = await supabase
         .from('audit_trail')
         .select('*')
-        .order('timestamp', { ascending: false })
-        .limit(100);
+        .order('timestamp', { ascending: false });
 
       if (error) throw error;
 
       // Format the data for display with proper handling of null values
-      const formattedLogs = data.map(log => ({
+      const formattedLogs = (data || []).map(log => ({
         id: log.id,
         actor: log.actor || 'Unknown',
         action: log.action || 'unknown',
@@ -182,7 +182,7 @@ export default function AuditTrail() {
         time: log.timestamp ? new Date(log.timestamp).toLocaleString() : 'Unknown',
         timestamp: log.timestamp,
         metadata: log.metadata || {},
-        success: log.success !== false, // Default to true if not explicitly false
+        success: log.success !== false,
         error_message: log.error_message,
         user_id: log.user_id,
         entity_id: log.entity_id,
@@ -195,15 +195,13 @@ export default function AuditTrail() {
       setLogs(formattedLogs);
     } catch (error) {
       console.error("Error fetching audit logs:", error);
-      // Fall back to mock data if database fetch fails
       setLogs(generateLogs());
     } finally {
       setLoading(false);
     }
   };
 
-  // Calculate statistics in real-time based on the loaded logs instead of relying on an RPC
-  // that might not exist in the database or might be slow to update.
+  // Calculate statistics in real-time from the last 30 days of logs
   useEffect(() => {
     if (!logs || logs.length === 0) {
       setStatistics({
@@ -218,33 +216,36 @@ export default function AuditTrail() {
       return;
     }
 
-    const total_logs = logs.length;
-    const successful_logs = logs.filter(l => l.success !== false).length;
-    const failed_logs = logs.filter(l => l.success === false).length;
+    // Filter to last 30 days for the stats cards
+    const cutoff30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const logs30d = logs.filter(l => l.timestamp && new Date(l.timestamp) >= cutoff30d);
+
+    const total_logs = logs30d.length;
+    const successful_logs = logs30d.filter(l => l.success !== false).length;
+    const failed_logs = logs30d.filter(l => l.success === false).length;
     const success_rate = total_logs > 0 ? (successful_logs / total_logs) * 100 : 0;
-    
-    // Count unique users
-    const uniqueActors = new Set(logs.filter(l => l.actor && l.actor !== 'Unknown').map(l => l.actor));
+
+    // Unique users in the last 30 days
+    const uniqueActors = new Set(logs30d.filter(l => l.actor && l.actor !== 'Unknown').map(l => l.actor));
     const unique_users = uniqueActors.size;
 
-    // Count actions
+    // Top actions across ALL time (for the breakdown card)
     const actionCounts = {};
     logs.forEach(l => {
       const action = l.action || 'unknown';
       actionCounts[action] = (actionCounts[action] || 0) + 1;
     });
-    
     const actions_by_count = Object.entries(actionCounts)
       .map(([action, count]) => ({ action, count }))
       .sort((a, b) => b.count - a.count);
 
     setStatistics({
-      total_logs,
-      successful_logs,
-      failed_logs,
-      success_rate,
-      unique_users,
-      actions_by_count,
+      total_logs,       // 30-day count
+      successful_logs,  // 30-day
+      failed_logs,      // 30-day
+      success_rate,     // 30-day
+      unique_users,     // 30-day
+      actions_by_count, // all-time top actions
       entities_by_count: []
     });
   }, [logs]);
@@ -488,8 +489,10 @@ export default function AuditTrail() {
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Audit Logs ({filteredLogs.length})</CardTitle>
-            <CardDescription>System activity and user actions</CardDescription>
+            <CardTitle className="text-base">
+              Audit Logs ({filteredLogs.length}{filteredLogs.length !== logs.length ? ` of ${logs.length}` : ''})
+            </CardTitle>
+            <CardDescription>System activity and user actions — all time</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
