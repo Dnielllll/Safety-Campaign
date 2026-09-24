@@ -101,8 +101,6 @@ This email was sent to you as a registered resident of Barangay 178.
                         </body>
                         </html>
                     `,
-                        </html>
-                    `,
                 })
             )
         );
