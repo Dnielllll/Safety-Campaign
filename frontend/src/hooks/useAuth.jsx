@@ -384,17 +384,13 @@ export function AuthProvider({ children }) {
       let timeoutMinutes = 4;
       try {
         const stored = localStorage.getItem('auth_settings');
-        console.log('=== Loading auth_settings for session timeout ===');
-        console.log('Raw localStorage auth_settings:', stored);
         if (stored) {
           const parsed = JSON.parse(stored);
-          console.log('Parsed auth_settings:', parsed);
           // Handle NaN/invalid values by falling back to defaults
           if (parsed.sessionTimeout && !isNaN(parsed.sessionTimeout) && parsed.sessionTimeout > 0) {
             timeoutMinutes = parsed.sessionTimeout;
           }
         }
-        console.log('Session timeout minutes:', timeoutMinutes);
       } catch (e) {
         console.warn('Could not parse auth_settings from localStorage:', e);
       }
