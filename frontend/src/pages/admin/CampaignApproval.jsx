@@ -147,12 +147,30 @@ export default function CampaignApproval() {
         else if (decision === "revision") newStatus = "draft";
         else if (decision === "rejected") newStatus = "rejected";
 
+        // Try to update with admin_notes, fall back to status only if column doesn't exist
+        let updateData = { status: newStatus };
+        if (revisionComment && revisionComment.trim() !== "") {
+          updateData.admin_notes = revisionComment;
+        }
+
         const { error } = await supabase
           .from("surveys")
-          .update({ status: newStatus, admin_notes: revisionComment })
+          .update(updateData)
           .eq("id", id);
         
-        if (error) throw error;
+        if (error) {
+          // If error is about admin_notes column, try without it
+          if (error.message && error.message.includes('admin_notes')) {
+            console.log("admin_notes column not found, updating status only");
+            const { error: statusError } = await supabase
+              .from("surveys")
+              .update({ status: newStatus })
+              .eq("id", id);
+            if (statusError) throw statusError;
+          } else {
+            throw error;
+          }
+        }
         
       } else {
         // Handle Campaign Approval via API
