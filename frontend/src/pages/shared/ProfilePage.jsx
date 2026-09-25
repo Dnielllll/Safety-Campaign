@@ -195,6 +195,28 @@ export default function ProfilePage() {
     }
   };
 
+  const handleRemoveAvatar = async () => {
+    if (!avatarUrl) return;
+
+    setUploadingAvatar(true);
+    try {
+      setAvatarUrl("");
+      setAvatarPreview("");
+      
+      const { error: updateErr } = await supabaseHelpers.updateUser(user.id, { avatar_url: null });
+      if (!updateErr) {
+        const updatedUser = { ...user, avatar_url: null };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+    } catch (err) {
+      console.error("Remove avatar error:", err);
+      setError("Failed to remove avatar.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   // Save profile info
   const handleProfileSave = async (e) => {
     e.preventDefault();
@@ -333,19 +355,32 @@ export default function ProfilePage() {
               </span>
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingAvatar}
-              className="shrink-0 w-full sm:w-auto"
-            >
-              {uploadingAvatar ? (
-                <><RefreshCw className="h-4 w-4 mr-1.5 animate-spin" /> Uploading…</>
-              ) : (
-                <><Upload className="h-4 w-4 mr-1.5" /> Change Photo</>
+            <div className="flex flex-col sm:flex-row gap-2 shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="w-full sm:w-auto"
+              >
+                {uploadingAvatar ? (
+                  <><RefreshCw className="h-4 w-4 mr-1.5 animate-spin" /> Uploading…</>
+                ) : (
+                  <><Upload className="h-4 w-4 mr-1.5" /> Change Photo</>
+                )}
+              </Button>
+              {avatarPreview && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRemoveAvatar}
+                  disabled={uploadingAvatar}
+                  className="w-full sm:w-auto text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  Remove Photo
+                </Button>
               )}
-            </Button>
+            </div>
           </div>
           <p className="text-xs text-muted-foreground mt-3">Hover over the avatar or click "Change Photo" to upload a new profile picture. Max 2MB, JPG/PNG.</p>
         </CardContent>
