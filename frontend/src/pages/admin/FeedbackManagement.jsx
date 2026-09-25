@@ -42,7 +42,24 @@ export default function FeedbackManagement() {
         .order("created_at", { ascending: false });
       
       if (error) throw error;
-      setSurveys(data || []);
+      
+      // Fetch questions for each survey
+      const surveysWithQuestions = await Promise.all(
+        (data || []).map(async (survey) => {
+          const { data: questions } = await supabase
+            .from("survey_questions")
+            .select("*")
+            .eq("survey_id", survey.id)
+            .order("order_index", { ascending: true });
+          
+          return {
+            ...survey,
+            questions: questions || []
+          };
+        })
+      );
+      
+      setSurveys(surveysWithQuestions);
       
       // Fetch responses for each survey
       if (data && data.length > 0) {

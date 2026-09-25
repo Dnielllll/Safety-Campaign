@@ -21,15 +21,56 @@ export default function Surveys() {
   }, [resetTheme]);
 
   useEffect(() => {
-    supabase.from('surveys').select('*').eq('status', 'published').order('created_at', { ascending: false })
-      .then(({ data }) => setSurveys(Array.isArray(data) && data.length > 0 ? data : mockSurveys))
-      .catch(() => setSurveys(mockSurveys));
+    const fetchSurveys = async () => {
+      try {
+        const { data: surveysData } = await supabase
+          .from('surveys')
+          .select('*')
+          .eq('status', 'published')
+          .order('created_at', { ascending: false });
+        
+        if (surveysData && surveysData.length > 0) {
+          // Fetch questions for each survey
+          const surveysWithQuestions = await Promise.all(
+            surveysData.map(async (survey) => {
+              const { data: questions } = await supabase
+                .from('survey_questions')
+                .select('*')
+                .eq('survey_id', survey.id)
+                .order('order_index', { ascending: true });
+              
+              // Convert questions to the frontend format
+              const formattedQuestions = (questions || []).map(q => ({
+                question: q.question_text,
+                type: q.question_type === 'multiple_choice' ? 'radio' : q.question_type === 'rating' ? 'scale' : q.question_type,
+                options: q.options || []
+              }));
+              
+              return {
+                ...survey,
+                questions: formattedQuestions,
+                category: 'Community' // Default category since it's not in the database
+              };
+            })
+          );
+          
+          setSurveys(surveysWithQuestions);
+        } else {
+          setSurveys(mockSurveys);
+        }
+      } catch (error) {
+        console.error('Error fetching surveys:', error);
+        setSurveys(mockSurveys);
+      }
+    };
+    
+    fetchSurveys();
   }, []);
 
   const list = surveys.length ? surveys : mockSurveys;
 
   const calculateScore = (responseData) => {
-    if (!responseData || typeof responseData !== 'object') return 0;
+    if (!responseData || typeof responseData !== 'object' || !selected?.questions) return 0;
     
     let totalScore = 0;
     let maxScore = 0;

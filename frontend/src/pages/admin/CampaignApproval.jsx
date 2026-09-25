@@ -94,6 +94,14 @@ export default function CampaignApproval() {
                 if (creatorData) submittedBy = creatorData.name || creatorData.email || "Staff Member";
               } catch (e) {}
             }
+            
+            // Fetch questions for this survey
+            const { data: questions } = await supabase
+              .from("survey_questions")
+              .select("*")
+              .eq("survey_id", s.id)
+              .order("order_index", { ascending: true });
+            
             return {
               id: s.id,
               type: "survey",
@@ -104,6 +112,7 @@ export default function CampaignApproval() {
               status: s.status,
               created_at: s.created_at,
               previousNotes: s.admin_notes || "",
+              questionsCount: questions?.length || 0
             };
           })
         );
@@ -275,6 +284,11 @@ export default function CampaignApproval() {
                 {c.created_at && (
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" /> {formatDate(c.created_at)}
+                  </span>
+                )}
+                {c.type === "survey" && c.questionsCount !== undefined && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MessageSquare className="h-3 w-3" /> {c.questionsCount} question{c.questionsCount !== 1 ? 's' : ''}
                   </span>
                 )}
               </div>

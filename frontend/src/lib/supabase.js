@@ -230,6 +230,34 @@ export const supabaseHelpers = {
     return { data, error };
   },
 
+  async getSurveyQuestions(surveyId) {
+    const { data, error } = await supabase
+      .from('survey_questions')
+      .select('*')
+      .eq('survey_id', surveyId)
+      .order('order_index', { ascending: true });
+    return { data, error };
+  },
+
+  async createSurveyQuestions(questionsData) {
+    const { data, error } = await supabase.from('survey_questions').insert(questionsData).select();
+    return { data, error };
+  },
+
+  async updateSurveyQuestions(surveyId, questionsData) {
+    // Delete existing questions
+    const { error: deleteError } = await supabase
+      .from('survey_questions')
+      .delete()
+      .eq('survey_id', surveyId);
+    
+    if (deleteError) return { data: null, error: deleteError };
+    
+    // Insert new questions
+    const { data, error } = await supabase.from('survey_questions').insert(questionsData).select();
+    return { data, error };
+  },
+
   async submitSurveyResponse(response) {
     const { data, error } = await supabase.from('survey_responses').insert(response).select().single();
     return { data, error };

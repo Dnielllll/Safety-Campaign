@@ -112,7 +112,31 @@ export default function StaffSurveys() {
           .order("created_at", { ascending: false });
         
         if (error) throw error;
-        setSurveys(data || []);
+        
+        // Fetch questions for each survey
+        const surveysWithQuestions = await Promise.all(
+          (data || []).map(async (survey) => {
+            const { data: questions } = await supabase
+              .from("survey_questions")
+              .select("*")
+              .eq("survey_id", survey.id)
+              .order("order_index", { ascending: true });
+            
+            // Convert questions back to the frontend format
+            const formattedQuestions = (questions || []).map(q => ({
+              question: q.question_text,
+              type: q.question_type === 'multiple_choice' ? 'radio' : q.question_type === 'rating' ? 'scale' : q.question_type,
+              options: q.options || []
+            }));
+            
+            return {
+              ...survey,
+              questions: formattedQuestions
+            };
+          })
+        );
+        
+        setSurveys(surveysWithQuestions);
       }
     } catch (err) {
       console.error("Failed to fetch surveys:", err);
@@ -190,16 +214,30 @@ export default function StaffSurveys() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      const { error } = await supabase.from("surveys").insert({
+      // First create the survey without questions
+      const { data: surveyData, error: surveyError } = await supabase.from("surveys").insert({
         title: surveyForm.title,
         description: surveyForm.description,
         campaign_id: surveyForm.campaign_id || null,
         created_by: user?.id,
-        status: "pending_approval",
-        questions: surveyForm.questions
-      });
+        status: "pending_approval"
+      }).select().single();
 
-      if (error) throw error;
+      if (surveyError) throw surveyError;
+
+      // Then create the survey questions
+      const questionsData = surveyForm.questions.map((q, index) => ({
+        survey_id: surveyData.id,
+        question_text: q.question,
+        question_type: q.type === 'radio' ? 'multiple_choice' : q.type === 'scale' ? 'rating' : q.type === 'text' ? 'text' : 'text',
+        options: q.type === 'radio' ? q.options : null,
+        order_index: index,
+        required: true
+      }));
+
+      const { error: questionsError } = await supabase.from("survey_questions").insert(questionsData);
+
+      if (questionsError) throw questionsError;
 
       closeSurveyDialog();
       await fetchSurveys();
@@ -227,13 +265,28 @@ export default function StaffSurveys() {
     }
   };
 
-  const editSurvey = (survey) => {
+  const editSurvey = async (survey) => {
     setEditingSurvey(survey);
+    
+    // Fetch questions for this survey
+    const { data: questions } = await supabase
+      .from("survey_questions")
+      .select("*")
+      .eq("survey_id", survey.id)
+      .order("order_index", { ascending: true });
+    
+    // Convert questions to frontend format
+    const formattedQuestions = (questions || []).map(q => ({
+      question: q.question_text,
+      type: q.question_type === 'multiple_choice' ? 'radio' : q.question_type === 'rating' ? 'scale' : q.question_type,
+      options: q.options || []
+    }));
+    
     setSurveyForm({
       title: survey.title,
       description: survey.description,
       campaign_id: survey.campaign_id || "",
-      questions: survey.questions || [{ question: "", type: "radio", options: ["Yes", "No"] }]
+      questions: formattedQuestions.length > 0 ? formattedQuestions : [{ question: "", type: "radio", options: ["Yes", "No"] }]
     });
     setSurveyDialogOpen(true);
   };
@@ -245,18 +298,40 @@ export default function StaffSurveys() {
     }
 
     try {
-      const { error } = await supabase
+      // Update the survey
+      const { error: surveyError } = await supabase
         .from("surveys")
         .update({
           title: surveyForm.title,
           description: surveyForm.description,
           campaign_id: surveyForm.campaign_id || null,
-          questions: surveyForm.questions,
           status: "pending_approval"
         })
         .eq("id", editingSurvey.id);
 
-      if (error) throw error;
+      if (surveyError) throw surveyError;
+
+      // Delete existing questions
+      const { error: deleteError } = await supabase
+        .from("survey_questions")
+        .delete()
+        .eq("survey_id", editingSurvey.id);
+
+      if (deleteError) throw deleteError;
+
+      // Insert new questions
+      const questionsData = surveyForm.questions.map((q, index) => ({
+        survey_id: editingSurvey.id,
+        question_text: q.question,
+        question_type: q.type === 'radio' ? 'multiple_choice' : q.type === 'scale' ? 'rating' : q.type === 'text' ? 'text' : 'text',
+        options: q.type === 'radio' ? q.options : null,
+        order_index: index,
+        required: true
+      }));
+
+      const { error: questionsError } = await supabase.from("survey_questions").insert(questionsData);
+
+      if (questionsError) throw questionsError;
 
       setSurveyDialogOpen(false);
       setEditingSurvey(null);
@@ -264,7 +339,7 @@ export default function StaffSurveys() {
         title: "",
         description: "",
         campaign_id: "",
-        questions: [{ question: "", type: "rating" }]
+        questions: [{ question: "", type: "radio", options: ["Yes", "No"] }]
       });
       await fetchSurveys();
       alert("Survey updated successfully!");
