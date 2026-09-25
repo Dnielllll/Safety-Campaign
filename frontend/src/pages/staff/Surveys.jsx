@@ -157,11 +157,18 @@ export default function StaffSurveys() {
         const surveyIds = publishedSurveys.map(s => s.id);
         
         // Fetch all responses for published surveys
-        const { data: responses } = await supabase
+        let query = supabase
           .from("survey_responses")
-          .select("*, survey_id")
-          .in("survey_id", surveyIds)
-          .order("created_at", { ascending: false });
+          .select("*, survey_id");
+        
+        // Use .in() for multiple surveys, .eq() for single survey
+        if (surveyIds.length === 1) {
+          query = query.eq("survey_id", surveyIds[0]);
+        } else {
+          query = query.in("survey_id", surveyIds);
+        }
+        
+        const { data: responses } = await query.order("created_at", { ascending: false });
         
         // Merge survey information with responses
         const responsesWithSurveyInfo = (responses || []).map(response => {
