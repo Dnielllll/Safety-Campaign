@@ -261,9 +261,6 @@ export default function FeedbackManagement() {
                             <div className="flex items-center gap-2 mb-2">
                               <p className="font-medium text-sm">{response.users?.name || 'Resident'}</p>
                               <Badge variant="outline">{relatedSurvey?.title || 'Unknown Survey'}</Badge>
-                              {response.score && (
-                                <Badge variant="secondary">{response.score}/5</Badge>
-                              )}
                             </div>
                             <p className="text-xs text-muted-foreground mb-2">
                               Responded: {new Date(response.submitted_at).toLocaleDateString()}

@@ -69,37 +69,6 @@ export default function StaffSurveys() {
     }
   };
 
-  const calculateScore = (responseData) => {
-    if (!responseData || typeof responseData !== 'object') return 0;
-    
-    let totalScore = 0;
-    let maxScore = 0;
-    
-    Object.values(responseData).forEach((answer) => {
-      // If answer is a number (rating), add it to total
-      if (typeof answer === 'number') {
-        totalScore += answer;
-        maxScore += 5; // Assuming max rating is 5
-      } 
-      // If answer is a positive response (like "Yes"), give full points
-      else if (typeof answer === 'string') {
-        const positiveResponses = ['Yes', 'Always', 'Very aware', 'Regularly'];
-        if (positiveResponses.some(response => answer.toLowerCase().includes(response.toLowerCase()))) {
-          totalScore += 2;
-          maxScore += 2;
-        } else {
-          maxScore += 2;
-        }
-      }
-    });
-    
-    // Normalize to 10-point scale
-    if (maxScore > 0) {
-      return Math.round((totalScore / maxScore) * 10);
-    }
-    return 0;
-  };
-
   const fetchSurveys = async () => {
     setFetching(true);
     try {
@@ -735,15 +704,7 @@ export default function StaffSurveys() {
                             <User className="h-4 w-4 text-muted-foreground" />
                             <p className="font-medium text-sm">Resident</p>
                           </div>
-                          {/* Score display */}
-                          {response.response_data && (
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className="text-sm font-medium">Score:</span>
-                              <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                                {calculateScore(response.response_data)}/10
-                              </Badge>
-                            </div>
-                          )}
+
                         </div>
                       </div>
                     </CardHeader>
