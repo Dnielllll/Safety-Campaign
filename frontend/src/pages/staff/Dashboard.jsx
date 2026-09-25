@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Megaphone, CheckSquare, Bell, Clock, ArrowRight, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth.jsx";
+import { supabase } from "@/lib/supabase";
 
 const stats = [
   { label: "Assigned Campaigns", value: 5, icon: Megaphone, delta: "2 due this week", to: "/staff/campaigns" },
@@ -19,14 +20,61 @@ const tasks = [
   { text: 'Update "Anti-Drug" campaign schedule', due: "Due in 5 days", urgent: false },
 ];
 
-const recentActivity = [
-  { text: 'Admin approved "Community Clean-Up Drive"', time: "1h ago" },
-  { text: 'You submitted "Flood Advisory" for review', time: "3h ago" },
-  { text: 'Feedback received on "Dengue Prevention"', time: "Yesterday" },
-];
+
 
 export default function StaffDashboard() {
   const { user } = useAuth();
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchRecentActivity();
+    }
+  }, [user]);
+
+  const fetchRecentActivity = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .eq('created_by', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+
+      const activity = (data || []).map(campaign => {
+        const date = new Date(campaign.updated_at || campaign.created_at);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        let timeAgo = 'Just now';
+        if (diffMins >= 1 && diffMins < 60) timeAgo = `${diffMins}m ago`;
+        else if (diffHours >= 1 && diffHours < 24) timeAgo = `${diffHours}h ago`;
+        else if (diffDays >= 1 && diffDays < 7) timeAgo = `${diffDays}d ago`;
+        else if (diffDays >= 7) timeAgo = date.toLocaleDateString();
+
+        let text = `Campaign "${campaign.title}" was updated`;
+        if (campaign.status === 'published' || campaign.status === 'active') text = `Campaign "${campaign.title}" is now published`;
+        else if (campaign.status === 'pending_approval' || campaign.status === 'submitted') text = `You submitted "${campaign.title}" for review`;
+        else if (campaign.status === 'needs_revision' || campaign.status === 'rejected') text = `Campaign "${campaign.title}" needs your attention`;
+        else if (campaign.status === 'draft') text = `You saved "${campaign.title}" as draft`;
+
+        return { text, time: timeAgo };
+      });
+
+      setRecentActivity(activity.length > 0 ? activity : [{ text: 'No recent activity yet', time: '' }]);
+    } catch (err) {
+      console.error('Error fetching recent activity:', err);
+      setRecentActivity([{ text: 'Failed to load activity', time: '' }]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">

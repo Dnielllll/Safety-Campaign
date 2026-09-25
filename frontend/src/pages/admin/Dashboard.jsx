@@ -100,18 +100,27 @@ export default function AdminDashboard() {
         let type = 'info';
         let text = '';
 
-        if (campaign.status === 'published') {
+        if (campaign.status === 'published' || campaign.status === 'active') {
           type = 'success';
-          text = `Campaign "${campaign.title || 'Untitled'}" was published`;
-        } else if (campaign.status === 'approved') {
+          text = `Campaign "${campaign.title || 'Untitled'}" is now ${campaign.status}`;
+        } else if (campaign.status === 'approved' || campaign.status === 'completed') {
           type = 'success';
-          text = `Campaign "${campaign.title || 'Untitled'}" was approved`;
-        } else if (campaign.status === 'pending') {
-          type = 'info';
-          text = `Campaign "${campaign.title || 'Untitled'}" submitted for review`;
+          text = `Campaign "${campaign.title || 'Untitled'}" was ${campaign.status}`;
+        } else if (campaign.status === 'pending' || campaign.status === 'pending_approval' || campaign.status === 'submitted') {
+          type = 'warning';
+          text = `Campaign "${campaign.title || 'Untitled'}" is pending review`;
         } else if (campaign.status === 'draft') {
           type = 'info';
-          text = `Draft "${campaign.title || 'Untitled'}" was created`;
+          text = `Draft "${campaign.title || 'Untitled'}" was created/updated`;
+        } else if (campaign.status === 'rejected' || campaign.status === 'needs_revision') {
+          type = 'warning';
+          text = `Campaign "${campaign.title || 'Untitled'}" needs revision or was rejected`;
+        } else if (campaign.status === 'archived' || campaign.status === 'cancelled') {
+          type = 'info';
+          text = `Campaign "${campaign.title || 'Untitled'}" was ${campaign.status}`;
+        } else {
+          type = 'info';
+          text = `Campaign "${campaign.title || 'Untitled'}" was updated (${campaign.status})`;
         }
 
         return { text, time: timeAgo, type };
