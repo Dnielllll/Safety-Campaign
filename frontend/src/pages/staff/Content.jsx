@@ -38,6 +38,7 @@ export default function StaffContent() {
       const { data, error } = await supabase
         .from('campaigns')
         .select('id, title')
+        .in('status', ['published', 'active'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
