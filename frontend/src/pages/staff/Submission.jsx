@@ -88,7 +88,7 @@ export default function CampaignSubmission() {
               user_id: admin.id,
               campaign_id: id,
               title: `New Campaign Submitted for Approval: ${campaign.title}`,
-              message: `A campaign "${campaign.title}" has been submitted by ${user?.name || user?.email || 'Staff'} and is awaiting your approval in Campaign Approval.`,
+              message: `A campaign "${campaign.title}" has been submitted by ${user?.name || user?.email || 'Staff'} and is awaiting your approval in Campaign/Survey Approval.`,
               type: "campaign",
               status: "unread"
             }));
@@ -107,7 +107,7 @@ export default function CampaignSubmission() {
           console.error("Submission - Error creating admin notification:", notifError);
         }
 
-        alert("Campaign submitted for approval! Admins will review it in Campaign Approval.");
+        alert("Campaign submitted for approval! Admins will review it in Campaign/Survey Approval.");
       }
     } catch (err) {
       console.error("Submission - Failed to submit:", err);

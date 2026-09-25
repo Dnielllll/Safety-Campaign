@@ -231,10 +231,10 @@ export default function CampaignApproval() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-            <CheckSquare className="h-6 w-6 text-primary" /> Campaign Approval
+            <CheckSquare className="h-6 w-6 text-primary" /> Campaign/Survey Approval
           </h1>
           <p className="text-muted-foreground text-sm">
-            Review and approve staff-submitted campaigns before they are published.
+            Review and approve staff-submitted campaigns and surveys before they are published.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchPending} disabled={loading}>

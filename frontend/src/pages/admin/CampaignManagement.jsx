@@ -382,7 +382,7 @@ export default function CampaignManagement() {
           <div className="flex items-center gap-2 mt-2">
             <Link to="/admin/approvals" className="text-xs text-primary hover:underline flex items-center gap-1">
               <CheckSquare className="h-3 w-3" />
-              Go to Campaign Approval for submitted campaigns
+              Go to Campaign/Survey Approval for submitted campaigns
               <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
@@ -484,7 +484,7 @@ export default function CampaignManagement() {
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">
-                        Note: To publish campaigns, use the <strong>Campaign Approval</strong> page to review and approve staff-submitted campaigns.
+                        Note: To publish campaigns, use the <strong>Campaign/Survey Approval</strong> page to review and approve staff-submitted campaigns.
                       </p>
                     </div>
                   )}

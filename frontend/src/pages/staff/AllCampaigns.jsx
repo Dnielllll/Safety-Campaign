@@ -180,7 +180,7 @@ export default function AllCampaigns() {
               user_id: admin.id,
               campaign_id: data.id,
               title: `New Campaign Submitted for Approval: ${data.title}`,
-              message: `A campaign "${data.title}" has been submitted by ${user?.name || user?.email || 'Staff'} and is awaiting your approval in Campaign Approval.`,
+              message: `A campaign "${data.title}" has been submitted by ${user?.name || user?.email || 'Staff'} and is awaiting your approval in Campaign/Survey Approval.`,
               type: "campaign",
               status: "unread"
             }));
@@ -207,7 +207,7 @@ export default function AllCampaigns() {
       setForm({ title: "", objectives: "", category: "general" });
       setOpen(false);
       
-      alert("Campaign submitted for approval! Admins will review it in Campaign Approval.");
+      alert("Campaign submitted for approval! Admins will review it in Campaign/Survey Approval.");
       
       // Navigate to Submission page to see the submitted campaign
       navigate('/staff/submission');

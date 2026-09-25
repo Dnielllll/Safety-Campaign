@@ -175,7 +175,7 @@ export default function StaffAIAssistant() {
             user_id: admin.id,
             campaign_id: data.id,
             title: `New Campaign Submitted for Approval: ${data.title}`,
-            message: `A new campaign "${data.title}" has been submitted by ${user?.name || user?.email || 'Staff'} and is awaiting your approval in Campaign Approval.`,
+            message: `A new campaign "${data.title}" has been submitted by ${user?.name || user?.email || 'Staff'} and is awaiting your approval in Campaign/Survey Approval.`,
             type: "campaign",
             status: "unread"
           }));
@@ -189,7 +189,7 @@ export default function StaffAIAssistant() {
         console.error("Error creating admin notification:", notifError);
       }
 
-      setSuccessMsg("✅ Campaign submitted for approval! The admin will review it in Campaign Approval.");
+      setSuccessMsg("✅ Campaign submitted for approval! The admin will review it in Campaign/Survey Approval.");
       setDraft("");
       setPrompt("");
     } catch (err) {

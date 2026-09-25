@@ -267,7 +267,7 @@ export default function StaffCampaigns() {
                 user_id: admin.id,
                 campaign_id: campaignData.id,
                 title: `New Campaign Submitted for Approval: ${campaignData.title}`,
-                message: `A campaign "${campaignData.title}" has been submitted by ${user?.name || user?.email || 'Staff'} and is awaiting your approval in Campaign Approval.`,
+                message: `A campaign "${campaignData.title}" has been submitted by ${user?.name || user?.email || 'Staff'} and is awaiting your approval in Campaign/Survey Approval.`,
                 type: "campaign",
                 status: "unread"
               }));
@@ -287,7 +287,7 @@ export default function StaffCampaigns() {
           console.error("Error creating admin notification:", notifError);
         }
 
-        alert("Campaign submitted for approval! Admins will review it in Campaign Approval.");
+        alert("Campaign submitted for approval! Admins will review it in Campaign/Survey Approval.");
         // Navigate to Submission page to see the submitted campaign
         navigate('/staff/submission');
       }
