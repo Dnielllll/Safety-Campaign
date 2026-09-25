@@ -38,14 +38,38 @@ class CampaignController extends Controller
 
     public function index(Request $request)
     {
-        // Absolute basic return for debugging
-        return response()->json([
-            'message' => 'Campaigns index working',
-            'campaigns' => [
-                ['id' => 1, 'title' => 'Test Campaign 1', 'status' => 'published'],
-                ['id' => 2, 'title' => 'Test Campaign 2', 'status' => 'draft']
-            ]
-        ]);
+        try {
+            $queryParams = 'select=id,title,status,priority,category,campaign_type,created_at&order=created_at.desc';
+
+            // Optional status filter
+            if ($request->has('status') && $request->status) {
+                $queryParams .= '&status=eq.' . urlencode($request->status);
+            }
+
+            $response = Http::withoutVerifying()->withHeaders([
+                'apikey'        => $this->supabaseKey,
+                'Authorization' => "Bearer {$this->supabaseKey}",
+                'Accept'        => 'application/json',
+            ])->get("{$this->supabaseUrl}/rest/v1/campaigns?{$queryParams}");
+
+            if (!$response->successful()) {
+                Log::warning('Supabase campaigns fetch failed', [
+                    'status' => $response->status(),
+                    'body'   => $response->body(),
+                ]);
+                return response()->json(['campaigns' => [], 'message' => 'Failed to fetch from Supabase'], 200);
+            }
+
+            $campaigns = $response->json();
+
+            return response()->json([
+                'campaigns' => is_array($campaigns) ? $campaigns : [],
+                'message'   => 'Campaigns fetched successfully',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch campaigns', ['error' => $e->getMessage()]);
+            return response()->json(['campaigns' => [], 'message' => 'Server error: ' . $e->getMessage()], 200);
+        }
     }
 
     public function store(Request $request)
