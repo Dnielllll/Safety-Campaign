@@ -303,21 +303,13 @@ export default function StaffSurveys() {
   const submitSurvey = async (id) => {
     setLoading(true);
     try {
-      const survey = surveys.find(s => s.id === id);
-      const updateData = { status: "pending_approval" };
-      
-      // Clear admin_notes when resubmitting after revision/rejection
-      if (survey && survey.admin_notes) {
-        updateData.admin_notes = null;
-      }
-      
       const { error } = await supabase
         .from("surveys")
-        .update(updateData)
+        .update({ status: "pending_approval" })
         .eq("id", id);
 
       if (error) throw error;
-      setSurveys((prev) => prev.map((s) => s.id === id ? { ...s, ...updateData } : s));
+      setSurveys((prev) => prev.map((s) => s.id === id ? { ...s, status: "pending_approval" } : s));
     } catch (err) {
       console.error("Failed to submit survey:", err);
     } finally {
