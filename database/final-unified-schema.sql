@@ -804,7 +804,7 @@ CREATE POLICY "Admins can delete surveys" ON public.surveys
 -- Survey Questions RLS Policies
 DROP POLICY IF EXISTS "Staff can manage survey questions" ON public.survey_questions;
 CREATE POLICY "Staff can manage survey questions" ON public.survey_questions
-  FOR ALL USING (public.is_admin_or_staff());
+  FOR ALL USING (public.is_admin_or_staff()) WITH CHECK (public.is_admin_or_staff());
 
 -- Survey Responses RLS Policies
 DROP POLICY IF EXISTS "Users can view own survey responses" ON public.survey_responses;
