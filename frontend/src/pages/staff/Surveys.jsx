@@ -195,7 +195,7 @@ export default function StaffSurveys() {
         description: surveyForm.description,
         campaign_id: surveyForm.campaign_id || null,
         created_by: user?.id,
-        status: "draft",
+        status: "pending_approval",
         questions: surveyForm.questions
       });
 
@@ -203,10 +203,10 @@ export default function StaffSurveys() {
 
       closeSurveyDialog();
       await fetchSurveys();
-      alert("Survey created successfully!");
+      alert("Survey created successfully and submitted for approval!");
     } catch (err) {
       console.error("Error creating survey:", err);
-      alert("Failed to create survey");
+      alert("Failed to create survey: " + err.message);
     }
   };
 
@@ -251,7 +251,8 @@ export default function StaffSurveys() {
           title: surveyForm.title,
           description: surveyForm.description,
           campaign_id: surveyForm.campaign_id || null,
-          questions: surveyForm.questions
+          questions: surveyForm.questions,
+          status: "pending_approval"
         })
         .eq("id", editingSurvey.id);
 

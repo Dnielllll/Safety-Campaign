@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { CheckSquare, X, MessageSquare, Loader2, RefreshCw, FileText, AlertTriangle, Calendar, User } from "lucide-react";
 import { supabase } from "@/lib/supabase.js";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -41,10 +41,9 @@ export default function CampaignApproval() {
         throw campaignsError;
       }
 
+      let pendingItems = [];
+
       if (campaignsData && campaignsData.length > 0) {
-        console.log("Found pending campaigns:", campaignsData.length);
-        
-        // Fetch creator information for each campaign
         const campaignsWithCreators = await Promise.all(
           campaignsData.map(async (c) => {
             let submittedBy = "Staff Member";
@@ -55,20 +54,15 @@ export default function CampaignApproval() {
                   .select("name, email")
                   .eq("id", c.created_by)
                   .single();
-                
-                if (creatorData) {
-                  submittedBy = creatorData.name || creatorData.email || "Staff Member";
-                }
-              } catch (creatorError) {
-                console.error("Error fetching creator:", creatorError);
-              }
+                if (creatorData) submittedBy = creatorData.name || creatorData.email || "Staff Member";
+              } catch (e) {}
             }
-            
             return {
               id: c.id,
+              type: "campaign",
               title: c.title || "Untitled Campaign",
               description: c.description || "",
-              submittedBy: submittedBy,
+              submittedBy,
               category: c.campaign_type || "general",
               status: c.status,
               created_at: c.created_at,
@@ -76,14 +70,52 @@ export default function CampaignApproval() {
             };
           })
         );
-        
-        setPending(campaignsWithCreators);
-      } else {
-        console.log("No pending campaigns found");
-        setPending([]);
+        pendingItems = [...pendingItems, ...campaignsWithCreators];
       }
+
+      // Fetch pending surveys
+      const { data: surveysData, error: surveysError } = await supabase
+        .from("surveys")
+        .select("id, title, description, status, created_at, created_by, admin_notes")
+        .eq("status", "pending_approval")
+        .order("created_at", { ascending: false });
+
+      if (!surveysError && surveysData && surveysData.length > 0) {
+        const surveysWithCreators = await Promise.all(
+          surveysData.map(async (s) => {
+            let submittedBy = "Staff Member";
+            if (s.created_by) {
+              try {
+                const { data: creatorData } = await supabase
+                  .from("users")
+                  .select("name, email")
+                  .eq("id", s.created_by)
+                  .single();
+                if (creatorData) submittedBy = creatorData.name || creatorData.email || "Staff Member";
+              } catch (e) {}
+            }
+            return {
+              id: s.id,
+              type: "survey",
+              title: s.title || "Untitled Survey",
+              description: s.description || "",
+              submittedBy,
+              category: "survey",
+              status: s.status,
+              created_at: s.created_at,
+              previousNotes: s.admin_notes || "",
+            };
+          })
+        );
+        pendingItems = [...pendingItems, ...surveysWithCreators];
+      }
+
+      // Sort all items by created_at descending
+      pendingItems.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      
+      setPending(pendingItems);
     } catch (err) {
-      console.error("Error fetching pending campaigns:", err);
+      console.error("Error fetching pending items:", err);
       setPending([]);
     } finally {
       setLoading(false);
@@ -96,40 +128,54 @@ export default function CampaignApproval() {
     console.log("Campaign Approval - Deciding campaign:", { id, decision });
 
     try {
-      let endpoint = "";
-      let body = {};
+      const item = pending.find(c => c.id === id);
+      if (!item) return;
 
-      if (decision === "approved") {
-        endpoint = `${API_BASE}/campaigns/${id}/approve`;
-        body = { admin_notes: revisionComment };
-      } else if (decision === "revision") {
-        endpoint = `${API_BASE}/campaigns/${id}/request-revision`;
-        body = { admin_notes: revisionComment };
-      } else if (decision === "rejected") {
-        endpoint = `${API_BASE}/campaigns/${id}/reject`;
-        body = { admin_notes: revisionComment };
+      if (item.type === "survey") {
+        // Handle Survey Approval via direct Supabase update
+        let newStatus = "pending_approval";
+        if (decision === "approved") newStatus = "published";
+        else if (decision === "revision") newStatus = "draft";
+        else if (decision === "rejected") newStatus = "rejected";
+
+        const { error } = await supabase
+          .from("surveys")
+          .update({ status: newStatus, admin_notes: revisionComment })
+          .eq("id", id);
+        
+        if (error) throw error;
+        
+      } else {
+        // Handle Campaign Approval via API
+        let endpoint = "";
+        let body = {};
+
+        if (decision === "approved") {
+          endpoint = `${API_BASE}/campaigns/${id}/approve`;
+          body = { admin_notes: revisionComment };
+        } else if (decision === "revision") {
+          endpoint = `${API_BASE}/campaigns/${id}/request-revision`;
+          body = { admin_notes: revisionComment };
+        } else if (decision === "rejected") {
+          endpoint = `${API_BASE}/campaigns/${id}/reject`;
+          body = { admin_notes: revisionComment };
+        }
+
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${user?.token || ""}`,
+          },
+          body: JSON.stringify(body),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || data.error || "Unknown error");
+        }
       }
-
-      console.log("Campaign Approval - Calling API:", { endpoint, body });
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${user?.token || ""}`,
-        },
-        body: JSON.stringify(body),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.error("Error updating campaign:", data);
-        alert(`Failed to update campaign: ${data.message || data.error || "Unknown error"}`);
-        throw new Error(data.message || data.error);
-      }
-
-      console.log("Campaign Approval - Campaign updated successfully", data);
 
       // Create notification for approved campaigns
       if (decision === "approved") {
@@ -209,8 +255,13 @@ export default function CampaignApproval() {
           <Card key={c.id} className="flex flex-col">
             <CardHeader>
               <div className="flex items-center justify-between mb-1">
-                <Badge variant="warning">Pending Approval</Badge>
-                <Badge variant="outline">{c.category.replace(/_/g, " ")}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="warning">Pending</Badge>
+                  <Badge variant={c.type === "survey" ? "secondary" : "outline"} className={c.type === "survey" ? "bg-purple-100 text-purple-800 border-purple-200" : ""}>
+                    {c.type === "survey" ? "Survey" : "Campaign"}
+                  </Badge>
+                </div>
+                {c.type !== "survey" && <Badge variant="outline">{c.category.replace(/_/g, " ")}</Badge>}
               </div>
               <CardTitle className="text-base flex items-center gap-2">
                 <FileText className="h-4 w-4 text-muted-foreground" />
@@ -338,8 +389,8 @@ export default function CampaignApproval() {
         {!loading && pending.length === 0 && (
           <div className="col-span-full text-center py-12 text-muted-foreground">
             <CheckSquare className="h-10 w-10 mx-auto mb-3 opacity-30" />
-            <p className="font-medium">No campaigns pending approval</p>
-            <p className="text-xs mt-1">When staff submit drafts for review, they will appear here.</p>
+            <p className="font-medium">No items pending approval</p>
+            <p className="text-xs mt-1">When staff submit campaigns or surveys for review, they will appear here.</p>
           </div>
         )}
       </div>
