@@ -258,13 +258,17 @@ export default function UserManagement() {
         .eq('id', userId)
         .single();
       
-      console.log('Calling secure Laravel endpoint to delete user:', userId);
-      
-      // Use the secure Laravel backend which calls the Supabase Admin API server-side.
-      // This deletes both the auth account AND the profile row.
-      await UsersAPI.remove(userId);
+      // Delete user profile from public.users table directly via Supabase
+      const { error: deleteError } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', userId);
 
-      console.log('User fully deleted (auth + profile).');
+      if (deleteError) {
+        throw new Error(deleteError.message);
+      }
+
+      console.log('User profile deleted successfully.');
       alert('User deleted successfully.');
       
       // Log user deletion event
@@ -296,20 +300,14 @@ export default function UserManagement() {
         .select('id, email, role')
         .in('id', userIds);
       
-      // Delete each user using the secure Laravel backend
-      let failedCount = 0;
-      
-      for (const userId of userIds) {
-        try {
-          await UsersAPI.remove(userId);
-        } catch (err) {
-          console.error('Error deleting user:', userId, err);
-          failedCount++;
-        }
-      }
+      // Delete users directly via Supabase
+      const { error: deleteError } = await supabase
+        .from('users')
+        .delete()
+        .in('id', userIds);
 
-      if (failedCount > 0) {
-        alert(`Successfully deleted ${userIds.length - failedCount} users. ${failedCount} users failed to delete.`);
+      if (deleteError) {
+        throw new Error(deleteError.message);
       }
       
       // Log bulk user deletion event
