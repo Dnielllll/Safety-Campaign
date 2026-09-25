@@ -214,16 +214,38 @@ export default function StaffSurveys() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      // First create the survey without questions
-      const { data: surveyData, error: surveyError } = await supabase.from("surveys").insert({
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+      
+      console.log("Creating survey with data:", {
         title: surveyForm.title,
         description: surveyForm.description,
         campaign_id: surveyForm.campaign_id || null,
-        created_by: user?.id,
+        created_by: user.id,
         status: "draft"
-      }).select().single();
+      });
+      
+      // Prepare survey data - ensure campaign_id is null if empty
+      const surveyDataToInsert = {
+        title: surveyForm.title,
+        description: surveyForm.description || null,
+        created_by: user.id,
+        status: "draft"
+      };
+      
+      // Only add campaign_id if it's not empty
+      if (surveyForm.campaign_id && surveyForm.campaign_id !== "") {
+        surveyDataToInsert.campaign_id = surveyForm.campaign_id;
+      }
+      
+      // First create the survey without questions
+      const { data: surveyData, error: surveyError } = await supabase.from("surveys").insert(surveyDataToInsert).select().single();
 
-      if (surveyError) throw surveyError;
+      if (surveyError) {
+        console.error("Survey creation error:", surveyError);
+        throw surveyError;
+      }
 
       // Then create the survey questions
       const questionsData = surveyForm.questions.map((q, index) => ({
@@ -237,7 +259,10 @@ export default function StaffSurveys() {
 
       const { error: questionsError } = await supabase.from("survey_questions").insert(questionsData);
 
-      if (questionsError) throw questionsError;
+      if (questionsError) {
+        console.error("Questions creation error:", questionsError);
+        throw questionsError;
+      }
 
       closeSurveyDialog();
       await fetchSurveys();
@@ -298,15 +323,22 @@ export default function StaffSurveys() {
     }
 
     try {
+      // Prepare survey data
+      const surveyDataToUpdate = {
+        title: surveyForm.title,
+        description: surveyForm.description || null,
+        status: "draft"
+      };
+      
+      // Only add campaign_id if it's not empty
+      if (surveyForm.campaign_id && surveyForm.campaign_id !== "") {
+        surveyDataToUpdate.campaign_id = surveyForm.campaign_id;
+      }
+      
       // Update the survey
       const { error: surveyError } = await supabase
         .from("surveys")
-        .update({
-          title: surveyForm.title,
-          description: surveyForm.description,
-          campaign_id: surveyForm.campaign_id || null,
-          status: "draft"
-        })
+        .update(surveyDataToUpdate)
         .eq("id", editingSurvey.id);
 
       if (surveyError) throw surveyError;
