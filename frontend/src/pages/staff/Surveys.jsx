@@ -220,7 +220,7 @@ export default function StaffSurveys() {
         description: surveyForm.description,
         campaign_id: surveyForm.campaign_id || null,
         created_by: user?.id,
-        status: "pending_approval"
+        status: "draft"
       }).select().single();
 
       if (surveyError) throw surveyError;
@@ -241,7 +241,7 @@ export default function StaffSurveys() {
 
       closeSurveyDialog();
       await fetchSurveys();
-      alert("Survey created successfully and submitted for approval!");
+      alert("Survey draft created successfully! You can submit it for approval when ready.");
     } catch (err) {
       console.error("Error creating survey:", err);
       alert("Failed to create survey: " + err.message);
@@ -305,7 +305,7 @@ export default function StaffSurveys() {
           title: surveyForm.title,
           description: surveyForm.description,
           campaign_id: surveyForm.campaign_id || null,
-          status: "pending_approval"
+          status: "draft"
         })
         .eq("id", editingSurvey.id);
 
