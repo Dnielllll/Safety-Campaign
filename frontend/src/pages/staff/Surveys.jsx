@@ -305,11 +305,11 @@ export default function StaffSurveys() {
     try {
       const { error } = await supabase
         .from("surveys")
-        .update({ status: "pending_approval", admin_notes: null })
+        .update({ status: "pending_approval" })
         .eq("id", id);
 
       if (error) throw error;
-      setSurveys((prev) => prev.map((s) => s.id === id ? { ...s, status: "pending_approval", admin_notes: null } : s));
+      setSurveys((prev) => prev.map((s) => s.id === id ? { ...s, status: "pending_approval" } : s));
     } catch (err) {
       console.error("Failed to submit survey:", err);
     } finally {
