@@ -138,8 +138,14 @@ export default function Register() {
         throw new Error("Registration failed. Please try again.");
       }
 
-      // Create the user record in the public.users table
-      const { error: insertError } = await supabase.from('users').insert({
+      // Supabase may return an existing user without error for duplicate emails
+      // Detect this by checking if identities array is empty (fake signup)
+      if (data.user.identities && data.user.identities.length === 0) {
+        throw new Error("This email is already registered. Please log in instead.");
+      }
+
+      // Create the user record in the public.users table (upsert to handle edge cases)
+      const { error: insertError } = await supabase.from('users').upsert({
         id: data.user.id,
         email: form.email,
         name: form.name.trim(),
@@ -147,7 +153,7 @@ export default function Register() {
         address: form.address.trim(),
         role: 'citizen',
         is_active: true
-      });
+      }, { onConflict: 'id' });
 
       if (insertError) {
         console.error("Error creating user record:", insertError);
