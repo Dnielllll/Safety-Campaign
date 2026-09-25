@@ -92,24 +92,7 @@ export default function CookieConsent() {
             </div>
           </div>
 
-          {/* Info pills */}
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "18px" }}>
-            {[
-              { icon: "🔒", label: "Secure login sessions" },
-              { icon: "🔔", label: "Notification preferences" },
-              { icon: "⚙️", label: "System settings" },
-            ].map(({ icon, label }) => (
-              <div key={label} style={{
-                display: "flex", alignItems: "center", gap: "6px",
-                background: "#fff7ed", border: "1px solid #fed7aa",
-                borderRadius: "20px", padding: "4px 12px",
-                fontSize: "12px", color: "#9a3412", fontWeight: 500,
-              }}>
-                <span>{icon}</span>
-                <span>{label}</span>
-              </div>
-            ))}
-          </div>
+
 
           {/* Privacy note */}
           <p style={{ margin: "0 0 18px", fontSize: "12px", color: "#9ca3af", lineHeight: "1.5" }}>

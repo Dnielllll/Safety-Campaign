@@ -89,7 +89,6 @@ const adminNavGroups = [
     items: [
       { to: "/admin/campaigns", label: "Campaign Management", icon: Megaphone },
       { to: "/admin/ai-assistant", label: "AI Assistant", icon: Sparkles },
-      { to: "/admin/content", label: "Content", icon: FileText },
       { to: "/admin/approvals", label: "Approvals", icon: CheckSquare },
       { to: "/admin/distribution", label: "Distribution", icon: Share2 },
     ],

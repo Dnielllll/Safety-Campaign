@@ -36,7 +36,6 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import UserManagement from "@/pages/admin/UserManagement";
 import CampaignManagement from "@/pages/admin/CampaignManagement";
 import AIContentAssistant from "@/pages/admin/AIContentAssistant";
-import ContentManagement from "@/pages/admin/ContentManagement";
 import CampaignApproval from "@/pages/admin/CampaignApproval";
 import Distribution from "@/pages/admin/Distribution";
 import NotificationManagement from "@/pages/admin/NotificationManagement";
@@ -163,7 +162,6 @@ export default function App() {
         <Route path="users" element={<UserManagement />} />
         <Route path="campaigns" element={<CampaignManagement />} />
         <Route path="ai-assistant" element={<AIContentAssistant />} />
-        <Route path="content" element={<ContentManagement />} />
         <Route path="approvals" element={<CampaignApproval />} />
         <Route path="distribution" element={<Distribution />} />
         <Route path="notifications" element={<NotificationManagement />} />
