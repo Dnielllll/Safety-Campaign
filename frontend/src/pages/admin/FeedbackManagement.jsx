@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { MessageSquareText, Reply, RefreshCw, Loader2, ClipboardList, User, CheckCircle2, XCircle, AlertTriangle, Edit } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MessageSquareText, Reply, RefreshCw, Loader2, ClipboardList } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabaseHelpers } from "@/lib/supabase.js";
@@ -29,7 +27,6 @@ export default function FeedbackManagement() {
   const [surveys, setSurveys] = useState([]);
   const [surveyResponses, setSurveyResponses] = useState([]);
   const [surveyLoading, setSurveyLoading] = useState(false);
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(null);
 
   useEffect(() => {
     fetchFeedback();
@@ -126,45 +123,6 @@ export default function FeedbackManagement() {
     }
   };
 
-  const approveSurvey = async (surveyId) => {
-    try {
-      const { error } = await supabase
-        .from("surveys")
-        .update({ 
-          status: "published",
-          published_at: new Date().toISOString(),
-          admin_notes: null
-        })
-        .eq("id", surveyId);
-
-      if (error) throw error;
-      await fetchSurveys();
-      alert("Survey approved and published successfully!");
-    } catch (err) {
-      console.error("Error approving survey:", err);
-      alert("Failed to approve survey");
-    }
-  };
-
-  const rejectSurvey = async (surveyId, notes) => {
-    try {
-      const { error } = await supabase
-        .from("surveys")
-        .update({ 
-          status: "rejected",
-          admin_notes: notes
-        })
-        .eq("id", surveyId);
-
-      if (error) throw error;
-      await fetchSurveys();
-      alert("Survey rejected with feedback. Staff will be notified to make revisions.");
-    } catch (err) {
-      console.error("Error rejecting survey:", err);
-      alert("Failed to reject survey");
-    }
-  };
-
 
 
   return (
@@ -174,7 +132,7 @@ export default function FeedbackManagement() {
           <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
             <MessageSquareText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Feedback & Survey Management
           </h1>
-          <p className="text-muted-foreground text-xs sm:text-sm">Review resident feedback, survey responses, and approve/reject staff-created surveys.</p>
+          <p className="text-muted-foreground text-xs sm:text-sm">Review resident feedback and survey responses.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <Button variant="outline" onClick={handleRefresh} disabled={refreshing} className="w-full sm:w-auto">
@@ -188,7 +146,6 @@ export default function FeedbackManagement() {
         <TabsList>
           <TabsTrigger value="feedback"><MessageSquareText className="h-4 w-4 mr-2" /> Feedback Messages</TabsTrigger>
           <TabsTrigger value="survey-results"><ClipboardList className="h-4 w-4 mr-2" /> Survey Feedback</TabsTrigger>
-          <TabsTrigger value="surveys"><ClipboardList className="h-4 w-4 mr-2" /> Survey Approval</TabsTrigger>
         </TabsList>
 
         <TabsContent value="feedback">
@@ -257,130 +214,6 @@ export default function FeedbackManagement() {
           )}
         </TabsContent>
 
-        <TabsContent value="surveys">
-          {surveyLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {surveys.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <ClipboardList className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                  <p className="font-medium">No surveys pending approval.</p>
-                  <p className="text-xs mt-1">Staff-created surveys awaiting review will appear here.</p>
-                </div>
-              ) : (
-                surveys.map((survey) => {
-                  const responses = surveyResponses.filter(r => r.survey_id === survey.id);
-                  const avgScore = responses.length > 0 && responses.some(r => r.score)
-                    ? (responses.filter(r => r.score).reduce((sum, r) => sum + r.score, 0) / responses.filter(r => r.score).length).toFixed(1)
-                    : null;
-                  
-                  const statusVariant = {
-                    draft: 'outline',
-                    pending_approval: 'warning',
-                    published: 'success',
-                    rejected: 'destructive',
-                    archived: 'secondary'
-                  }[survey.status] || 'secondary';
-
-                  const isPending = survey.status === 'pending_approval';
-                  const isRejected = survey.status === 'rejected';
-
-                  return (
-                    <Card key={survey.id} className={isPending ? "border-amber-300 bg-amber-50/30" : isRejected ? "border-red-300 bg-red-50/30" : ""}>
-                      <CardHeader>
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <CardTitle className="text-base">{survey.title}</CardTitle>
-                            <p className="text-sm text-muted-foreground mt-1">{survey.description}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={statusVariant}>
-                              {survey.status.replace('_', ' ')}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                          <User className="h-3 w-3" />
-                          Created by: {survey.users?.name || 'Staff'}
-                          {survey.campaigns && (
-                            <span>• Campaign: {survey.campaigns.title}</span>
-                          )}
-                        </div>
-                        {isRejected && survey.admin_notes && (
-                          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md text-xs">
-                            <span className="font-semibold text-red-800">Admin notes:</span> {survey.admin_notes}
-                          </div>
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                          <div className="text-center p-3 bg-muted/50 rounded-md">
-                            <p className="text-2xl font-bold text-primary">{responses.length}</p>
-                            <p className="text-xs text-muted-foreground">Responses</p>
-                          </div>
-                          {avgScore && (
-                            <div className="text-center p-3 bg-muted/50 rounded-md">
-                              <p className="text-2xl font-bold text-primary">{avgScore}</p>
-                              <p className="text-xs text-muted-foreground">Avg Score</p>
-                            </div>
-                          )}
-                          <div className="text-center p-3 bg-muted/50 rounded-md">
-                            <p className="text-2xl font-bold text-primary">{survey.questions?.length || 0}</p>
-                            <p className="text-xs text-muted-foreground">Questions</p>
-                          </div>
-                          <div className="text-center p-3 bg-muted/50 rounded-md">
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(survey.created_at).toLocaleDateString()}
-                            </p>
-                            <p className="text-xs text-muted-foreground">Created</p>
-                          </div>
-                        </div>
-                        {responses.length > 0 && (
-                          <div className="space-y-2">
-                            <p className="text-sm font-semibold">Response Summary:</p>
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                              <div className="p-2 bg-muted/30 rounded">
-                                <span className="font-medium">Total Responses:</span> {responses.length}
-                              </div>
-                              {avgScore && (
-                                <div className="p-2 bg-muted/30 rounded">
-                                  <span className="font-medium">Average Score:</span> {avgScore}/5
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </CardContent>
-                      {isPending && (
-                        <CardFooter className="flex gap-2">
-                          <Button 
-                            onClick={() => approveSurvey(survey.id)}
-                            className="flex-1"
-                          >
-                            <CheckCircle2 className="h-4 w-4 mr-1" />
-                            Approve & Publish
-                          </Button>
-                          <Button 
-                            variant="destructive" 
-                            className="flex-1"
-                            onClick={() => setRejectDialogOpen(survey.id)}
-                          >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Reject
-                          </Button>
-                        </CardFooter>
-                      )}
-                    </Card>
-                  );
-                })
-              )}
-            </div>
-          )}
-        </TabsContent>
-
         <TabsContent value="survey-results">
           {surveyLoading ? (
             <div className="flex items-center justify-center py-12">
@@ -435,39 +268,6 @@ export default function FeedbackManagement() {
           )}
         </TabsContent>
       </Tabs>
-
-      {rejectDialogOpen && (
-        <Dialog open={!!rejectDialogOpen} onOpenChange={(open) => !open && setRejectDialogOpen(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Reject Survey</DialogTitle>
-            </DialogHeader>
-            <p className="text-sm text-muted-foreground">
-              Please provide feedback for the staff member about why this survey was rejected and what revisions are needed.
-            </p>
-            <Textarea 
-              placeholder="Enter your feedback and revision requirements..."
-              id={`reject-notes-${rejectDialogOpen}`}
-            />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setRejectDialogOpen(null)}>Cancel</Button>
-              <Button 
-                onClick={() => {
-                  const notes = document.getElementById(`reject-notes-${rejectDialogOpen}`).value;
-                  if (notes.trim()) {
-                    rejectSurvey(rejectDialogOpen, notes);
-                    setRejectDialogOpen(null);
-                  } else {
-                    alert("Please provide feedback for rejection");
-                  }
-                }}
-              >
-                Reject Survey
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 }
