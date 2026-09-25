@@ -138,6 +138,22 @@ export default function Register() {
         throw new Error("Registration failed. Please try again.");
       }
 
+      // Create the user record in the public.users table
+      const { error: insertError } = await supabase.from('users').insert({
+        id: data.user.id,
+        email: form.email,
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        address: form.address.trim(),
+        role: 'citizen',
+        is_active: true
+      });
+
+      if (insertError) {
+        console.error("Error creating user record:", insertError);
+        throw new Error("Failed to create user profile. Please try again.");
+      }
+
       // Send welcome email via notification-service (your custom welcome email)
       try {
         console.log('Sending welcome email to:', form.email, 'for user:', form.name.trim());
