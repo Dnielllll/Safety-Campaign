@@ -288,22 +288,24 @@ export default function SafetyCampaigns() {
               </button>
             </div>
             <CardTitle className="text-2xl">{displayTitle}</CardTitle>
+            <div className="mt-4">
+              <Button onClick={() => handleListen(selected)} variant="default" className="w-full sm:w-auto">
+                {playing === selected.id ? (
+                  <>
+                    <Square className="h-4 w-4 mr-2" />
+                    {t.stop}
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="h-4 w-4 mr-2" />
+                    {t.listenVoiceAnnouncement}
+                  </>
+                )}
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm whitespace-pre-line">{displayContent}</p>
-            <Button onClick={() => handleListen(selected)} variant="outline">
-              {playing === selected.id ? (
-                <>
-                  <Square className="h-4 w-4 mr-2" />
-                  {t.stop}
-                </>
-              ) : (
-                <>
-                  <Volume2 className="h-4 w-4 mr-2" />
-                  {t.listenVoiceAnnouncement}
-                </>
-              )}
-            </Button>
+          <CardContent className="space-y-4 pt-0">
+            <p className="text-sm whitespace-pre-line mt-4">{displayContent}</p>
 
             {contentList.length > 0 && (
               <div className="mt-6">
