@@ -39,6 +39,7 @@ export default function StaffContent() {
         .from('campaigns')
         .select('id, title')
         .in('status', ['published', 'active'])
+        .eq('created_by', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -60,7 +61,8 @@ export default function StaffContent() {
 
       const { data, error } = await supabase
         .from('content')
-        .select('*, campaigns(title)')
+        .select('*, campaigns!inner(title, created_by)')
+        .eq('campaigns.created_by', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
