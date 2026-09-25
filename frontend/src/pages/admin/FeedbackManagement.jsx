@@ -69,7 +69,13 @@ export default function FeedbackManagement() {
           .select("*, survey_id, users(name)")
           .in("survey_id", surveyIds);
         
-        setSurveyResponses(responses || []);
+        // Map submitted_at to created_at for compatibility with existing code
+        const responsesWithCreatedAt = (responses || []).map(response => ({
+          ...response,
+          created_at: response.submitted_at
+        }));
+        
+        setSurveyResponses(responsesWithCreatedAt);
       }
     } catch (err) {
       console.error("Error fetching surveys:", err);
@@ -260,7 +266,7 @@ export default function FeedbackManagement() {
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground mb-2">
-                              Responded: {new Date(response.created_at).toLocaleDateString()}
+                              Responded: {new Date(response.submitted_at).toLocaleDateString()}
                             </p>
                             {response.comments && (
                               <div className="p-3 bg-muted/50 rounded-md mb-2">

@@ -168,7 +168,7 @@ export default function StaffSurveys() {
           query = query.in("survey_id", surveyIds);
         }
         
-        const { data: responses } = await query.order("created_at", { ascending: false });
+        const { data: responses } = await query.order("submitted_at", { ascending: false });
         
         // Merge survey information with responses
         const responsesWithSurveyInfo = (responses || []).map(response => {
@@ -176,7 +176,9 @@ export default function StaffSurveys() {
           return {
             ...response,
             survey_title: survey?.title || 'Unknown Survey',
-            survey_created_at: survey?.created_at
+            survey_created_at: survey?.created_at,
+            // Map submitted_at to created_at for compatibility with existing code
+            created_at: response.submitted_at
           };
         });
         
@@ -726,7 +728,7 @@ export default function StaffSurveys() {
                           <div className="flex items-center gap-2 mb-2">
                             <Badge variant="outline">{response.survey_title}</Badge>
                             <p className="text-xs text-muted-foreground">
-                              {new Date(response.created_at).toLocaleDateString()}
+                              {new Date(response.submitted_at).toLocaleDateString()}
                             </p>
                           </div>
                           <div className="flex items-center gap-2 mb-1">
