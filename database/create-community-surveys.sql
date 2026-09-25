@@ -1,5 +1,6 @@
 -- Create Community Surveys for Daniel Rivera (danieljimenezjr30@gmail.com)
 -- Run this in Supabase Dashboard -> SQL Editor -> New Query
+-- All surveys created as 'draft' status so Daniel can edit and submit for approval
 
 -- First, get Daniel Rivera's user ID
 DO $$
@@ -24,7 +25,7 @@ BEGIN
         'Fire Safety Awareness Survey',
         'Help us assess the community''s level of fire safety awareness.',
         daniel_user_id,
-        'published'
+        'draft'
     )
     RETURNING id INTO survey_id;
     
@@ -44,7 +45,7 @@ BEGIN
         'Dengue Prevention Campaign Evaluation',
         'Evaluate the effectiveness of the dengue prevention campaign.',
         daniel_user_id,
-        'published'
+        'draft'
     )
     RETURNING id INTO survey_id;
     
@@ -64,7 +65,7 @@ BEGIN
         'Flood Evacuation Route Awareness',
         'Assess awareness of flood evacuation procedures and routes.',
         daniel_user_id,
-        'published'
+        'draft'
     )
     RETURNING id INTO survey_id;
     
@@ -84,7 +85,7 @@ BEGIN
         'Anti-Scam Awareness Campaign',
         'Evaluate the effectiveness of anti-scam awareness efforts.',
         daniel_user_id,
-        'published'
+        'draft'
     )
     RETURNING id INTO survey_id;
     
@@ -104,7 +105,7 @@ BEGIN
         'Environmental Cleanliness Campaign',
         'Assess the impact of environmental cleanliness initiatives.',
         daniel_user_id,
-        'published'
+        'draft'
     )
     RETURNING id INTO survey_id;
     
@@ -124,7 +125,7 @@ BEGIN
         'Road Safety Awareness Survey',
         'Evaluate road safety awareness and campaign effectiveness.',
         daniel_user_id,
-        'published'
+        'draft'
     )
     RETURNING id INTO survey_id;
     
