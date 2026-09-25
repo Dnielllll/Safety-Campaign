@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ClipboardList, CheckCircle2, ChevronRight } from "lucide-react";
+import { ClipboardList, CheckCircle2, ChevronRight, AlertCircle } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,46 @@ export default function Surveys() {
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [alreadySubmitted, setAlreadySubmitted] = useState({});
+  const [user, setUser] = useState(null);
 
   // Force light mode for public pages
   useEffect(() => {
     resetTheme();
   }, [resetTheme]);
+
+  // Get current user
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getCurrentUser();
+  }, []);
+
+  // Check which surveys the user has already submitted
+  useEffect(() => {
+    const checkSubmissions = async () => {
+      if (!user) return;
+      
+      try {
+        const { data: responses } = await supabase
+          .from('survey_responses')
+          .select('survey_id')
+          .eq('user_id', user.id);
+        
+        const submittedSurveys = {};
+        (responses || []).forEach(response => {
+          submittedSurveys[response.survey_id] = true;
+        });
+        setAlreadySubmitted(submittedSurveys);
+      } catch (error) {
+        console.error('Error checking submissions:', error);
+      }
+    };
+    
+    checkSubmissions();
+  }, [user]);
 
   useEffect(() => {
     const fetchSurveys = async () => {
@@ -110,6 +145,13 @@ export default function Surveys() {
     setLoading(true);
     try {
       const { user } = await supabaseHelpers.getAuthUser();
+      
+      // Check if already submitted
+      if (alreadySubmitted[selected.id]) {
+        alert("You have already submitted this survey. Each survey can only be taken once.");
+        return;
+      }
+      
       const score = calculateScore(answers);
       const { error } = await supabaseHelpers.submitSurveyResponse({
         survey_id: selected.id,
@@ -117,8 +159,19 @@ export default function Surveys() {
         response_data: answers,
         score: score
       });
-      if (error) throw error;
+      
+      if (error) {
+        // Handle duplicate submission error
+        if (error.message.includes('duplicate') || error.message.includes('unique')) {
+          alert("You have already submitted this survey. Each survey can only be taken once.");
+          setAlreadySubmitted(prev => ({ ...prev, [selected.id]: true }));
+          return;
+        }
+        throw error;
+      }
+      
       setSubmitted(true);
+      setAlreadySubmitted(prev => ({ ...prev, [selected.id]: true }));
     } catch (error) {
       console.error(error);
       alert("Failed to submit survey. Please try again.");
@@ -143,6 +196,30 @@ export default function Surveys() {
   }
 
   if (selected) {
+    // Check if already submitted before showing form
+    if (alreadySubmitted[selected.id]) {
+      return (
+        <div className="container py-8 max-w-2xl">
+          <button onClick={() => setSelected(null)} className="text-sm text-primary mb-4 hover:underline">← Back to surveys</button>
+          <Card>
+            <CardHeader>
+              <Badge variant="secondary" className="w-fit mb-1">{selected.category}</Badge>
+              <CardTitle>{selected.title}</CardTitle>
+              <CardDescription>{selected.description}</CardDescription>
+            </CardHeader>
+            <CardContent className="text-center py-8">
+              <AlertCircle className="h-12 w-12 text-amber-600 mx-auto mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Already Submitted</h3>
+              <p className="text-muted-foreground text-sm">You have already submitted this survey. Each survey can only be taken once.</p>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={() => setSelected(null)} className="w-full">Back to Surveys</Button>
+            </CardFooter>
+          </Card>
+        </div>
+      );
+    }
+
     return (
       <div className="container py-8 max-w-2xl">
         <button onClick={() => setSelected(null)} className="text-sm text-primary mb-4 hover:underline">← Back to surveys</button>
@@ -223,23 +300,44 @@ export default function Surveys() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        {list.map((s) => (
-          <Card key={s.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelected(s)}>
-            <CardHeader>
-              <div className="flex items-center justify-between mb-1">
-                <Badge variant="secondary">{s.category}</Badge>
-                <span className="text-xs text-muted-foreground">{s.questions?.length ?? 0} questions</span>
-              </div>
-              <CardTitle className="text-base">{s.title}</CardTitle>
-              <CardDescription>{s.description}</CardDescription>
-            </CardHeader>
-            <CardFooter>
-              <Button variant="ghost" size="sm">
-                Take Survey <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+        {list.map((s) => {
+          const isSubmitted = alreadySubmitted[s.id];
+          return (
+            <Card 
+              key={s.id} 
+              className={`hover:shadow-md transition-shadow ${isSubmitted ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} 
+              onClick={() => !isSubmitted && setSelected(s)}
+            >
+              <CardHeader>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{s.category}</Badge>
+                    {isSubmitted && (
+                      <Badge variant="outline" className="text-green-600 border-green-600">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Submitted
+                      </Badge>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground">{s.questions?.length ?? 0} questions</span>
+                </div>
+                <CardTitle className="text-base">{s.title}</CardTitle>
+                <CardDescription>{s.description}</CardDescription>
+              </CardHeader>
+              <CardFooter>
+                {isSubmitted ? (
+                  <Button variant="outline" size="sm" disabled>
+                    Already Submitted
+                  </Button>
+                ) : (
+                  <Button variant="ghost" size="sm">
+                    Take Survey <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
 
       {list.length === 0 && (
