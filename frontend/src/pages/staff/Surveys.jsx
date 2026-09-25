@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ClipboardList, Plus, Send, Clock, CheckCircle2, XCircle, MessageSquare, Loader2, AlertTriangle, RefreshCw, User, Edit } from "lucide-react";
+import { ClipboardList, Plus, Send, Clock, CheckCircle2, XCircle, MessageSquare, Loader2, AlertTriangle, RefreshCw, User, Edit, X } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -201,6 +201,33 @@ export default function StaffSurveys() {
       ...prev,
       questions: prev.questions.map((q, i) => 
         i === index ? { ...q, [field]: value } : q
+      )
+    }));
+  };
+
+  const addOption = (questionIndex) => {
+    setSurveyForm(prev => ({
+      ...prev,
+      questions: prev.questions.map((q, i) => 
+        i === questionIndex ? { ...q, options: [...(q.options || []), ""] } : q
+      )
+    }));
+  };
+
+  const removeOption = (questionIndex, optionIndex) => {
+    setSurveyForm(prev => ({
+      ...prev,
+      questions: prev.questions.map((q, i) => 
+        i === questionIndex ? { ...q, options: q.options.filter((_, optIdx) => optIdx !== optionIndex) } : q
+      )
+    }));
+  };
+
+  const updateOption = (questionIndex, optionIndex, value) => {
+    setSurveyForm(prev => ({
+      ...prev,
+      questions: prev.questions.map((q, i) => 
+        i === questionIndex ? { ...q, options: q.options.map((opt, optIdx) => optIdx === optionIndex ? value : opt) } : q
       )
     }));
   };
@@ -519,12 +546,40 @@ export default function StaffSurveys() {
                     
                     {q.type === "radio" && (
                       <div className="space-y-2">
-                        <Label className="text-sm">Options (comma-separated)</Label>
-                        <Input
-                          value={q.options?.join(", ") || ""}
-                          onChange={(e) => updateQuestion(index, "options", e.target.value.split(", ").filter(opt => opt.trim()))}
-                          placeholder="e.g., Always, Sometimes, Rarely"
-                        />
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Options</Label>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => addOption(index)}
+                            className="h-6 text-xs"
+                          >
+                            <Plus className="h-3 w-3 mr-1" /> Add Option
+                          </Button>
+                        </div>
+                        {(q.options || []).map((option, optIndex) => (
+                          <div key={optIndex} className="flex gap-2">
+                            <Input
+                              value={option}
+                              onChange={(e) => updateOption(index, optIndex, e.target.value)}
+                              placeholder={`Option ${optIndex + 1}`}
+                              className="flex-1"
+                            />
+                            {(q.options || []).length > 2 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeOption(index, optIndex)}
+                                className="h-8 w-8"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                        {(q.options || []).length === 0 && (
+                          <p className="text-xs text-muted-foreground">Add at least 2 options for multiple choice</p>
+                        )}
                       </div>
                     )}
                   </div>
