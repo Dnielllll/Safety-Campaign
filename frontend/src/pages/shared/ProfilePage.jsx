@@ -173,8 +173,19 @@ export default function ProfilePage() {
         const { data: urlData } = supabase.storage
           .from("avatars")
           .getPublicUrl(filePath);
-        setAvatarUrl(urlData.publicUrl);
-        setAvatarPreview(urlData.publicUrl);
+        
+        const newAvatarUrl = urlData.publicUrl;
+        setAvatarUrl(newAvatarUrl);
+        setAvatarPreview(newAvatarUrl);
+
+        // Auto-save the avatar URL to the database immediately
+        const { error: updateErr } = await supabaseHelpers.updateUser(user.id, { avatar_url: newAvatarUrl });
+        if (!updateErr) {
+          // Update global context and local storage immediately
+          const updatedUser = { ...user, avatar_url: newAvatarUrl };
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
       }
     } catch (err) {
       console.warn("Avatar crop/upload error:", err);
@@ -208,11 +219,16 @@ export default function ProfilePage() {
         return;
       }
 
-      setUser((prev) => ({
-        ...prev,
-        ...updates,
-        avatar_url: avatarUrl || prev?.avatar_url,
-      }));
+      setUser((prev) => {
+        const updatedUser = {
+          ...prev,
+          ...updates,
+          avatar_url: avatarUrl || prev?.avatar_url,
+        };
+        // Persist to local storage so refresh doesn't flash old data
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        return updatedUser;
+      });
 
       setSaved("profile");
       setTimeout(() => setSaved(""), 3000);
