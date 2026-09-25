@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CheckCircle, Loader2, Eye, EyeOff } from "lucide-react";
-import { supabaseHelpers } from "@/lib/supabase.js";
+import { supabase, supabaseHelpers } from "@/lib/supabase.js";
 import { notificationApi } from "@/lib/apiGateway.js";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/ThemeProvider.jsx";
