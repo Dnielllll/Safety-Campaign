@@ -303,13 +303,21 @@ export default function StaffSurveys() {
   const submitSurvey = async (id) => {
     setLoading(true);
     try {
+      const survey = surveys.find(s => s.id === id);
+      const updateData = { status: "pending_approval" };
+      
+      // Clear admin_notes when resubmitting after revision/rejection
+      if (survey && survey.admin_notes) {
+        updateData.admin_notes = null;
+      }
+      
       const { error } = await supabase
         .from("surveys")
-        .update({ status: "pending_approval" })
+        .update(updateData)
         .eq("id", id);
 
       if (error) throw error;
-      setSurveys((prev) => prev.map((s) => s.id === id ? { ...s, status: "pending_approval" } : s));
+      setSurveys((prev) => prev.map((s) => s.id === id ? { ...s, ...updateData } : s));
     } catch (err) {
       console.error("Failed to submit survey:", err);
     } finally {
@@ -613,10 +621,11 @@ export default function StaffSurveys() {
               const Icon = meta.icon;
               const canSubmit = survey.status === "draft" || survey.status === "rejected";
               const isRejected = survey.status === "rejected";
+              const hasAdminNotes = survey.admin_notes && survey.admin_notes.trim() !== "";
               const responses = surveyResponses.filter(r => r.survey_id === survey.id);
 
               return (
-                <Card key={survey.id} className={isRejected ? "border-red-300 bg-red-50/30" : ""}>
+                <Card key={survey.id} className={isRejected ? "border-red-300 bg-red-50/30" : hasAdminNotes ? "border-amber-300 bg-amber-50/30" : ""}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -643,14 +652,16 @@ export default function StaffSurveys() {
                       </p>
                     )}
 
-                    {/* Admin comment box for rejected surveys */}
-                    {isRejected && survey.admin_notes && (
-                      <div className="mt-3 flex gap-2 items-start rounded-md border border-red-300 bg-red-50 p-3">
-                        <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-500" />
+                    {/* Admin comment box for surveys with revision requests or rejections */}
+                    {hasAdminNotes && (
+                      <div className={`mt-3 flex gap-2 items-start rounded-md border p-3 ${isRejected ? "border-red-300 bg-red-50" : "border-amber-300 bg-amber-50"}`}>
+                        <AlertTriangle className={`h-4 w-4 shrink-0 mt-0.5 ${isRejected ? "text-red-500" : "text-amber-500"}`} />
                         <div>
-                          <p className="text-xs font-semibold text-red-800 mb-0.5">Admin Comment:</p>
-                          <p className="text-sm text-red-900">&ldquo;{survey.admin_notes}&rdquo;</p>
-                          <p className="text-xs text-red-600 mt-1">
+                          <p className={`text-xs font-semibold mb-0.5 ${isRejected ? "text-red-800" : "text-amber-800"}`}>
+                            {isRejected ? "Admin Comment (Rejected):" : "Admin Comment (Revision Request):"}
+                          </p>
+                          <p className={`text-sm ${isRejected ? "text-red-900" : "text-amber-900"}`}>&ldquo;{survey.admin_notes}&rdquo;</p>
+                          <p className={`text-xs mt-1 ${isRejected ? "text-red-600" : "text-amber-600"}`}>
                             Please edit the survey before resubmitting.
                           </p>
                         </div>
@@ -677,7 +688,7 @@ export default function StaffSurveys() {
                         className="w-full"
                       >
                         {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
-                        {isRejected ? "Resubmit for Review" : "Submit for Review"}
+                        {hasAdminNotes ? "Resubmit for Review" : "Submit for Review"}
                       </Button>
                     ) : (
                       <Button variant="outline" className="w-full" disabled>
