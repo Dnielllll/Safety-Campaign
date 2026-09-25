@@ -159,7 +159,7 @@ export default function StaffSurveys() {
         // Fetch all responses for published surveys
         const { data: responses } = await supabase
           .from("survey_responses")
-          .select("*, survey_id, users(name, email)")
+          .select("*, survey_id")
           .in("survey_id", surveyIds)
           .order("created_at", { ascending: false });
         
@@ -724,10 +724,7 @@ export default function StaffSurveys() {
                           </div>
                           <div className="flex items-center gap-2 mb-1">
                             <User className="h-4 w-4 text-muted-foreground" />
-                            <p className="font-medium text-sm">{response.users?.name || 'Resident'}</p>
-                            {response.users?.email && (
-                              <p className="text-xs text-muted-foreground">({response.users.email})</p>
-                            )}
+                            <p className="font-medium text-sm">Resident</p>
                           </div>
                           {/* Score display */}
                           {response.response_data && (
