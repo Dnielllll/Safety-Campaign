@@ -251,8 +251,8 @@ export default function PublicLayout() {
 
           {/* User section at bottom */}
           <div className="p-4 border-t border-border">
-            <div className="flex flex-col gap-2">
-              <Link to="/profile" className="flex items-center gap-2 p-2 rounded-md hover:bg-secondary transition-colors">
+            <div className="flex flex-col gap-1">
+              <Link to="/profile" className="flex items-center gap-3 p-2 rounded-md hover:bg-secondary transition-colors">
                 <Avatar className="h-8 w-8">
                   {user?.avatar_url ? (
                     <AvatarImage src={user.avatar_url} alt={user?.name} />
@@ -260,19 +260,18 @@ export default function PublicLayout() {
                     <AvatarFallback>{user.name?.[0] ?? "U"}</AvatarFallback>
                   )}
                 </Avatar>
-                <span className="text-sm font-medium truncate">{user.name}</span>
-              </Link>
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-destructive hover:bg-secondary rounded-md transition-colors"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Log out
-                </button>
-                <div className="flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium truncate block">{user.name}</span>
+                  <span className="text-xs text-muted-foreground truncate block">View Profile</span>
                 </div>
-              </div>
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-destructive hover:bg-secondary rounded-md transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                Log out
+              </button>
             </div>
           </div>
         </aside>
@@ -335,16 +334,35 @@ export default function PublicLayout() {
                     </Link>
                   );
                 })}
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileOpen(false);
-                  }}
-                  className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Log out
-                </button>
+                <div className="border-t border-border pt-2 mt-2 flex flex-col gap-1">
+                  <Link
+                    to="/profile"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-secondary"
+                  >
+                    <Avatar className="h-8 w-8">
+                      {user?.avatar_url ? (
+                        <AvatarImage src={user.avatar_url} alt={user?.name} />
+                      ) : (
+                        <AvatarFallback>{user.name?.[0] ?? "U"}</AvatarFallback>
+                      )}
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium truncate block">{user.name}</span>
+                      <span className="text-xs text-muted-foreground truncate block">View Profile</span>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMobileOpen(false);
+                    }}
+                    className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Log out
+                  </button>
+                </div>
               </nav>
             )}
           </header>
