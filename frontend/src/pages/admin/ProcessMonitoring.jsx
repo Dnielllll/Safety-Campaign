@@ -22,7 +22,7 @@ import {
   RefreshCw,
   FileText
 } from "lucide-react";
-import { supabase, supabaseHelpers } from "@/lib/supabase.js";
+import { supabase } from "@/lib/supabase.js";
 
 export default function ProcessMonitoring() {
   const [metrics, setMetrics] = useState(null);
@@ -35,7 +35,15 @@ export default function ProcessMonitoring() {
     const reviewTimeoutThreshold = 48 * 60 * 60 * 1000; // 48 hours
 
     const totalCampaigns = campaigns.length;
-    const pendingApproval = campaigns.filter(c => c.status === 'pending_approval' || c.status === 'submitted').length;
+    const pendingApproval = campaigns.filter(c => c.status === 'pending_approval').length;
+    
+    console.log('Campaign breakdown by status:');
+    const statusCounts = {};
+    campaigns.forEach(c => {
+      statusCounts[c.status] = (statusCounts[c.status] || 0) + 1;
+    });
+    console.log(statusCounts);
+    console.log('Pending approval count:', pendingApproval);
     
     // Calculate draft timeout (drafts older than 24 hours)
     const draftTimeout = campaigns.filter(c => {
@@ -46,13 +54,15 @@ export default function ProcessMonitoring() {
 
     // Calculate review timeout (pending reviews older than 48 hours)
     const reviewTimeout = campaigns.filter(c => {
-      if (c.status !== 'pending_approval' && c.status !== 'submitted') return false;
+      if (c.status !== 'pending_approval') return false;
       const createdAt = new Date(c.created_at);
       return (now - createdAt) > reviewTimeoutThreshold;
     }).length;
 
     // Calculate average approval time for approved campaigns
-    const approvedCampaigns = campaigns.filter(c => c.status === 'approved' && c.approved_at);
+    const approvedCampaigns = campaigns.filter(c => 
+      (c.status === 'approved' || c.status === 'published') && c.approved_at
+    );
     let avgApprovalTimeHours = 0;
     if (approvedCampaigns.length > 0) {
       const totalApprovalTime = approvedCampaigns.reduce((sum, c) => {
@@ -86,12 +96,18 @@ export default function ProcessMonitoring() {
   const fetchMetrics = async () => {
     try {
       setLoading(true);
-      const { data: campaigns, error } = await supabaseHelpers.getCampaigns();
+      // Direct query to avoid deduplication - we need all campaigns including those with same title
+      const { data: campaigns, error } = await supabase
+        .from('campaigns')
+        .select('*')
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error('Failed to fetch campaigns:', error);
         setMetrics(null);
       } else {
+        console.log('Fetched campaigns for metrics:', campaigns?.length, 'total');
+        console.log('Campaign statuses:', campaigns?.map(c => ({ id: c.id, title: c.title, status: c.status })));
         const calculatedMetrics = calculateMetrics(campaigns || []);
         setMetrics(calculatedMetrics);
       }
@@ -115,10 +131,13 @@ export default function ProcessMonitoring() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'campaigns' },
         (payload) => {
+          console.log('Campaign change detected:', payload);
           fetchMetrics();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Real-time subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
