@@ -20,14 +20,54 @@ import {
   Activity,
   X,
   RefreshCw,
-  FileText
+  FileText,
+  ClipboardList
 } from "lucide-react";
 import { supabase } from "@/lib/supabase.js";
 
 export default function ProcessMonitoring() {
   const [metrics, setMetrics] = useState(null);
+  const [surveyMetrics, setSurveyMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
+
+  const calculateSurveyMetrics = (surveys) => {
+    const now = new Date();
+    const draftTimeoutThreshold = 24 * 60 * 60 * 1000; // 24 hours
+    const reviewTimeoutThreshold = 48 * 60 * 60 * 1000; // 48 hours
+
+    const totalSurveys = surveys.length;
+    const pendingApproval = surveys.filter(s => s.status === 'pending_approval').length;
+    
+    console.log('Survey breakdown by status:');
+    const statusCounts = {};
+    surveys.forEach(s => {
+      statusCounts[s.status] = (statusCounts[s.status] || 0) + 1;
+    });
+    console.log(statusCounts);
+    console.log('Pending approval surveys count:', pendingApproval);
+    
+    // Calculate draft timeout (drafts older than 24 hours)
+    const draftTimeout = surveys.filter(s => {
+      if (s.status !== 'draft') return false;
+      const createdAt = new Date(s.created_at);
+      return (now - createdAt) > draftTimeoutThreshold;
+    }).length;
+
+    // Calculate review timeout (pending reviews older than 48 hours)
+    const reviewTimeout = surveys.filter(s => {
+      if (s.status !== 'pending_approval') return false;
+      const createdAt = new Date(s.created_at);
+      return (now - createdAt) > reviewTimeoutThreshold;
+    }).length;
+
+    return {
+      total_surveys: totalSurveys,
+      pending_approval: pendingApproval,
+      draft_timeout: draftTimeout,
+      review_timeout: reviewTimeout
+    };
+  };
 
   const calculateMetrics = (campaigns) => {
     const now = new Date();
@@ -96,14 +136,15 @@ export default function ProcessMonitoring() {
   const fetchMetrics = async () => {
     try {
       setLoading(true);
-      // Direct query to avoid deduplication - we need all campaigns including those with same title
-      const { data: campaigns, error } = await supabase
+      
+      // Fetch campaigns
+      const { data: campaigns, error: campaignsError } = await supabase
         .from('campaigns')
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) {
-        console.error('Failed to fetch campaigns:', error);
+      if (campaignsError) {
+        console.error('Failed to fetch campaigns:', campaignsError);
         setMetrics(null);
       } else {
         console.log('Fetched campaigns for metrics:', campaigns?.length, 'total');
@@ -112,10 +153,26 @@ export default function ProcessMonitoring() {
         setMetrics(calculatedMetrics);
       }
       
+      // Fetch surveys
+      const { data: surveys, error: surveysError } = await supabase
+        .from('surveys')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (surveysError) {
+        console.error('Failed to fetch surveys:', surveysError);
+        setSurveyMetrics(null);
+      } else {
+        console.log('Fetched surveys for metrics:', surveys?.length, 'total');
+        const calculatedSurveyMetrics = calculateSurveyMetrics(surveys || []);
+        setSurveyMetrics(calculatedSurveyMetrics);
+      }
+      
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Failed to fetch metrics:', error);
       setMetrics(null);
+      setSurveyMetrics(null);
     } finally {
       setLoading(false);
     }
@@ -125,7 +182,7 @@ export default function ProcessMonitoring() {
     fetchMetrics();
     
     // Set up real-time subscription for campaigns
-    const channel = supabase
+    const campaignChannel = supabase
       .channel('process-monitoring-campaigns')
       .on(
         'postgres_changes',
@@ -136,11 +193,27 @@ export default function ProcessMonitoring() {
         }
       )
       .subscribe((status) => {
-        console.log('Real-time subscription status:', status);
+        console.log('Campaign real-time subscription status:', status);
+      });
+      
+    // Set up real-time subscription for surveys
+    const surveyChannel = supabase
+      .channel('process-monitoring-surveys')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'surveys' },
+        (payload) => {
+          console.log('Survey change detected:', payload);
+          fetchMetrics();
+        }
+      )
+      .subscribe((status) => {
+        console.log('Survey real-time subscription status:', status);
       });
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(campaignChannel);
+      supabase.removeChannel(surveyChannel);
     };
   }, []);
 
@@ -196,22 +269,53 @@ export default function ProcessMonitoring() {
           color="text-blue-500"
         />
         <MetricCard
-          title="Pending Approval"
+          title="Pending Campaigns"
           value={metrics?.pending_approval ?? 0}
           icon={Clock}
           color="text-yellow-500"
           trend="Awaiting review"
         />
         <MetricCard
-          title="Draft Timeout"
+          title="Total Surveys"
+          value={surveyMetrics?.total_surveys ?? 0}
+          icon={ClipboardList}
+          color="text-purple-500"
+        />
+        <MetricCard
+          title="Pending Surveys"
+          value={surveyMetrics?.pending_approval ?? 0}
+          icon={Clock}
+          color="text-orange-500"
+          trend="Awaiting review"
+        />
+      </div>
+      
+      {/* Timeout Metrics */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="Campaign Draft Timeout"
           value={metrics?.draft_timeout ?? 0}
           icon={AlertTriangle}
           color="text-red-500"
           trend="Requires attention"
         />
         <MetricCard
-          title="Review Timeout"
+          title="Campaign Review Timeout"
           value={metrics?.review_timeout ?? 0}
+          icon={AlertTriangle}
+          color="text-red-500"
+          trend="SLA exceeded"
+        />
+        <MetricCard
+          title="Survey Draft Timeout"
+          value={surveyMetrics?.draft_timeout ?? 0}
+          icon={AlertTriangle}
+          color="text-red-500"
+          trend="Requires attention"
+        />
+        <MetricCard
+          title="Survey Review Timeout"
+          value={surveyMetrics?.review_timeout ?? 0}
           icon={AlertTriangle}
           color="text-red-500"
           trend="SLA exceeded"
@@ -221,14 +325,14 @@ export default function ProcessMonitoring() {
       {/* Performance Metrics */}
       <div className="grid gap-4 md:grid-cols-2">
         <MetricCard
-          title="Average Approval Time"
+          title="Campaign Avg Approval Time"
           value={`${metrics?.avg_approval_time_hours ?? 0}h`}
           icon={Activity}
           color="text-purple-500"
           trend="Time to approval"
         />
         <MetricCard
-          title="SLA Compliance Rate"
+          title="Campaign SLA Compliance"
           value={`${metrics?.sla_compliance_rate ?? 0}%`}
           icon={CheckCircle}
           color="text-green-500"
