@@ -22,6 +22,7 @@ const statusMeta = {
 export default function StaffSurveys() {
   const [surveys, setSurveys] = useState([]);
   const [surveyResponses, setSurveyResponses] = useState([]);
+  const [allSurveys, setAllSurveys] = useState([]); // Store all published surveys with questions
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [surveyDialogOpen, setSurveyDialogOpen] = useState(false);
@@ -139,19 +140,41 @@ export default function StaffSurveys() {
         
         const { data: responses } = await query.order("submitted_at", { ascending: false });
         
+        // Fetch questions for each published survey
+        const surveysWithQuestions = await Promise.all(
+          publishedSurveys.map(async (survey) => {
+            const { data: questions } = await supabase
+              .from("survey_questions")
+              .select("*")
+              .eq("survey_id", survey.id)
+              .order("order_index", { ascending: true });
+            
+            return {
+              ...survey,
+              questions: (questions || []).map(q => ({
+                question: q.question_text,
+                type: q.question_type === 'multiple_choice' ? 'radio' : q.question_type === 'rating' ? 'scale' : q.question_type,
+                options: q.options || []
+              }))
+            };
+          })
+        );
+        
         // Merge survey information with responses
         const responsesWithSurveyInfo = (responses || []).map(response => {
-          const survey = publishedSurveys.find(s => s.id === response.survey_id);
+          const survey = surveysWithQuestions.find(s => s.id === response.survey_id);
           return {
             ...response,
             survey_title: survey?.title || 'Unknown Survey',
             survey_created_at: survey?.created_at,
+            questions: survey?.questions || [],
             // Map submitted_at to created_at for compatibility with existing code
             created_at: response.submitted_at
           };
         });
         
         setSurveyResponses(responsesWithSurveyInfo);
+        setAllSurveys(surveysWithQuestions);
       } else {
         setSurveyResponses([]);
       }
@@ -713,14 +736,19 @@ export default function StaffSurveys() {
                         <div className="p-3 bg-muted/50 rounded-md">
                           <p className="text-sm font-semibold text-primary mb-2">Survey Answers:</p>
                           <div className="space-y-2">
-                            {Object.entries(response.response_data).map(([questionIndex, answer]) => (
-                              <div key={questionIndex} className="text-sm">
-                                <p className="font-medium text-muted-foreground mb-1">
-                                  Question {parseInt(questionIndex) + 1}:
-                                </p>
-                                <p className="text-foreground">{answer}</p>
-                              </div>
-                            ))}
+                            {Object.entries(response.response_data).map(([questionIndex, answer]) => {
+                              // Use the questions from allSurveys (which contains all published surveys)
+                              const survey = allSurveys.find(s => s.id === response.survey_id);
+                              const question = survey?.questions?.[parseInt(questionIndex)];
+                              return (
+                                <div key={questionIndex} className="text-sm">
+                                  <p className="font-medium text-muted-foreground mb-1">
+                                    Question {parseInt(questionIndex) + 1}: {question?.question || 'Unknown question'}
+                                  </p>
+                                  <p className="text-foreground font-semibold">{answer}</p>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       )}

@@ -27,6 +27,7 @@ export default function FeedbackManagement() {
   const [surveys, setSurveys] = useState([]);
   const [surveyResponses, setSurveyResponses] = useState([]);
   const [surveyLoading, setSurveyLoading] = useState(false);
+  const [allSurveys, setAllSurveys] = useState([]);
 
   useEffect(() => {
     fetchFeedback();
@@ -54,25 +55,31 @@ export default function FeedbackManagement() {
           
           return {
             ...survey,
-            questions: questions || []
+            questions: (questions || []).map(q => ({
+              question_text: q.question_text,
+              question_type: q.question_type,
+              options: q.options
+            }))
           };
         })
       );
       
       setSurveys(surveysWithQuestions);
+      setAllSurveys(surveysWithQuestions);
       
       // Fetch responses for each survey
       if (data && data.length > 0) {
         const surveyIds = data.map(s => s.id);
         const { data: responses } = await supabase
           .from("survey_responses")
-          .select("*, survey_id, users(name)")
+          .select("*, survey_id, users(name), surveys(title)")
           .in("survey_id", surveyIds);
         
         // Map submitted_at to created_at for compatibility with existing code
         const responsesWithCreatedAt = (responses || []).map(response => ({
           ...response,
-          created_at: response.submitted_at
+          created_at: response.submitted_at,
+          survey_title: response.surveys?.title || 'Unknown Survey'
         }));
         
         setSurveyResponses(responsesWithCreatedAt);
@@ -252,7 +259,7 @@ export default function FeedbackManagement() {
                 </div>
               ) : (
                 surveyResponses.map((response) => {
-                  const relatedSurvey = surveys.find(s => s.id === response.survey_id);
+                  const relatedSurvey = allSurveys.find(s => s.id === response.survey_id);
                   return (
                     <Card key={response.id}>
                       <CardContent className="p-4">
@@ -260,7 +267,7 @@ export default function FeedbackManagement() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <p className="font-medium text-sm">{response.users?.name || 'Resident'}</p>
-                              <Badge variant="outline">{relatedSurvey?.title || 'Unknown Survey'}</Badge>
+                              <Badge variant="outline">{response.survey_title || relatedSurvey?.title || 'Unknown Survey'}</Badge>
                             </div>
                             <p className="text-xs text-muted-foreground mb-2">
                               Responded: {new Date(response.submitted_at).toLocaleDateString()}
@@ -271,10 +278,22 @@ export default function FeedbackManagement() {
                                 <p className="text-sm text-muted-foreground">{response.comments}</p>
                               </div>
                             )}
-                            {response.answers && (
+                            {response.response_data && Object.keys(response.response_data).length > 0 && (
                               <div className="p-3 bg-muted/50 rounded-md">
-                                <p className="text-sm font-semibold text-primary mb-1">Survey Answers:</p>
-                                <pre className="text-xs text-muted-foreground whitespace-pre-wrap">{JSON.stringify(response.answers, null, 2)}</pre>
+                                <p className="text-sm font-semibold text-primary mb-2">Survey Answers:</p>
+                                <div className="space-y-2">
+                                  {Object.entries(response.response_data).map(([questionIndex, answer]) => {
+                                    const question = relatedSurvey?.questions?.[parseInt(questionIndex)];
+                                    return (
+                                      <div key={questionIndex} className="text-sm">
+                                        <p className="font-medium text-muted-foreground mb-1">
+                                          Question {parseInt(questionIndex) + 1}: {question?.question_text || 'Unknown question'}
+                                        </p>
+                                        <p className="text-foreground font-semibold">{answer}</p>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             )}
                           </div>
