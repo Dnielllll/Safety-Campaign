@@ -35,7 +35,7 @@ export default function ProcessMonitoring() {
     const reviewTimeoutThreshold = 48 * 60 * 60 * 1000; // 48 hours
 
     const totalCampaigns = campaigns.length;
-    const pendingApproval = campaigns.filter(c => c.status === 'pending_approval').length;
+    const pendingApproval = campaigns.filter(c => c.status === 'pending_approval' || c.status === 'submitted').length;
     
     console.log('Campaign breakdown by status:');
     const statusCounts = {};
@@ -43,7 +43,7 @@ export default function ProcessMonitoring() {
       statusCounts[c.status] = (statusCounts[c.status] || 0) + 1;
     });
     console.log(statusCounts);
-    console.log('Pending approval count:', pendingApproval);
+    console.log('Pending approval count (including submitted):', pendingApproval);
     
     // Calculate draft timeout (drafts older than 24 hours)
     const draftTimeout = campaigns.filter(c => {
@@ -54,7 +54,7 @@ export default function ProcessMonitoring() {
 
     // Calculate review timeout (pending reviews older than 48 hours)
     const reviewTimeout = campaigns.filter(c => {
-      if (c.status !== 'pending_approval') return false;
+      if (c.status !== 'pending_approval' && c.status !== 'submitted') return false;
       const createdAt = new Date(c.created_at);
       return (now - createdAt) > reviewTimeoutThreshold;
     }).length;
